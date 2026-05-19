@@ -1,0 +1,17 @@
+# rAÍz — dependencias del proyecto
+# Instalar con: pip install -r requirements.txt
+#
+# Nota: smtplib, sqlite3, uuid, re, email, datetime y contextlib
+# son módulos de la librería estándar de Python — no se listan aquí.
+
+# Interfaz web
+streamlit>=1.32.0
+
+# Modelo de lenguaje (Google GenAI SDK unificado)
+# Importado como: from google import genai
+google-genai>=1.0.0
+
+# Base de datos en producción (Supabase)
+# Solo se importa cuando SUPABASE_URL está configurado en secrets.toml.
+# Si no está configurado, database.py usa SQLite automáticamente.
+supabase>=2.11.0,<2.26.0
