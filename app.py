@@ -19,7 +19,7 @@ except KeyError:
     st.error("Falta configurar GEMINI_API_KEY en .streamlit/secrets.toml")
     st.stop()
 
-MODEL = "gemini-3.5-flash"
+MODEL = "gemini-3.1-flash-lite"
 
 @st.cache_resource
 def obtener_cliente():

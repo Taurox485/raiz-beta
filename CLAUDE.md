@@ -8,7 +8,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 ## Stack técnico actual
 - `app.py` — Streamlit + Google GenAI SDK (`google-genai`)
 - `instrucciones.txt` — system prompt pedagógico, cargado en tiempo de ejecución
-- Modelo: `gemini-2.5-pro-preview` (verificar el ID exacto en app.py)
+- Modelo: `gemini-3.1-flash-lite`
 - API key via `st.secrets["GEMINI_API_KEY"]`
 
 ## Arquitectura pedagógica (leer instrucciones.txt completo)
