@@ -24,24 +24,29 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Habeas data colombiano (Ley 1581/2012) — consentimiento explícito obligatorio en primer registro
 
 ## Estado actual del código
-- Chat funcional con historial de sesión en `st.session_state`
-- Limpieza de etiquetas implementada
-- **Sin implementar:** generación de PDF de reportes (placeholder en app.py línea ~118)
-- **Sin implementar:** canal real de alertas al orientador (solo hace `print()` a consola)
-- **Sin base de datos:** todo vive en memoria de sesión, no hay persistencia
+
+### Implementado y funcional
+- Auth completa: registro, login, consentimiento habeas data, recuperación de ID por email
+- Base de datos: `database.py` con adapter SQLite (dev) / Supabase (prod)
+- Schema SQL en `schema.sql`, seed data real de 11 municipios y ~25 instituciones del Valle del Cauca
+- Chat con historial persistente; retoma de sesión reconstruyendo contexto Gemini desde DB
+- Alertas al orientador guardadas en DB (`alertas` table) al detectar etiquetas internas
+- Perfil de riesgo actualizado en DB por turno
+- **Generación de PDFs (`pdf_generator.py`):** implementada con `fpdf2`
+  - `generar_pdfs(estudiante, historial, client, model, system_instruction) → (bytes, bytes)`
+  - Llama a Gemini para extraer datos estructurados (Holland, fortalezas, nudges, riesgo)
+  - Genera PDF estudiante ("Mi Mapa rAÍz") y PDF orientador ("Ficha de Acompañamiento")
+  - Se activa en `app.py` al detectar `[FIN_CONSEJERIA]`; botón "Descargar mi Perfil"
+  - `test_pdf.py` en raíz para pruebas manuales con estudiante `ALC-9-2026-0001`
+
+### Pendiente
+- **SMTP:** envío de PDFs por email al estudiante y al orientador (secrets configurados, lógica no conectada a pdf_generator)
+- **Marca de agua** en PDFs antes de producción
+- **Deploy** a Streamlit Cloud
 
 ---
 
-## FASE 1 — En desarrollo: Supabase + Autenticación
-
-### Estado: Schema aprobado, pendiente datos de seed
-
-El siguiente paso inmediato es recibir del usuario:
-1. Lista de municipios con abreviatura (3-5 letras, sin tildes) para generar IDs
-2. Instituciones educativas por municipio
-3. Nombre + email del orientador por institución
-
-Con esos datos, crear la migración inicial y arrancar la implementación.
+## FASE 1 — Completada: Supabase + Autenticación
 
 ### Schema de base de datos aprobado (5 tablas)
 
@@ -124,23 +129,24 @@ migrations/
 └── 002_...                   ← cambios futuros
 ```
 
-### Archivos a crear (Fase 1)
+### Archivos creados (Fase 1)
 ```
 raiz/
-├── app.py                    modificar — pantalla de auth antes del chat
-├── database.py               nuevo — Supabase + SQLite adapter
-├── auth.py                   nuevo — registro, login, generación de ID
-├── requirements.txt          nuevo
-├── migrations/
-│   └── 001_schema_inicial.sql  nuevo — schema + seed data
+├── app.py                    auth gate + chat + PDF download + alertas → DB
+├── database.py               Supabase + SQLite adapter
+├── auth.py                   registro, login, consentimiento, recuperación de ID
+├── pdf_generator.py          generación de PDFs con fpdf2 + Gemini
+├── email_service.py          SMTP Gmail (envío de ID; PDF pendiente de conectar)
+├── test_pdf.py               prueba manual de pdf_generator
+├── requirements.txt
+├── schema.sql                schema PostgreSQL + seed data para Supabase
 └── .streamlit/
-    └── secrets.toml          nuevo — plantilla sin valores reales
+    └── secrets.toml          plantilla (GEMINI_API_KEY real, SMTP pendiente)
 ```
 
 ---
 
-## Fases futuras (no implementar aún)
+## Fases futuras
 
-- **Fase 2:** Dashboard del orientador
-- **Fase 3:** Generación de reportes PDF por estudiante
+- **Fase 2:** Dashboard del orientador (alertas pendientes + lista de estudiantes)
 - **Fase 4:** Canal de alertas en tiempo real (email/WhatsApp al orientador)
