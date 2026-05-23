@@ -164,57 +164,17 @@ RLS está actualmente desactivado. En producción, los datos sensibles (perfil_r
 
 ## PRIORIDAD MEDIA — Mejoras para el piloto
 
-### PENDIENTE 6 — Vista de administrador (dashboard básico) ✅ COMPLETADO (Mayo 2026)
+### PENDIENTE 6 — Vista de administrador (dashboard básico)
 
-**Implementado:** `admin_dashboard.py` + gate en `app.py` (`/?admin=1`). Auth: email + `ADMIN_PASSWORD` en secrets.toml. Tres tabs: registrar estudiante, lista de estudiantes, alertas pendientes. Roles: fcc / orientador / secretaria.
+**Funcionalidades mínimas requeridas:**
+- Login de administrador (Supabase Auth, separado del flujo de estudiante)
+- Registro de nuevo estudiante con confirmación de consentimiento de acudiente
+- Lista de estudiantes de la institución con estado: sesión actual, perfil de riesgo, alertas pendientes
+- Visualización de alertas pendientes con indicador de urgencia
+- Descarga de PDF del reporte del orientador desde el dashboard (sin necesidad de que el estudiante lo genere)
 
-**Pendiente de producción (ver items PENDIENTE 10 y 11 abajo):**
-- Migrar auth de admin a Supabase Auth (una cuenta por admin, no contraseña compartida)
-- Agregar campo `jurisdiccion` a tabla `administradores` para scope regional de secretaria
-
-**Funcionalidades originalmente requeridas — estado:**
-- ✅ Login de administrador (piloto: contraseña compartida; producción: Supabase Auth)
-- ✅ Registro de nuevo estudiante con confirmación de consentimiento de acudiente
-- ✅ Lista de estudiantes con estado: sesión actual, perfil de riesgo, autorización
-- ✅ Visualización de alertas pendientes con indicador de urgencia
-- ⏳ Descarga de PDF del reporte del orientador desde el dashboard (sin necesidad de que el estudiante lo genere)
-
-### PENDIENTE 10 — Migrar auth de admin a Supabase Auth (antes de producción)
-
-**Contexto:** El piloto usa `ADMIN_PASSWORD` compartida en secrets.toml — aceptable para piloto, inválido para producción. En producción cada administrador debe tener su propia cuenta con contraseña individual.
-
-**Cambios requeridos:**
-- Crear usuarios en Supabase Auth (una cuenta por administrador)
-- Asociar `auth.users.id` de Supabase con `administradores.id` en la DB
-- Reemplazar el form de email + ADMIN_PASSWORD en `admin_dashboard.py` por `supabase.auth.sign_in_with_password()`
-- Eliminar `ADMIN_PASSWORD` de secrets.toml
-
-### PENDIENTE 11 — Campo `jurisdiccion` para rol secretaria (antes de producción)
-
-**Contexto:** El rol `secretaria` actualmente tiene acceso a todas las instituciones (igual que `fcc`). En producción, la Secretaría de Educación de cada municipio debe ver solo las instituciones de su jurisdicción.
-
-**Cambios requeridos en schema:**
-```sql
-ALTER TABLE administradores ADD COLUMN municipio_id INTEGER REFERENCES municipios(id);
-```
-**Cambios requeridos en `database.py`:** `get_sedes_disponibles`, `get_estudiantes_por_admin`, `get_alertas_pendientes` deben filtrar por `municipio_id` cuando `rol = 'secretaria'`.
-
-### PENDIENTE 12 — Signed URLs para archivos de consentimiento (antes de producción)
-
-**Contexto:** Los archivos subidos al bucket `consentimientos` de Supabase usan `get_public_url()` — el bucket quedaría público. Para producción, los documentos firmados de acudientes son datos personales de menores y deben protegerse.
-
-**Cambios requeridos en `database.py`:** Reemplazar `get_public_url()` por `create_signed_url(path, expires_in=3600)` en `guardar_archivo_consentimiento()`. Las URLs firmadas expiran en 1 hora — suficiente para revisión inmediata.
-
-### PENDIENTE 13 — Crear bucket `consentimientos` en Supabase antes del deploy
-
-**Checklist manual antes de deploy a Streamlit Cloud:**
-1. Ir a Supabase Dashboard → Storage → New bucket
-2. Nombre: `consentimientos`
-3. Acceso: **privado** (no público — ver PENDIENTE 12)
-4. Sin límite de tamaño por archivo (los PDFs de autorización pueden pesar hasta 5 MB)
-5. Verificar que la `service_role_key` tiene permisos de escritura en el bucket
-
-**Nota:** Sin este bucket, la subida de archivos de consentimiento falla silenciosamente en producción (en SQLite dev se guarda en carpeta local `consentimientos/`).
+**Nota de diseño:**
+El dashboard del orientador era la Fase 2 definida en CLAUDE.md. Este pendiente lo adelanta parcialmente porque el flujo de registro lo hace necesario antes del piloto.
 
 ### PENDIENTE 7 — Consentimiento diferenciado para datos sensibles
 
@@ -377,3 +337,28 @@ Para producción: Supabase Edge Functions o un scheduler externo.
 ```bash
 pip install twilio
 ```
+
+---
+
+## PENDIENTES DE PRODUCCIÓN — Surgidos del dashboard admin
+
+### PENDIENTE 10 — Migrar auth de admin a Supabase Auth por usuario
+**Contexto:** Para el piloto se usa una contraseña compartida (`ADMIN_PASSWORD` en secrets.toml) para todos los administradores. Esto es aceptable para 300 estudiantes en un piloto controlado, pero no escala.
+**Para producción:** Cada administrador debe tener su propia cuenta en Supabase Auth con email + contraseña individual. El login de admin_dashboard.py debe autenticar contra Supabase Auth en lugar de la contraseña hardcodeada.
+**Archivos a modificar:** `admin_dashboard.py`, `secrets.toml`
+
+### PENDIENTE 11 — Campo jurisdiccion para scope regional de Secretaría
+**Contexto:** El rol `secretaria` actualmente ve todas las instituciones igual que `fcc`. El campo `jurisdiccion` no existe en el schema.
+**Para producción:** Agregar campo `jurisdiccion` a la tabla `administradores` para limitar el scope de la Secretaría de Educación del Valle a sus instituciones y municipios específicos.
+**Archivos a modificar:** `schema.sql`, `migrations/003_...sql`, `database.py`
+
+### PENDIENTE 12 — Crear bucket 'consentimientos' en Supabase antes del deploy
+**Contexto:** El dashboard admin sube archivos de consentimiento al bucket `consentimientos` en Supabase Storage. Este bucket debe crearse manualmente antes del primer deploy a Streamlit Cloud.
+**Acción manual requerida:** En el dashboard de Supabase → Storage → New bucket → nombre: `consentimientos` → público (por ahora).
+**Bloqueante para:** Subida de archivos de consentimiento en producción. No bloqueante para desarrollo local (guarda en carpeta `consentimientos/`).
+
+### PENDIENTE 13 — Migrar URLs de consentimiento a signed URLs
+**Contexto:** Los archivos de consentimiento de menores de edad se guardan en un bucket público de Supabase Storage. Las URLs son accesibles por cualquiera que tenga el link.
+**Para producción:** Cambiar el bucket a privado y usar signed URLs con expiración para acceder a los archivos. Esto protege datos de menores conforme a la Ley 1581/2012.
+**Archivos a modificar:** `admin_dashboard.py`, `database.py`
+**Impacto:** Las URLs guardadas en `consentimiento_archivo_url` deberán generarse dinámicamente en lugar de almacenarse estáticas.
