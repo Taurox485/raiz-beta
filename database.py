@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS estudiantes (
     momento_actual                      INTEGER DEFAULT 1,
     perfil_riesgo                       TEXT    DEFAULT 'sin_evaluar',
     mentoria_completada                 INTEGER DEFAULT 0,
+    consentimiento_archivo_url          TEXT,
     CHECK (email IS NOT NULL OR celular_hash IS NOT NULL)
 );
 CREATE TABLE IF NOT EXISTS mensajes (
@@ -282,7 +283,8 @@ def _ensure_sqlite():
         # Nota: DROP NOT NULL sobre email no es soportado en SQLite via ALTER TABLE.
         # El _DDL ya lo refleja NULLable para instalaciones frescas. En DBs existentes
         # la restricción la aplica la capa de aplicación (formulario del administrador).
-        _add_col(conn, "estudiantes", "celular_hash", "TEXT")
+        _add_col(conn, "estudiantes", "celular_hash",              "TEXT")
+        _add_col(conn, "estudiantes", "consentimiento_archivo_url", "TEXT")
     _sqlite_ready = True
 
 
@@ -957,4 +959,262 @@ def set_consentimiento_acudiente(estudiante_uuid: str) -> None:
             WHERE  id = ?
             """,
             (now, estudiante_uuid),
+        )
+
+
+# ── API pública: dashboard de administrador ───────────────────────────────────
+
+def update_consentimiento_url(estudiante_uuid: str, url: str) -> None:
+    if _use_supabase():
+        _get_supabase().table("estudiantes").update(
+            {"consentimiento_archivo_url": url}
+        ).eq("id", estudiante_uuid).execute()
+        return
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            "UPDATE estudiantes SET consentimiento_archivo_url = ? WHERE id = ?",
+            (url, estudiante_uuid),
+        )
+
+
+def guardar_archivo_consentimiento(
+    estudiante_id: str,
+    sede_id: int,
+    extension: str,
+    file_bytes: bytes,
+) -> str:
+    """
+    Persiste el archivo del consentimiento del acudiente.
+    Supabase: sube al bucket 'consentimientos', retorna la URL pública.
+    SQLite:   guarda en carpeta local 'consentimientos/', retorna la ruta relativa.
+    Nota: el bucket 'consentimientos' debe crearse manualmente en Supabase antes
+    de usar esta función en producción.
+    """
+    import os
+    extension = extension.lower().lstrip(".")
+    ruta = f"{sede_id}/{estudiante_id}.{extension}"
+
+    if _use_supabase():
+        _get_supabase().storage.from_("consentimientos").upload(
+            ruta,
+            file_bytes,
+            {"content-type": f"image/{extension}" if extension != "pdf" else "application/pdf"},
+        )
+        return _get_supabase().storage.from_("consentimientos").get_public_url(ruta)
+
+    os.makedirs("consentimientos", exist_ok=True)
+    local_path = f"consentimientos/{estudiante_id}.{extension}"
+    with open(local_path, "wb") as fh:
+        fh.write(file_bytes)
+    return local_path
+
+
+def get_sedes_disponibles(admin_uuid: str, rol: str) -> list:
+    """
+    Retorna las sedes visibles para el admin según su rol.
+    Cada dict: {id, nombre, municipio, institucion}
+    fcc / secretaria: todas las sedes.
+    orientador:       solo sedes de su institución.
+    """
+    _SQL_ALL = """
+        SELECT s.id, s.nombre, m.nombre AS municipio, i.nombre AS institucion
+        FROM   sedes s
+        JOIN   instituciones i ON s.institucion_id = i.id
+        JOIN   municipios    m ON i.municipio_id   = m.id
+        ORDER  BY m.nombre, i.nombre, s.nombre
+    """
+    _SQL_ORIENTADOR = """
+        SELECT s.id, s.nombre, m.nombre AS municipio, i.nombre AS institucion
+        FROM   sedes s
+        JOIN   instituciones i ON s.institucion_id = i.id
+        JOIN   municipios    m ON i.municipio_id   = m.id
+        WHERE  i.id = (SELECT institucion_id FROM administradores WHERE id = ?)
+        ORDER  BY s.nombre
+    """
+
+    if _use_supabase():
+        sb = _get_supabase()
+        if rol == "orientador":
+            adm = sb.table("administradores").select("institucion_id").eq("id", admin_uuid).limit(1).execute()
+            inst_id = adm.data[0]["institucion_id"] if adm.data else None
+            if not inst_id:
+                return []
+            r = sb.table("sedes").select(
+                "id, nombre, instituciones(nombre, municipios(nombre))"
+            ).eq("institucion_id", inst_id).order("nombre").execute()
+        else:
+            r = sb.table("sedes").select(
+                "id, nombre, instituciones(nombre, municipios(nombre))"
+            ).execute()
+        result = []
+        for row in r.data:
+            inst = row.get("instituciones") or {}
+            mun  = inst.get("municipios") or {}
+            result.append({
+                "id":         row["id"],
+                "nombre":     row["nombre"],
+                "municipio":  mun.get("nombre", ""),
+                "institucion": inst.get("nombre", ""),
+            })
+        result.sort(key=lambda x: (x["municipio"], x["institucion"], x["nombre"]))
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        if rol == "orientador":
+            rows = conn.execute(_SQL_ORIENTADOR, (admin_uuid,)).fetchall()
+        else:
+            rows = conn.execute(_SQL_ALL).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
+    """
+    Retorna estudiantes dentro del scope del admin.
+    Cada dict: estudiante_id, nombre, apellido, grado, sede_nombre,
+    municipio, sesion_actual, perfil_riesgo,
+    consentimiento_acudiente_verificado, tiene_archivo_consentimiento.
+    """
+    _BASE = """
+        SELECT e.estudiante_id,
+               e.nombre,
+               e.apellido,
+               e.grado,
+               s.nombre  AS sede_nombre,
+               m.nombre  AS municipio,
+               e.sesion_actual,
+               e.perfil_riesgo,
+               e.consentimiento_acudiente_verificado,
+               CASE WHEN e.consentimiento_archivo_url IS NOT NULL THEN 1 ELSE 0 END
+                   AS tiene_archivo_consentimiento
+        FROM   estudiantes   e
+        JOIN   sedes         s ON e.sede_id          = s.id
+        JOIN   instituciones i ON s.institucion_id   = i.id
+        JOIN   municipios    m ON i.municipio_id     = m.id
+        {where}
+        ORDER  BY m.nombre, i.nombre, e.apellido, e.nombre
+    """
+
+    if _use_supabase():
+        sb = _get_supabase()
+        sel = (
+            "estudiante_id, nombre, apellido, grado, sesion_actual, "
+            "perfil_riesgo, consentimiento_acudiente_verificado, "
+            "consentimiento_archivo_url, "
+            "sedes(nombre, instituciones(nombre, municipios(nombre)))"
+        )
+        q = sb.table("estudiantes").select(sel)
+        if rol == "orientador":
+            adm = sb.table("administradores").select("institucion_id").eq("id", admin_uuid).limit(1).execute()
+            inst_id = adm.data[0]["institucion_id"] if adm.data else None
+            if inst_id:
+                q = q.eq("sedes.institucion_id", inst_id)
+        rows_raw = q.order("apellido").execute().data
+        result = []
+        for row in rows_raw:
+            sede_info = row.get("sedes") or {}
+            inst_info = sede_info.get("instituciones") or {}
+            mun_info  = inst_info.get("municipios") or {}
+            result.append({
+                "estudiante_id":                    row["estudiante_id"],
+                "nombre":                           row["nombre"],
+                "apellido":                         row["apellido"],
+                "grado":                            row["grado"],
+                "sede_nombre":                      sede_info.get("nombre", ""),
+                "municipio":                        mun_info.get("nombre", ""),
+                "sesion_actual":                    row["sesion_actual"],
+                "perfil_riesgo":                    row["perfil_riesgo"],
+                "consentimiento_acudiente_verificado": row["consentimiento_acudiente_verificado"],
+                "tiene_archivo_consentimiento":     bool(row.get("consentimiento_archivo_url")),
+            })
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        if rol == "orientador":
+            sql = _BASE.format(
+                where="WHERE i.id = (SELECT institucion_id FROM administradores WHERE id = ?)"
+            )
+            rows = conn.execute(sql, (admin_uuid,)).fetchall()
+        else:
+            rows = conn.execute(_BASE.format(where="")).fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            d["tiene_archivo_consentimiento"] = bool(d["tiene_archivo_consentimiento"])
+            d["consentimiento_acudiente_verificado"] = bool(d["consentimiento_acudiente_verificado"])
+            result.append(d)
+        return result
+
+
+def get_alertas_pendientes(admin_uuid: str, rol: str) -> list:
+    """
+    Retorna alertas con estado='pendiente' dentro del scope del admin.
+    Cada dict: id, estudiante_codigo, nombre_estudiante, tipo, timestamp.
+    """
+    _BASE = """
+        SELECT a.id,
+               e.estudiante_id AS estudiante_codigo,
+               e.nombre || ' ' || e.apellido AS nombre_estudiante,
+               a.tipo,
+               a.timestamp
+        FROM   alertas        a
+        JOIN   estudiantes    e ON a.estudiante_id = e.id
+        JOIN   sedes          s ON a.sede_id        = s.id
+        JOIN   instituciones  i ON s.institucion_id = i.id
+        WHERE  a.estado = 'pendiente'
+        {scope}
+        ORDER  BY a.timestamp DESC
+    """
+
+    if _use_supabase():
+        sb = _get_supabase()
+        sel = (
+            "id, tipo, timestamp, estado, "
+            "estudiantes(estudiante_id, nombre, apellido), "
+            "sedes(institucion_id)"
+        )
+        q = sb.table("alertas").select(sel).eq("estado", "pendiente").order("timestamp", desc=True)
+        if rol == "orientador":
+            adm = sb.table("administradores").select("institucion_id").eq("id", admin_uuid).limit(1).execute()
+            inst_id = adm.data[0]["institucion_id"] if adm.data else None
+            if inst_id:
+                q = q.eq("sedes.institucion_id", inst_id)
+        rows_raw = q.execute().data
+        result = []
+        for row in rows_raw:
+            est = row.get("estudiantes") or {}
+            result.append({
+                "id":               row["id"],
+                "estudiante_codigo": est.get("estudiante_id", ""),
+                "nombre_estudiante": f"{est.get('nombre','')} {est.get('apellido','')}".strip(),
+                "tipo":             row["tipo"],
+                "timestamp":        row["timestamp"],
+            })
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        if rol == "orientador":
+            sql = _BASE.format(
+                scope="AND i.id = (SELECT institucion_id FROM administradores WHERE id = ?)"
+            )
+            rows = conn.execute(sql, (admin_uuid,)).fetchall()
+        else:
+            rows = conn.execute(_BASE.format(scope="")).fetchall()
+        return [dict(r) for r in rows]
+
+
+def marcar_alerta_vista(alerta_id: str) -> None:
+    if _use_supabase():
+        _get_supabase().table("alertas").update(
+            {"estado": "vista"}
+        ).eq("id", alerta_id).execute()
+        return
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            "UPDATE alertas SET estado = 'vista' WHERE id = ?",
+            (alerta_id,),
         )

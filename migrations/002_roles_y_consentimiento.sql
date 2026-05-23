@@ -80,3 +80,7 @@ ALTER TABLE estudiantes
 ALTER TABLE estudiantes
     ADD CONSTRAINT check_contacto_requerido
     CHECK (email IS NOT NULL OR celular_hash IS NOT NULL);
+
+-- URL o ruta local del documento físico de autorización del acudiente (opcional)
+ALTER TABLE estudiantes
+    ADD COLUMN consentimiento_archivo_url VARCHAR(500);

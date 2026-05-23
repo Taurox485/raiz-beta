@@ -12,6 +12,12 @@ st.set_page_config(
     layout="centered",
 )
 
+# ── Admin gate ─────────────────────────────────────────────────────────────────
+if st.query_params.get("admin") == "1":
+    from admin_dashboard import mostrar_dashboard_admin
+    mostrar_dashboard_admin()
+    st.stop()
+
 # ── Cliente Gemini ─────────────────────────────────────────────────────────────
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]

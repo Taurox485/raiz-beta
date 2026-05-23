@@ -164,17 +164,57 @@ RLS está actualmente desactivado. En producción, los datos sensibles (perfil_r
 
 ## PRIORIDAD MEDIA — Mejoras para el piloto
 
-### PENDIENTE 6 — Vista de administrador (dashboard básico)
+### PENDIENTE 6 — Vista de administrador (dashboard básico) ✅ COMPLETADO (Mayo 2026)
 
-**Funcionalidades mínimas requeridas:**
-- Login de administrador (Supabase Auth, separado del flujo de estudiante)
-- Registro de nuevo estudiante con confirmación de consentimiento de acudiente
-- Lista de estudiantes de la institución con estado: sesión actual, perfil de riesgo, alertas pendientes
-- Visualización de alertas pendientes con indicador de urgencia
-- Descarga de PDF del reporte del orientador desde el dashboard (sin necesidad de que el estudiante lo genere)
+**Implementado:** `admin_dashboard.py` + gate en `app.py` (`/?admin=1`). Auth: email + `ADMIN_PASSWORD` en secrets.toml. Tres tabs: registrar estudiante, lista de estudiantes, alertas pendientes. Roles: fcc / orientador / secretaria.
 
-**Nota de diseño:**
-El dashboard del orientador era la Fase 2 definida en CLAUDE.md. Este pendiente lo adelanta parcialmente porque el flujo de registro lo hace necesario antes del piloto.
+**Pendiente de producción (ver items PENDIENTE 10 y 11 abajo):**
+- Migrar auth de admin a Supabase Auth (una cuenta por admin, no contraseña compartida)
+- Agregar campo `jurisdiccion` a tabla `administradores` para scope regional de secretaria
+
+**Funcionalidades originalmente requeridas — estado:**
+- ✅ Login de administrador (piloto: contraseña compartida; producción: Supabase Auth)
+- ✅ Registro de nuevo estudiante con confirmación de consentimiento de acudiente
+- ✅ Lista de estudiantes con estado: sesión actual, perfil de riesgo, autorización
+- ✅ Visualización de alertas pendientes con indicador de urgencia
+- ⏳ Descarga de PDF del reporte del orientador desde el dashboard (sin necesidad de que el estudiante lo genere)
+
+### PENDIENTE 10 — Migrar auth de admin a Supabase Auth (antes de producción)
+
+**Contexto:** El piloto usa `ADMIN_PASSWORD` compartida en secrets.toml — aceptable para piloto, inválido para producción. En producción cada administrador debe tener su propia cuenta con contraseña individual.
+
+**Cambios requeridos:**
+- Crear usuarios en Supabase Auth (una cuenta por administrador)
+- Asociar `auth.users.id` de Supabase con `administradores.id` en la DB
+- Reemplazar el form de email + ADMIN_PASSWORD en `admin_dashboard.py` por `supabase.auth.sign_in_with_password()`
+- Eliminar `ADMIN_PASSWORD` de secrets.toml
+
+### PENDIENTE 11 — Campo `jurisdiccion` para rol secretaria (antes de producción)
+
+**Contexto:** El rol `secretaria` actualmente tiene acceso a todas las instituciones (igual que `fcc`). En producción, la Secretaría de Educación de cada municipio debe ver solo las instituciones de su jurisdicción.
+
+**Cambios requeridos en schema:**
+```sql
+ALTER TABLE administradores ADD COLUMN municipio_id INTEGER REFERENCES municipios(id);
+```
+**Cambios requeridos en `database.py`:** `get_sedes_disponibles`, `get_estudiantes_por_admin`, `get_alertas_pendientes` deben filtrar por `municipio_id` cuando `rol = 'secretaria'`.
+
+### PENDIENTE 12 — Signed URLs para archivos de consentimiento (antes de producción)
+
+**Contexto:** Los archivos subidos al bucket `consentimientos` de Supabase usan `get_public_url()` — el bucket quedaría público. Para producción, los documentos firmados de acudientes son datos personales de menores y deben protegerse.
+
+**Cambios requeridos en `database.py`:** Reemplazar `get_public_url()` por `create_signed_url(path, expires_in=3600)` en `guardar_archivo_consentimiento()`. Las URLs firmadas expiran en 1 hora — suficiente para revisión inmediata.
+
+### PENDIENTE 13 — Crear bucket `consentimientos` en Supabase antes del deploy
+
+**Checklist manual antes de deploy a Streamlit Cloud:**
+1. Ir a Supabase Dashboard → Storage → New bucket
+2. Nombre: `consentimientos`
+3. Acceso: **privado** (no público — ver PENDIENTE 12)
+4. Sin límite de tamaño por archivo (los PDFs de autorización pueden pesar hasta 5 MB)
+5. Verificar que la `service_role_key` tiene permisos de escritura en el bucket
+
+**Nota:** Sin este bucket, la subida de archivos de consentimiento falla silenciosamente en producción (en SQLite dev se guarda en carpeta local `consentimientos/`).
 
 ### PENDIENTE 7 — Consentimiento diferenciado para datos sensibles
 
