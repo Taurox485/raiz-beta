@@ -50,6 +50,15 @@ if not auth.esta_autenticado():
 # ── A partir de aquí: estudiante autenticado ──────────────────────────────────
 estudiante = st.session_state.estudiante
 
+# Guard de acudiente: auth.py ya bloquea esto, pero lo verificamos aquí también
+# por si el registro viene de una sesión anterior al piloto.
+if not estudiante.get("consentimiento_acudiente_verificado"):
+    st.error(
+        "Tu perfil está pendiente de activación por parte de tu institución. "
+        "Pedile a tu orientador/a que habilite tu acceso."
+    )
+    st.stop()
+
 st.title("🌱 rAÍz")
 st.caption(f"**{estudiante['nombre']}** · ID: `{estudiante['estudiante_id']}`")
 
@@ -173,11 +182,29 @@ if user_input and not st.session_state.fin_consejeria:
                 )
             if "[ALERTA_PSICOLOGICA_CRITICA]" in raw:
                 tiene_alerta = True
-                db.crear_alerta(
+                alerta_id = db.crear_alerta(
                     estudiante_uuid=estudiante["id"],
                     sede_id=estudiante["sede_id"],
                     tipo="psicologica_critica",
                 )
+                # Tres destinatarios simultáneos (PENDIENTE 2 — Política PEAS)
+                orientador_email = db.get_orientador_email(estudiante["sede_id"])
+                rector_email     = db.get_rector_email(estudiante["sede_id"])
+                peas_email       = st.secrets.get("PEAS_EMAIL", "")
+                try:
+                    import email_service
+                    resultados = email_service.enviar_alerta_critica(
+                        orientador_email=orientador_email,
+                        rector_email=rector_email,
+                        peas_email=peas_email,
+                        nombre_estudiante=(
+                            f"{estudiante['nombre']} {estudiante['apellido']}"
+                        ),
+                        estudiante_id=estudiante["estudiante_id"],
+                    )
+                    db.update_notificaciones_alerta(alerta_id, **resultados)
+                except Exception:
+                    pass  # La alerta quedó en DB; el reintento es responsabilidad del dashboard
 
             # ── Perfil de riesgo → DB ──────────────────────────────────────
             # El motor de inferencia del prompt emite a lo sumo una etiqueta

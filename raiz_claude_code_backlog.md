@@ -242,3 +242,98 @@ Debe ser diseñado por Corpoeducación y/o FCC en coordinación con las instituc
 
 *Documento generado en sesión de revisión del system prompt — Mayo 2026*  
 *Próxima acción: implementar en Claude Code en el orden de prioridad indicado*
+
+---
+
+## MÓDULO WHATSAPP — Re-engagement automatizado
+
+### Contexto
+Sistema de mensajes automáticos por WhatsApp para reactivar estudiantes que iniciaron el proceso pero no han avanzado. Canal: Twilio WhatsApp API. Volumen piloto: 300 estudiantes × 5 mensajes = 1,500 mensajes (~$75 USD).
+
+### Configuración requerida en secrets.toml
+```toml
+TWILIO_ACCOUNT_SID = "..."
+TWILIO_AUTH_TOKEN = "..."
+TWILIO_WHATSAPP_NUMBER = "whatsapp:+57XXXXXXXXXX"  # número prepago registrado en Twilio
+APP_URL = "https://raiz-beta-5kpec9cahh2dpgw56vpxsj.streamlit.app"
+```
+
+### Schema — cambios requeridos
+
+```sql
+-- Tabla de mensajes WhatsApp enviados (evita duplicados y registra historial)
+CREATE TABLE whatsapp_mensajes (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    estudiante_id   UUID REFERENCES estudiantes(id),
+    tipo_mensaje    INTEGER CHECK (tipo_mensaje BETWEEN 1 AND 5),
+    enviado_at      TIMESTAMPTZ DEFAULT NOW(),
+    estado          VARCHAR(20) DEFAULT 'enviado'  -- enviado / fallido
+);
+```
+
+### Los 5 mensajes — variables: {nombre}, {codigo}, {link}
+
+**Mensaje 1** — Día 1 después del registro, nunca entró al chat:
+> ¡Hola, {nombre}! 🌱 Soy rAÍz, tu mentor de proyecto de vida. Ya tenés tu cuenta lista — solo falta que arranquemos. Vamos a tener 4 conversaciones donde vas a descubrir cosas importantes sobre vos: tus intereses, tus fortalezas y lo que querés para tu futuro. Tu código de ingreso es: *{codigo}* ¿Le entramos? Entrá acá: {link}
+
+**Mensaje 2** — 2 días después de completar S1 sin entrar a S2:
+> ¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote 🌿 En la próxima charla vamos a descubrir para qué sos realmente bueno/a. Tu código: *{codigo}* ¿Seguimos? Entrá acá: {link}
+
+**Mensaje 3** — 2 días después de completar S2 sin entrar a S3:
+> ¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos — tus intereses y tus fortalezas. Ahora viene la parte más interesante: hablar de lo que imaginás para tu futuro 🌱 Tu código: *{codigo}* ¿Le damos? Entrá acá: {link}
+
+**Mensaje 4** — 2 días después de completar S3 sin entrar a S4:
+> ¡Hola, {nombre}! Ya estás en la última charla — ¡casi terminás! 🎯 En esta sesión te voy a mostrar todo lo que descubrimos juntos sobre vos. Tu código: *{codigo}* Entrá acá: {link}
+
+**Mensaje 5** — 7 días sin actividad en cualquier punto, último intento:
+> ¡Hola, {nombre}! Sé que el tiempo a veces no alcanza para todo 😊 Pero tu proceso de rAÍz te está esperando — podés retomarlo exactamente donde lo dejaste, sin empezar de cero. Tu código: *{codigo}* ¿Le damos una última oportunidad? Entrá acá: {link}
+
+### Lógica del proceso periódico (whatsapp_service.py)
+
+```python
+# Reglas de activación — evaluar en este orden:
+# 1. sesion_actual == 1 AND momento_actual == 1 AND nunca tuvo mensajes
+#    AND fecha_registro < NOW() - INTERVAL '1 day'
+#    → Mensaje 1
+
+# 2. sesion_actual == 2 AND momento_actual == 1
+#    AND ultimo_mensaje_whatsapp tipo != 2
+#    AND ultimo_mensaje_chat < NOW() - INTERVAL '2 days'
+#    → Mensaje 2
+
+# 3. sesion_actual == 3 AND momento_actual == 1
+#    AND ultimo_mensaje_whatsapp tipo != 3
+#    AND ultimo_mensaje_chat < NOW() - INTERVAL '2 days'
+#    → Mensaje 3
+
+# 4. sesion_actual == 4 AND momento_actual == 1
+#    AND ultimo_mensaje_whatsapp tipo != 4
+#    AND ultimo_mensaje_chat < NOW() - INTERVAL '2 days'
+#    → Mensaje 4
+
+# 5. mentoria_completada == FALSE
+#    AND ultimo_mensaje_chat < NOW() - INTERVAL '7 days'
+#    AND ultimo_mensaje_whatsapp tipo != 5
+#    → Mensaje 5
+
+# NUNCA enviar más de 1 mensaje por tipo por estudiante
+# NUNCA enviar si mentoria_completada == TRUE
+# Horario de envío: entre 16:00 y 18:00 hora Colombia (UTC-5)
+```
+
+### Archivos a crear/modificar
+- `whatsapp_service.py` — nuevo archivo con lógica de envío y proceso periódico
+- `database.py` — métodos para consultar estudiantes elegibles y registrar envíos
+- `schema.sql` — tabla whatsapp_mensajes
+- `migrations/003_whatsapp.sql` — ALTER/CREATE para producción
+- `secrets.toml` — añadir credenciales Twilio
+- `requirements.txt` — añadir `twilio`
+
+### Ejecución del proceso periódico
+Para el piloto: correr manualmente o con un cron job simple.
+Para producción: Supabase Edge Functions o un scheduler externo.
+
+### Instalación
+```bash
+pip install twilio
+```

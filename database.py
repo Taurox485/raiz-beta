@@ -56,7 +56,9 @@ CREATE TABLE IF NOT EXISTS instituciones (
     nombre              TEXT    NOT NULL,
     orientador_nombre   TEXT,
     orientador_email    TEXT,
-    orientador_telefono TEXT
+    orientador_telefono TEXT,
+    rector_nombre       TEXT,
+    rector_email        TEXT
 );
 CREATE TABLE IF NOT EXISTS sedes (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,21 +73,37 @@ CREATE TABLE IF NOT EXISTS admins_sede (
     codigo_admin   TEXT UNIQUE NOT NULL,
     fecha_registro TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS administradores (
+    id                 TEXT    PRIMARY KEY,
+    nombre             TEXT    NOT NULL,
+    email              TEXT    UNIQUE NOT NULL,
+    rol                TEXT    NOT NULL CHECK (rol IN ('fcc', 'orientador', 'secretaria')),
+    institucion_id     INTEGER REFERENCES instituciones(id),
+    activo             INTEGER DEFAULT 1,
+    fecha_creacion     TEXT    DEFAULT (datetime('now'))
+);
 CREATE TABLE IF NOT EXISTS estudiantes (
-    id                         TEXT    PRIMARY KEY,
-    estudiante_id              TEXT    UNIQUE NOT NULL,
-    nombre                     TEXT    NOT NULL,
-    apellido                   TEXT    NOT NULL,
-    grado                      INTEGER NOT NULL,
-    email                      TEXT    UNIQUE NOT NULL,
-    sede_id                    INTEGER NOT NULL REFERENCES sedes(id),
-    consentimiento_habeas_data INTEGER DEFAULT 0,
-    fecha_consentimiento       TEXT,
-    fecha_registro             TEXT    DEFAULT (datetime('now')),
-    sesion_actual              INTEGER DEFAULT 1,
-    momento_actual             INTEGER DEFAULT 1,
-    perfil_riesgo              TEXT    DEFAULT 'sin_evaluar',
-    mentoria_completada        INTEGER DEFAULT 0
+    id                                  TEXT    PRIMARY KEY,
+    estudiante_id                       TEXT    UNIQUE NOT NULL,
+    nombre                              TEXT    NOT NULL,
+    apellido                            TEXT    NOT NULL,
+    grado                               INTEGER NOT NULL,
+    email                               TEXT    UNIQUE,
+    celular_hash                        TEXT,
+    sede_id                             INTEGER NOT NULL REFERENCES sedes(id),
+    asentimiento_estudiante             INTEGER DEFAULT 0,
+    fecha_asentimiento_estudiante       TEXT,
+    consentimiento_acudiente_verificado INTEGER DEFAULT 0,
+    fecha_verificacion_acudiente        TEXT,
+    administrador_registro_id           TEXT    REFERENCES administradores(id),
+    consentimiento_datos_sensibles      INTEGER DEFAULT 0,
+    fecha_consentimiento_sensibles      TEXT,
+    fecha_registro                      TEXT    DEFAULT (datetime('now')),
+    sesion_actual                       INTEGER DEFAULT 1,
+    momento_actual                      INTEGER DEFAULT 1,
+    perfil_riesgo                       TEXT    DEFAULT 'sin_evaluar',
+    mentoria_completada                 INTEGER DEFAULT 0,
+    CHECK (email IS NOT NULL OR celular_hash IS NOT NULL)
 );
 CREATE TABLE IF NOT EXISTS mensajes (
     id            TEXT    PRIMARY KEY,
@@ -97,13 +115,17 @@ CREATE TABLE IF NOT EXISTS mensajes (
     tiene_alerta  INTEGER DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS alertas (
-    id               TEXT    PRIMARY KEY,
-    estudiante_id    TEXT    NOT NULL REFERENCES estudiantes(id),
-    sede_id          INTEGER NOT NULL REFERENCES sedes(id),
-    tipo             TEXT    NOT NULL,
-    estado           TEXT    DEFAULT 'pendiente',
-    timestamp        TEXT    DEFAULT (datetime('now')),
-    nota_resolucion  TEXT
+    id                     TEXT    PRIMARY KEY,
+    estudiante_id          TEXT    NOT NULL REFERENCES estudiantes(id),
+    sede_id                INTEGER NOT NULL REFERENCES sedes(id),
+    tipo                   TEXT    NOT NULL,
+    estado                 TEXT    DEFAULT 'pendiente',
+    timestamp              TEXT    DEFAULT (datetime('now')),
+    nota_resolucion        TEXT,
+    notificado_orientador  INTEGER DEFAULT 0,
+    notificado_rector      INTEGER DEFAULT 0,
+    notificado_peas        INTEGER DEFAULT 0,
+    timestamp_notificacion TEXT
 );
 """
 
@@ -184,6 +206,23 @@ _SEED_INSTITUCIONES = [
 _sqlite_ready = False
 
 
+# ── SQLite: helpers de migración ───────────────────────────────────────────────
+
+def _cols(conn, table: str) -> set:
+    return {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+
+
+def _add_col(conn, table: str, col: str, defn: str) -> None:
+    if col not in _cols(conn, table):
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {defn}")
+
+
+def _rename_col(conn, table: str, old: str, new: str) -> None:
+    c = _cols(conn, table)
+    if old in c and new not in c:
+        conn.execute(f"ALTER TABLE {table} RENAME COLUMN {old} TO {new}")
+
+
 # ── SQLite: helpers internos ───────────────────────────────────────────────────
 
 @contextmanager
@@ -224,6 +263,26 @@ def _ensure_sqlite():
                     "INSERT INTO sedes (institucion_id, nombre, es_sede_principal) VALUES (?, ?, ?)",
                     [(cur.lastrowid, nombre, int(principal)) for nombre, principal in sedes],
                 )
+
+        # ── Migración 002: roles y consentimiento (idempotente) ────────────────
+        _rename_col(conn, "estudiantes", "consentimiento_habeas_data",  "asentimiento_estudiante")
+        _rename_col(conn, "estudiantes", "fecha_consentimiento",        "fecha_asentimiento_estudiante")
+        _add_col(conn, "estudiantes", "consentimiento_acudiente_verificado", "INTEGER DEFAULT 0")
+        _add_col(conn, "estudiantes", "fecha_verificacion_acudiente",        "TEXT")
+        _add_col(conn, "estudiantes", "administrador_registro_id",           "TEXT")
+        _add_col(conn, "estudiantes", "consentimiento_datos_sensibles",      "INTEGER DEFAULT 0")
+        _add_col(conn, "estudiantes", "fecha_consentimiento_sensibles",      "TEXT")
+        _add_col(conn, "instituciones", "rector_nombre", "TEXT")
+        _add_col(conn, "instituciones", "rector_email",  "TEXT")
+        _add_col(conn, "alertas", "notificado_orientador",   "INTEGER DEFAULT 0")
+        _add_col(conn, "alertas", "notificado_rector",       "INTEGER DEFAULT 0")
+        _add_col(conn, "alertas", "notificado_peas",         "INTEGER DEFAULT 0")
+        _add_col(conn, "alertas", "timestamp_notificacion",  "TEXT")
+        # Ajuste piloto: celular_hash opcional (al menos email o celular requerido)
+        # Nota: DROP NOT NULL sobre email no es soportado en SQLite via ALTER TABLE.
+        # El _DDL ya lo refleja NULLable para instalaciones frescas. En DBs existentes
+        # la restricción la aplica la capa de aplicación (formulario del administrador).
+        _add_col(conn, "estudiantes", "celular_hash", "TEXT")
     _sqlite_ready = True
 
 
@@ -415,18 +474,26 @@ def get_estudiante_por_email(email: str) -> Optional[dict]:
         return dict(row) if row else None
 
 
-def set_consentimiento(estudiante_uuid: str) -> None:
+def set_consentimiento(
+    estudiante_uuid: str,
+    incluye_datos_sensibles: bool = True,
+) -> None:
     """
-    Graba consentimiento habeas data con timestamp preciso (Ley 1581/2012).
-    Debe llamarse justo después de que el estudiante marca el checkbox.
+    Graba el asentimiento informado del estudiante con timestamp preciso (Ley 1581/2012).
+    incluye_datos_sensibles=True cuando el estudiante acepta también el checkbox de
+    datos sensibles (salud, situación socioeconómica) — ver PENDIENTE 7 del backlog.
     """
     now = datetime.now(timezone.utc).isoformat()
+    payload: dict = {
+        "asentimiento_estudiante":           True,
+        "fecha_asentimiento_estudiante":     now,
+        "consentimiento_datos_sensibles":    incluye_datos_sensibles,
+    }
+    if incluye_datos_sensibles:
+        payload["fecha_consentimiento_sensibles"] = now
 
     if _use_supabase():
-        _get_supabase().table("estudiantes").update({
-            "consentimiento_habeas_data": True,
-            "fecha_consentimiento":       now,
-        }).eq("id", estudiante_uuid).execute()
+        _get_supabase().table("estudiantes").update(payload).eq("id", estudiante_uuid).execute()
         return
 
     _ensure_sqlite()
@@ -434,11 +501,13 @@ def set_consentimiento(estudiante_uuid: str) -> None:
         conn.execute(
             """
             UPDATE estudiantes
-            SET    consentimiento_habeas_data = 1,
-                   fecha_consentimiento       = ?
+            SET    asentimiento_estudiante          = 1,
+                   fecha_asentimiento_estudiante    = ?,
+                   consentimiento_datos_sensibles   = ?,
+                   fecha_consentimiento_sensibles   = ?
             WHERE  id = ?
             """,
-            (now, estudiante_uuid),
+            (now, int(incluye_datos_sensibles), now if incluye_datos_sensibles else None, estudiante_uuid),
         )
 
 
@@ -580,11 +649,11 @@ def get_historial(
 
 # ── API pública: alertas ───────────────────────────────────────────────────────
 
-def crear_alerta(estudiante_uuid: str, sede_id: int, tipo: str) -> None:
+def crear_alerta(estudiante_uuid: str, sede_id: int, tipo: str) -> str:
     """
-    Reemplaza el print() actual de app.py.
+    Crea una alerta y retorna su UUID.
     tipo: 'orientador_requerida' | 'psicologica_critica'
-    El orientador consulta alertas pendientes desde su futuro dashboard (Fase 2).
+    El UUID es necesario para llamar a update_notificaciones_alerta() después del envío.
     """
     alert_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -597,7 +666,7 @@ def crear_alerta(estudiante_uuid: str, sede_id: int, tipo: str) -> None:
             "tipo":          tipo,
             "timestamp":     now,
         }).execute()
-        return
+        return alert_id
 
     _ensure_sqlite()
     with _conn() as conn:
@@ -608,6 +677,7 @@ def crear_alerta(estudiante_uuid: str, sede_id: int, tipo: str) -> None:
             """,
             (alert_id, estudiante_uuid, sede_id, tipo, now),
         )
+    return alert_id
 
 
 def get_sede_info(sede_id: int) -> dict:
@@ -652,3 +722,239 @@ def get_sede_info(sede_id: int) -> dict:
         if row is None:
             return {"institucion": "", "municipio": "", "orientador_nombre": ""}
         return dict(row)
+
+
+# ── API pública: emails de notificación ───────────────────────────────────────
+
+def get_orientador_email(sede_id: int) -> Optional[str]:
+    if _use_supabase():
+        r = (
+            _get_supabase()
+            .table("sedes")
+            .select("instituciones(orientador_email)")
+            .eq("id", sede_id)
+            .limit(1)
+            .execute()
+        )
+        if r.data:
+            return (r.data[0].get("instituciones") or {}).get("orientador_email")
+        return None
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            """
+            SELECT i.orientador_email
+            FROM   sedes s JOIN instituciones i ON s.institucion_id = i.id
+            WHERE  s.id = ?
+            """,
+            (sede_id,),
+        ).fetchone()
+        return row[0] if row else None
+
+
+def get_rector_email(sede_id: int) -> Optional[str]:
+    if _use_supabase():
+        r = (
+            _get_supabase()
+            .table("sedes")
+            .select("instituciones(rector_email)")
+            .eq("id", sede_id)
+            .limit(1)
+            .execute()
+        )
+        if r.data:
+            return (r.data[0].get("instituciones") or {}).get("rector_email")
+        return None
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            """
+            SELECT i.rector_email
+            FROM   sedes s JOIN instituciones i ON s.institucion_id = i.id
+            WHERE  s.id = ?
+            """,
+            (sede_id,),
+        ).fetchone()
+        return row[0] if row else None
+
+
+def update_notificaciones_alerta(
+    alerta_id: str,
+    orientador: bool,
+    rector: bool,
+    peas: bool,
+) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+
+    if _use_supabase():
+        _get_supabase().table("alertas").update({
+            "notificado_orientador":  orientador,
+            "notificado_rector":      rector,
+            "notificado_peas":        peas,
+            "timestamp_notificacion": now,
+        }).eq("id", alerta_id).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """
+            UPDATE alertas
+            SET    notificado_orientador  = ?,
+                   notificado_rector      = ?,
+                   notificado_peas        = ?,
+                   timestamp_notificacion = ?
+            WHERE  id = ?
+            """,
+            (int(orientador), int(rector), int(peas), now, alerta_id),
+        )
+
+
+# ── API pública: administradores ──────────────────────────────────────────────
+
+def crear_administrador(
+    nombre: str,
+    email: str,
+    rol: str,
+    institucion_id: Optional[int] = None,
+) -> str:
+    """
+    Crea un administrador y retorna su UUID.
+    rol: 'fcc' | 'orientador' | 'secretaria'
+    institucion_id: requerido para 'orientador', NULL para 'fcc' y 'secretaria'.
+    """
+    admin_id = str(uuid.uuid4())
+    email = email.lower().strip()
+
+    if _use_supabase():
+        _get_supabase().table("administradores").insert({
+            "id":             admin_id,
+            "nombre":         nombre,
+            "email":          email,
+            "rol":            rol,
+            "institucion_id": institucion_id,
+        }).execute()
+        return admin_id
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO administradores (id, nombre, email, rol, institucion_id)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (admin_id, nombre, email, rol, institucion_id),
+        )
+    return admin_id
+
+
+def get_administrador_por_email(email: str) -> Optional[dict]:
+    email = email.lower().strip()
+
+    if _use_supabase():
+        r = (
+            _get_supabase().table("administradores")
+            .select("*")
+            .eq("email", email)
+            .eq("activo", True)
+            .limit(1)
+            .execute()
+        )
+        return r.data[0] if r.data else None
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM administradores WHERE email = ? AND activo = 1",
+            (email,),
+        ).fetchone()
+        return dict(row) if row else None
+
+
+# ── API pública: registro por administrador ───────────────────────────────────
+
+def crear_estudiante_admin(
+    nombre: str,
+    apellido: str,
+    grado: int,
+    sede_id: int,
+    admin_uuid: str,
+    email: Optional[str] = None,
+    celular_hash: Optional[str] = None,
+) -> str:
+    """
+    Crea un estudiante desde el dashboard del administrador.
+    Requiere al menos email o celular_hash.
+    consentimiento_acudiente_verificado se marca por separado con
+    set_consentimiento_acudiente() una vez confirmada la firma física.
+    Retorna el estudiante_id generado (ej. 'ALC-9-2026-0042').
+    """
+    if not email and not celular_hash:
+        raise ValueError(
+            "Ingresá al menos un medio de contacto: email o número de celular."
+        )
+
+    email_norm = email.lower().strip() if email else None
+    new_uuid = str(uuid.uuid4())
+
+    if _use_supabase():
+        est_id = _get_supabase().rpc(
+            "generar_estudiante_id", {"p_sede_id": sede_id, "p_grado": grado}
+        ).execute().data
+        _get_supabase().table("estudiantes").insert({
+            "id":                      new_uuid,
+            "estudiante_id":           est_id,
+            "nombre":                  nombre,
+            "apellido":                apellido,
+            "grado":                   grado,
+            "email":                   email_norm,
+            "celular_hash":            celular_hash,
+            "sede_id":                 sede_id,
+            "administrador_registro_id": admin_uuid,
+        }).execute()
+        return est_id
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        est_id = _generar_id_sqlite(conn, sede_id, grado)
+        conn.execute(
+            """
+            INSERT INTO estudiantes
+                (id, estudiante_id, nombre, apellido, grado,
+                 email, celular_hash, sede_id, administrador_registro_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (new_uuid, est_id, nombre, apellido, grado,
+             email_norm, celular_hash, sede_id, admin_uuid),
+        )
+    return est_id
+
+
+def set_consentimiento_acudiente(estudiante_uuid: str) -> None:
+    """
+    Marca que la autorización del acudiente fue verificada físicamente.
+    Solo el administrador puede llamar este método desde el dashboard.
+    Sin esta marca, el estudiante no puede acceder al chat (auth.py lo bloquea).
+    """
+    now = datetime.now(timezone.utc).isoformat()
+
+    if _use_supabase():
+        _get_supabase().table("estudiantes").update({
+            "consentimiento_acudiente_verificado": True,
+            "fecha_verificacion_acudiente":        now,
+        }).eq("id", estudiante_uuid).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """
+            UPDATE estudiantes
+            SET    consentimiento_acudiente_verificado = 1,
+                   fecha_verificacion_acudiente        = ?
+            WHERE  id = ?
+            """,
+            (now, estudiante_uuid),
+        )

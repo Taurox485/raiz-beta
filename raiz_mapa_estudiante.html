@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Mapa rAÍz — Valentina Torres</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  :root {
+    --verde-oscuro: #2D5016;
+    --verde-medio: #4A7C2A;
+    --verde-claro: #7AB648;
+    --verde-palido: #D4EDBA;
+    --verde-fondo: #EEF7E4;
+    --tierra: #8B5E3C;
+    --tierra-claro: #C49A6C;
+    --tierra-palido: #F0E4D4;
+    --ocre: #C8892A;
+    --ocre-claro: #F2D589;
+    --ocre-fondo: #FDF6E3;
+    --crema: #FAF7F2;
+    --blanco: #FFFFFF;
+    --gris-texto: #2A2A2A;
+    --gris-medio: #5A5A5A;
+    --gris-suave: #9A9A9A;
+    --gris-linea: #E0DDD8;
+    --rojo-alerta: #C0392B;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --page-width: 210mm;
+    --page-padding: 14mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    background: #E8E4DC;
+    color: var(--gris-texto);
+    font-size: 10pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: var(--page-width);
+    min-height: 297mm;
+    margin: 8mm auto;
+    background: var(--blanco);
+    padding: var(--page-padding);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  /* MARCA DE AGUA */
+  .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-family: var(--font-body);
+    font-size: 36pt;
+    font-weight: 600;
+    color: rgba(180, 175, 165, 0.10);
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  /* HEADER */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1.5px solid var(--verde-medio);
+    padding-bottom: 7px;
+    margin-bottom: 12px;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+  }
+
+  .logo-r {
+    font-family: var(--font-display);
+    font-size: 22pt;
+    color: var(--verde-oscuro);
+    line-height: 1;
+  }
+
+  .logo-raiz {
+    font-family: var(--font-display);
+    font-size: 15pt;
+    color: var(--verde-medio);
+    font-style: italic;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .logo-sub {
+    font-size: 7pt;
+    color: var(--gris-suave);
+    margin-left: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    align-self: flex-end;
+    margin-bottom: 2px;
+  }
+
+  .header-meta {
+    text-align: right;
+    font-size: 7.5pt;
+    color: var(--gris-suave);
+    line-height: 1.5;
+  }
+
+  .header-meta strong {
+    color: var(--gris-medio);
+    font-weight: 500;
+  }
+
+  /* PAGE NUMBER */
+  .page-number {
+    position: absolute;
+    bottom: 8mm;
+    right: var(--page-padding);
+    font-size: 7.5pt;
+    color: var(--gris-suave);
+    letter-spacing: 0.04em;
+  }
+
+  /* ENCABEZADO ESTUDIANTE */
+  .student-header {
+    background: var(--verde-fondo);
+    border-left: 4px solid var(--verde-claro);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 20px;
+  }
+
+  .student-header h1 {
+    font-family: var(--font-display);
+    font-size: 15pt;
+    color: var(--verde-oscuro);
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .student-field {
+    font-size: 8pt;
+    color: var(--gris-medio);
+  }
+
+  .student-field span {
+    font-weight: 500;
+    color: var(--gris-texto);
+  }
+
+  /* SECCIONES */
+  .section {
+    margin-bottom: 13px;
+  }
+
+  .section-label {
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--verde-medio);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--verde-palido);
+  }
+
+  /* CUADRANTE */
+  .cuadrante-card {
+    background: var(--crema);
+    border: 1px solid var(--gris-linea);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .cuadrante-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--verde-medio);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: 1px;
+  }
+
+  .cuadrante-icon {
+    font-size: 18pt;
+    line-height: 1;
+  }
+
+  .cuadrante-name {
+    font-family: var(--font-display);
+    font-size: 11pt;
+    color: var(--verde-oscuro);
+    margin-bottom: 3px;
+  }
+
+  .cuadrante-desc {
+    font-size: 9pt;
+    color: var(--gris-medio);
+    line-height: 1.5;
+  }
+
+  .cuadrante-tag {
+    display: inline-block;
+    background: var(--verde-palido);
+    color: var(--verde-oscuro);
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+  }
+
+  /* FORTALEZAS */
+  .fortalezas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .fortaleza-card {
+    border: 1px solid var(--gris-linea);
+    border-radius: 7px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .fortaleza-accent {
+    width: 5px;
+    flex-shrink: 0;
+    background: var(--verde-claro);
+  }
+
+  .fortaleza-accent.tierra { background: var(--tierra-claro); }
+  .fortaleza-accent.ocre { background: var(--ocre); }
+
+  .fortaleza-body {
+    padding: 8px 11px;
+    flex: 1;
+  }
+
+  .fortaleza-name {
+    font-weight: 600;
+    font-size: 9.5pt;
+    color: var(--verde-oscuro);
+    margin-bottom: 2px;
+  }
+
+  .fortaleza-name.tierra { color: var(--tierra); }
+  .fortaleza-name.ocre { color: #7A5A10; }
+
+  .fortaleza-evidencia {
+    font-size: 8.5pt;
+    color: var(--gris-medio);
+    line-height: 1.45;
+  }
+
+  .evidencia-label {
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gris-suave);
+    display: block;
+    margin-top: 3px;
+    margin-bottom: 1px;
+  }
+
+  /* VALOR */
+  .valor-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--tierra-palido);
+    border-radius: 7px;
+    padding: 10px 14px;
+  }
+
+  .valor-icon {
+    font-size: 20pt;
+    flex-shrink: 0;
+  }
+
+  .valor-name {
+    font-family: var(--font-display);
+    font-size: 13pt;
+    color: var(--tierra);
+    margin-bottom: 2px;
+  }
+
+  .valor-desc {
+    font-size: 8.5pt;
+    color: var(--gris-medio);
+    line-height: 1.45;
+  }
+
+  /* PROPÓSITO */
+  .proposito-card {
+    background: var(--ocre-fondo);
+    border-left: 3px solid var(--ocre);
+    border-radius: 0 7px 7px 0;
+    padding: 10px 14px;
+    font-size: 10pt;
+    color: var(--gris-texto);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .proposito-card::before {
+    content: '"';
+    font-family: var(--font-display);
+    font-size: 24pt;
+    color: var(--ocre-claro);
+    line-height: 0.6;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* REFLEXIONES */
+  .reflexiones-strip {
+    background: var(--verde-palido);
+    border-radius: 7px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .reflexion-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 9pt;
+    color: var(--verde-oscuro);
+    line-height: 1.45;
+  }
+
+  .reflexion-bullet {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--verde-medio);
+    color: white;
+    font-size: 8pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.5px;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: #F5F4F1;
+    border-radius: 5px;
+    padding: 9px 12px;
+    font-size: 6.5pt;
+    color: var(--gris-suave);
+    line-height: 1.55;
+    border: 0.5px solid var(--gris-linea);
+  }
+
+  .disclaimer strong {
+    font-weight: 600;
+    color: var(--gris-medio);
+  }
+
+  /* PIE DE PÁGINA */
+  .page-footer {
+    position: absolute;
+    bottom: 8mm;
+    left: var(--page-padding);
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.75px solid var(--gris-linea);
+    padding-top: 5px;
+    font-size: 6.5pt;
+    color: var(--gris-suave);
+  }
+
+  .footer-brand {
+    font-weight: 500;
+    color: var(--verde-oscuro);
+  }
+
+  /* PRINT */
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; }
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PÁGINA 1 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+
+  <div class="content">
+
+    <!-- HEADER REPETIDO -->
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>Mi Mapa rAÍz</strong><br>
+        Documento del estudiante · Grado 9°
+      </div>
+    </div>
+
+    <!-- ENCABEZADO ESTUDIANTE -->
+    <div class="student-header">
+      <h1>Valentina Torres</h1>
+      <div class="student-field">Institución: <span>I.E. Jorge Isaacs</span></div>
+      <div class="student-field">Municipio: <span>El Cerrito, Valle del Cauca</span></div>
+      <div class="student-field">Grado: <span>9°</span></div>
+      <div class="student-field">Fecha: <span>Mayo 2026</span></div>
+    </div>
+
+    <!-- SECCIÓN 1: PERFIL DE INTERESES -->
+    <div class="section">
+      <div class="section-label">Tu perfil de intereses</div>
+      <div class="cuadrante-card">
+        <div class="cuadrante-badge">
+          <span class="cuadrante-icon">🤝</span>
+        </div>
+        <div>
+          <span class="cuadrante-tag">Cuadrante dominante</span>
+          <div class="cuadrante-name">Personas</div>
+          <div class="cuadrante-desc">
+            Las personas con perfil de <strong>Personas</strong> disfrutan trabajar con otros, enseñar, escuchar y liderar. 
+            Se sienten bien cuando pueden ayudar a alguien a resolver algo. Te energiza estar en contacto con gente, 
+            entender cómo piensan y acompañar a quienes lo necesitan. Lo que más te mueve es hacer la diferencia 
+            en la vida de alguien más.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: FORTALEZAS -->
+    <div class="section">
+      <div class="section-label">Tus fortalezas</div>
+      <div class="fortalezas-grid">
+
+        <div class="fortaleza-card">
+          <div class="fortaleza-accent"></div>
+          <div class="fortaleza-body">
+            <div class="fortaleza-name">Escucha activa</div>
+            <div class="fortaleza-evidencia">
+              Tenés una capacidad natural para escuchar sin interrumpir y hacer sentir a la otra persona 
+              que realmente la entendés.
+            </div>
+            <span class="evidencia-label">Lo que contaste</span>
+            <div class="fortaleza-evidencia">
+              "Cuando un compañero tuvo problemas con su mamá, me sentó a escucharlo en el descanso. 
+              Me dijo que era la primera vez que alguien lo escuchaba de verdad."
+            </div>
+          </div>
+        </div>
+
+        <div class="fortaleza-card">
+          <div class="fortaleza-accent tierra"></div>
+          <div class="fortaleza-body">
+            <div class="fortaleza-name tierra">Organización y constancia</div>
+            <div class="fortaleza-evidencia">
+              Cuando te comprometés con algo, lo llevás hasta el final. No abandonás en la mitad 
+              aunque sea difícil.
+            </div>
+            <span class="evidencia-label">Lo que contaste</span>
+            <div class="fortaleza-evidencia">
+              "Ayudé a mi mamá a organizar los gastos de la casa y empecé a usar un cuaderno 
+              para anotar las deudas. Llevamos tres meses haciéndolo."
+            </div>
+          </div>
+        </div>
+
+        <div class="fortaleza-card">
+          <div class="fortaleza-accent ocre"></div>
+          <div class="fortaleza-body">
+            <div class="fortaleza-name ocre">Comunicación clara</div>
+            <div class="fortaleza-evidencia">
+              Sabés explicar las cosas de manera sencilla, sin enredar. Eso hace que la gente 
+              te entienda y confíe en lo que decís.
+            </div>
+            <span class="evidencia-label">Lo que contaste</span>
+            <div class="fortaleza-evidencia">
+              "Me pidieron que presentara el proyecto del río ante el rector y me felicitaron 
+              porque expliqué bien lo que el grupo había hecho."
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: LO QUE TE MUEVE -->
+    <div class="section">
+      <div class="section-label">Lo que te mueve</div>
+      <div class="valor-card">
+        <div class="valor-icon">⚖️</div>
+        <div>
+          <div class="valor-name">Responsabilidad</div>
+          <div class="valor-desc">
+            Para vos, cumplir con lo que prometiste es algo muy serio. No te sentís bien si dejaste 
+            a alguien abajo, así sea difícil. Ese valor es lo que hace que la gente confíe en vos.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 4: TU PROPÓSITO -->
+    <div class="section">
+      <div class="section-label">Tu propósito</div>
+      <div class="proposito-card">
+        Querés usar lo que sabés para que tu familia viva mejor, y que los jóvenes de El Cerrito 
+        tengan más oportunidades de las que tuviste vos.
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz</span>
+    <span>rAÍz es un proyecto de la Fundación Corazón de Caña y Corpoeducación — Valle del Cauca, Colombia — 2026</span>
+  </div>
+
+  <div class="page-number">1 / 2</div>
+</div>
+
+
+<!-- ===================== PÁGINA 2 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+
+  <div class="content">
+
+    <!-- HEADER REPETIDO -->
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>Mi Mapa rAÍz</strong> · Valentina Torres<br>
+        I.E. Jorge Isaacs · El Cerrito · Mayo 2026
+      </div>
+    </div>
+
+    <!-- SECCIÓN 5: REFLEXIONES -->
+    <div class="section">
+      <div class="section-label">Reflexiones hacia el futuro</div>
+      <div class="reflexiones-strip">
+
+        <div class="reflexion-item">
+          <div class="reflexion-bullet">1</div>
+          <div>
+            <strong>Sabés que escuchar a otros se te da bien</strong> — pensá en quién de tu entorno 
+            podría necesitar eso hoy. No tenés que esperar a ser profesional para hacerlo.
+          </div>
+        </div>
+
+        <div class="reflexion-item">
+          <div class="reflexion-bullet">2</div>
+          <div>
+            Tu constancia es una ventaja real. Muchas personas empiezan cosas y no las terminan — vos sí. 
+            Eso vale, y <strong>vale mucho más de lo que creés</strong> a la hora de estudiar o trabajar.
+          </div>
+        </div>
+
+        <div class="reflexion-item">
+          <div class="reflexion-bullet">3</div>
+          <div>
+            Hay caminos que combinan tu amor por ayudar con tu capacidad de organizarte: 
+            trabajo social, psicología, educación, salud comunitaria. 
+            <strong>Explorá, preguntá, visitá — el mundo es más grande de lo que se ve desde el colegio.</strong>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ESPACIO VISUAL -->
+    <div style="margin: 14px 0; padding: 12px 14px; background: var(--crema, #FAF7F2); border-radius: 7px; border: 1px solid #E0DDD8;">
+      <div style="font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #4A7C2A; margin-bottom: 8px;">Una última pregunta para vos</div>
+      <div style="font-family: 'DM Serif Display', Georgia, serif; font-size: 12pt; color: #2A2A2A; line-height: 1.5; font-style: italic;">
+        Si en diez años alguien te pregunta qué hiciste para mejorar tu comunidad,<br>¿qué querés poder responderle?
+      </div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="font-size: 7pt; color: #9A9A9A; margin-top: 8px;">Tu respuesta · espacio para escribir</div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="section">
+      <div class="disclaimer">
+        <strong>Sobre este documento.</strong> Este perfil fue generado por rAÍz, una herramienta de inteligencia artificial en fase piloto, a partir de las respuestas que compartiste en tus conversaciones. La precisión y utilidad de este perfil dependen directamente de la calidad y honestidad de lo que expresaste durante el proceso. Este documento no constituye un diagnóstico psicológico, una evaluación clínica ni una predicción sobre tu futuro. Es un punto de partida para el autoconocimiento — una foto de este momento, no una verdad definitiva sobre quién sos o qué podés lograr.
+        <br><br>
+        rAÍz es una herramienta en desarrollo continuo. Si algo de lo que leés acá no te representa, conversalo con tu docente orientador/a — su criterio profesional siempre prevalece sobre este documento. rAÍz no reemplaza el acompañamiento de un profesional de orientación, psicología o trabajo social.
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz</span>
+    <span>rAÍz es un proyecto de la Fundación Corazón de Caña y Corpoeducación — Valle del Cauca, Colombia — 2026</span>
+  </div>
+
+  <div class="page-number">2 / 2</div>
+</div>
+
+</body>
+</html>
