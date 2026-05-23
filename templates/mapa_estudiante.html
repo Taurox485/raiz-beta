@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Mapa rAÍz — {{ nombre_completo }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  :root {
+    --verde-oscuro: #2D5016;
+    --verde-medio: #4A7C2A;
+    --verde-claro: #7AB648;
+    --verde-palido: #D4EDBA;
+    --verde-fondo: #EEF7E4;
+    --tierra: #8B5E3C;
+    --tierra-claro: #C49A6C;
+    --tierra-palido: #F0E4D4;
+    --ocre: #C8892A;
+    --ocre-claro: #F2D589;
+    --ocre-fondo: #FDF6E3;
+    --crema: #FAF7F2;
+    --blanco: #FFFFFF;
+    --gris-texto: #2A2A2A;
+    --gris-medio: #5A5A5A;
+    --gris-suave: #9A9A9A;
+    --gris-linea: #E0DDD8;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --page-width: 210mm;
+    --page-padding: 14mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    background: #E8E4DC;
+    color: var(--gris-texto);
+    font-size: 10pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: var(--page-width);
+    min-height: 297mm;
+    margin: 8mm auto;
+    background: var(--blanco);
+    padding: var(--page-padding);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-family: var(--font-body);
+    font-size: 36pt;
+    font-weight: 600;
+    color: rgba(180, 175, 165, 0.10);
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1.5px solid var(--verde-medio);
+    padding-bottom: 7px;
+    margin-bottom: 12px;
+  }
+
+  .logo-mark { display: flex; align-items: baseline; gap: 0; }
+  .logo-r { font-family: var(--font-display); font-size: 22pt; color: var(--verde-oscuro); line-height: 1; }
+  .logo-raiz { font-family: var(--font-display); font-size: 15pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
+  .logo-sub { font-size: 7pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 2px; }
+
+  .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; }
+  .header-meta strong { color: var(--gris-medio); font-weight: 500; }
+
+  .page-number { position: absolute; bottom: 8mm; right: var(--page-padding); font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
+
+  .student-header {
+    background: var(--verde-fondo);
+    border-left: 4px solid var(--verde-claro);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 20px;
+  }
+
+  .student-header h1 { font-family: var(--font-display); font-size: 15pt; color: var(--verde-oscuro); grid-column: 1 / -1; margin-bottom: 4px; line-height: 1.2; }
+  .student-field { font-size: 8pt; color: var(--gris-medio); }
+  .student-field span { font-weight: 500; color: var(--gris-texto); }
+
+  .section { margin-bottom: 13px; }
+
+  .section-label {
+    font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--verde-medio); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--verde-palido); }
+
+  .cuadrante-card {
+    background: var(--crema); border: 1px solid var(--gris-linea); border-radius: 8px;
+    padding: 12px 14px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .cuadrante-badge {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--verde-medio);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 1px;
+  }
+  .cuadrante-icon { font-size: 18pt; line-height: 1; }
+  .cuadrante-name { font-family: var(--font-display); font-size: 11pt; color: var(--verde-oscuro); margin-bottom: 3px; }
+  .cuadrante-desc { font-size: 9pt; color: var(--gris-medio); line-height: 1.5; }
+  .cuadrante-tag { display: inline-block; background: var(--verde-palido); color: var(--verde-oscuro); font-size: 7pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-bottom: 5px; }
+
+  .fortalezas-grid { display: flex; flex-direction: column; gap: 7px; }
+
+  .fortaleza-card { border: 1px solid var(--gris-linea); border-radius: 7px; overflow: hidden; display: flex; }
+  .fortaleza-accent { width: 5px; flex-shrink: 0; background: var(--verde-claro); }
+  .fortaleza-accent.tierra { background: var(--tierra-claro); }
+  .fortaleza-accent.ocre { background: var(--ocre); }
+  .fortaleza-body { padding: 8px 11px; flex: 1; }
+  .fortaleza-name { font-weight: 600; font-size: 9.5pt; color: var(--verde-oscuro); margin-bottom: 2px; }
+  .fortaleza-name.tierra { color: var(--tierra); }
+  .fortaleza-name.ocre { color: #7A5A10; }
+  .fortaleza-evidencia { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.45; }
+  .evidencia-label { font-size: 7pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gris-suave); display: block; margin-top: 3px; margin-bottom: 1px; }
+
+  .valor-card { display: flex; align-items: center; gap: 12px; background: var(--tierra-palido); border-radius: 7px; padding: 10px 14px; }
+  .valor-icon { font-size: 20pt; flex-shrink: 0; }
+  .valor-name { font-family: var(--font-display); font-size: 13pt; color: var(--tierra); margin-bottom: 2px; }
+  .valor-desc { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.45; }
+
+  .proposito-card {
+    background: var(--ocre-fondo); border-left: 3px solid var(--ocre); border-radius: 0 7px 7px 0;
+    padding: 10px 14px; font-size: 10pt; color: var(--gris-texto); line-height: 1.5; font-style: italic;
+  }
+  .proposito-card::before { content: '\201C'; font-family: var(--font-display); font-size: 24pt; color: var(--ocre-claro); line-height: 0.6; display: block; margin-bottom: 4px; }
+
+  .reflexiones-strip { background: var(--verde-palido); border-radius: 7px; padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; }
+  .reflexion-item { display: flex; gap: 8px; align-items: flex-start; font-size: 9pt; color: var(--verde-oscuro); line-height: 1.45; }
+  .reflexion-bullet { width: 18px; height: 18px; border-radius: 50%; background: var(--verde-medio); color: white; font-size: 8pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.5px; }
+
+  .disclaimer { background: #F5F4F1; border-radius: 5px; padding: 9px 12px; font-size: 6.5pt; color: var(--gris-suave); line-height: 1.55; border: 0.5px solid var(--gris-linea); }
+  .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
+
+  .page-footer {
+    position: absolute; bottom: 8mm; left: var(--page-padding); right: 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; font-size: 6.5pt; color: var(--gris-suave);
+  }
+  .footer-brand { font-weight: 500; color: var(--verde-oscuro); }
+
+  @media print { body { background: white; } .page { box-shadow: none; margin: 0; } }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PÁGINA 1 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="content">
+
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>Mi Mapa rAÍz</strong><br>
+        Documento del estudiante · Grado 9°
+      </div>
+    </div>
+
+    <div class="student-header">
+      <h1>{{ nombre_completo }}</h1>
+      <div class="student-field">Institución: <span>{{ institucion or 'N/D' }}</span></div>
+      <div class="student-field">Municipio: <span>{{ municipio or 'N/D' }}</span></div>
+      <div class="student-field">Grado: <span>9°</span></div>
+      <div class="student-field">Fecha: <span>{{ fecha }}</span></div>
+    </div>
+
+    <!-- SECCIÓN 1: PERFIL DE INTERESES -->
+    <div class="section">
+      <div class="section-label">Tu perfil de intereses</div>
+      <div class="cuadrante-card">
+        <div class="cuadrante-badge">
+          <span class="cuadrante-icon">{{ cuadrante_icono }}</span>
+        </div>
+        <div>
+          <span class="cuadrante-tag">Cuadrante dominante</span>
+          <div class="cuadrante-name">{{ cuadrante_nombre }}</div>
+          <div class="cuadrante-desc">{{ cuadrante_descripcion }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: FORTALEZAS -->
+    {% set accent_classes = ['', 'tierra', 'ocre'] %}
+    <div class="section">
+      <div class="section-label">Tus fortalezas</div>
+      <div class="fortalezas-grid">
+        {% for f in fortalezas %}
+        {% set cls = accent_classes[loop.index0] if loop.index0 < 3 else '' %}
+        <div class="fortaleza-card">
+          <div class="fortaleza-accent {{ cls }}"></div>
+          <div class="fortaleza-body">
+            <div class="fortaleza-name {{ cls }}">{{ f.nombre }}</div>
+            <span class="evidencia-label">Lo que contaste</span>
+            <div class="fortaleza-evidencia">{{ f.evidencia }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: LO QUE TE MUEVE -->
+    <div class="section">
+      <div class="section-label">Lo que te mueve</div>
+      <div class="valor-card">
+        <div class="valor-icon">{{ valor_icono }}</div>
+        <div>
+          <div class="valor-name">{{ valor_central }}</div>
+          <div class="valor-desc">{{ valor_descripcion }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 4: TU PROPÓSITO -->
+    {% if proposito %}
+    <div class="section">
+      <div class="section-label">Tu propósito</div>
+      <div class="proposito-card">{{ proposito }}</div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz</span>
+    <span>{{ pie }}</span>
+  </div>
+  <div class="page-number">1 / 2</div>
+</div>
+
+
+<!-- ===================== PÁGINA 2 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="content">
+
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>Mi Mapa rAÍz</strong> · {{ nombre_completo }}<br>
+        {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }} · {{ fecha }}
+      </div>
+    </div>
+
+    <!-- SECCIÓN 5: REFLEXIONES -->
+    <div class="section">
+      <div class="section-label">Reflexiones hacia el futuro</div>
+      <div class="reflexiones-strip">
+        {% for r in reflexiones %}
+        <div class="reflexion-item">
+          <div class="reflexion-bullet">{{ loop.index }}</div>
+          <div>{{ r }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ESPACIO PARA ESCRIBIR -->
+    <div style="margin: 14px 0; padding: 12px 14px; background: var(--crema); border-radius: 7px; border: 1px solid #E0DDD8;">
+      <div style="font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #4A7C2A; margin-bottom: 8px;">Una última pregunta para vos</div>
+      <div style="font-family: 'DM Serif Display', Georgia, serif; font-size: 12pt; color: #2A2A2A; line-height: 1.5; font-style: italic;">
+        Si en diez años alguien te pregunta qué hiciste para mejorar tu comunidad,<br>¿qué querés poder responderle?
+      </div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="font-size: 7pt; color: #9A9A9A; margin-top: 8px;">Tu respuesta · espacio para escribir</div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="section">
+      <div class="disclaimer">{{ disclaimer | safe }}</div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz</span>
+    <span>{{ pie }}</span>
+  </div>
+  <div class="page-number">2 / 2</div>
+</div>
+
+</body>
+</html>

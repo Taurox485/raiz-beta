@@ -608,3 +608,47 @@ def crear_alerta(estudiante_uuid: str, sede_id: int, tipo: str) -> None:
             """,
             (alert_id, estudiante_uuid, sede_id, tipo, now),
         )
+
+
+def get_sede_info(sede_id: int) -> dict:
+    """
+    Retorna {institucion, municipio, orientador_nombre} para una sede.
+    Usado por pdf_generator para poblar los encabezados de los PDFs.
+    """
+    if _use_supabase():
+        r = (
+            _get_supabase()
+            .table("sedes")
+            .select("nombre, instituciones(nombre, orientador_nombre, municipios(nombre))")
+            .eq("id", sede_id)
+            .limit(1)
+            .execute()
+        )
+        if not r.data:
+            return {"institucion": "", "municipio": "", "orientador_nombre": ""}
+        row = r.data[0]
+        inst = row.get("instituciones") or {}
+        mun = inst.get("municipios") or {}
+        return {
+            "institucion":      inst.get("nombre", ""),
+            "municipio":        mun.get("nombre", ""),
+            "orientador_nombre": inst.get("orientador_nombre", ""),
+        }
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            """
+            SELECT i.nombre  AS institucion,
+                   m.nombre  AS municipio,
+                   i.orientador_nombre
+            FROM   sedes         s
+            JOIN   instituciones i ON s.institucion_id = i.id
+            JOIN   municipios    m ON i.municipio_id   = m.id
+            WHERE  s.id = ?
+            """,
+            (sede_id,),
+        ).fetchone()
+        if row is None:
+            return {"institucion": "", "municipio": "", "orientador_nombre": ""}
+        return dict(row)

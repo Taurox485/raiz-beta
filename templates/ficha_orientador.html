@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de Acompañamiento — {{ nombre_completo }}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  :root {
+    --verde-oscuro: #2D5016;
+    --verde-medio: #4A7C2A;
+    --verde-claro: #7AB648;
+    --verde-palido: #D4EDBA;
+    --verde-fondo: #EEF7E4;
+    --tierra: #8B5E3C;
+    --tierra-claro: #C49A6C;
+    --tierra-palido: #F0E4D4;
+    --ocre: #C8892A;
+    --ocre-claro: #F2D589;
+    --ocre-fondo: #FDF6E3;
+    --crema: #FAF7F2;
+    --blanco: #FFFFFF;
+    --gris-texto: #2A2A2A;
+    --gris-medio: #5A5A5A;
+    --gris-suave: #9A9A9A;
+    --gris-linea: #E0DDD8;
+    --amarillo-alerta-bg: #FFFBEB;
+    --amarillo-alerta-borde: #F59E0B;
+    --amarillo-alerta-texto: #78350F;
+    --rojo-alerta-bg: #FEF2F2;
+    --rojo-alerta-borde: #DC2626;
+    --rojo-alerta-texto: #7F1D1D;
+    --verde-ok-bg: #F0FDF4;
+    --verde-ok-borde: #16A34A;
+    --verde-ok-texto: #14532D;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --page-width: 210mm;
+    --page-padding: 13mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    background: #E8E4DC;
+    color: var(--gris-texto);
+    font-size: 9.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: var(--page-width);
+    min-height: 297mm;
+    margin: 8mm auto;
+    background: var(--blanco);
+    padding: var(--page-padding);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  .watermark {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-family: var(--font-body); font-size: 36pt; font-weight: 600;
+    color: rgba(180, 175, 165, 0.09); white-space: nowrap; letter-spacing: 0.08em;
+    pointer-events: none; z-index: 0; user-select: none;
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  .page-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--tierra-claro); padding-bottom: 7px; margin-bottom: 11px;
+  }
+
+  .logo-mark { display: flex; align-items: baseline; gap: 0; }
+  .logo-r { font-family: var(--font-display); font-size: 22pt; color: var(--verde-oscuro); line-height: 1; }
+  .logo-raiz { font-family: var(--font-display); font-size: 15pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
+  .logo-sub { font-size: 7pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 2px; }
+
+  .doc-tipo-badge { background: var(--tierra-palido); color: var(--tierra); font-size: 7pt; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; border: 0.75px solid var(--tierra-claro); }
+
+  .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+
+  .student-banner {
+    background: var(--tierra-palido); border-left: 4px solid var(--tierra-claro);
+    border-radius: 0 6px 6px 0; padding: 9px 13px; margin-bottom: 11px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px;
+  }
+  .student-banner h1 { font-family: var(--font-display); font-size: 14pt; color: var(--tierra); grid-column: 1 / -1; margin-bottom: 3px; }
+  .student-field { font-size: 7.5pt; color: var(--gris-medio); }
+  .student-field span { font-weight: 500; color: var(--gris-texto); }
+
+  .section { margin-bottom: 11px; }
+
+  .section-label {
+    font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--tierra); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--tierra-palido); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .info-box { background: var(--crema); border: 0.75px solid var(--gris-linea); border-radius: 7px; padding: 9px 12px; }
+  .info-box-title { font-size: 8.5pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 4px; }
+  .info-box-body { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.5; }
+
+  .nota-pedagogica { background: var(--verde-fondo); border-left: 2.5px solid var(--verde-claro); border-radius: 0 5px 5px 0; padding: 6px 9px; font-size: 7.5pt; color: var(--verde-oscuro); line-height: 1.45; margin-top: 6px; }
+  .nota-pedagogica::before { content: 'Nota para el orientador: '; font-weight: 600; }
+
+  .que-es { background: #F8F6F2; border-radius: 7px; padding: 9px 13px; font-size: 8.5pt; color: var(--gris-medio); line-height: 1.55; border: 0.75px solid var(--gris-linea); }
+
+  .cuadrante-docente { display: flex; gap: 12px; background: var(--crema); border: 0.75px solid var(--gris-linea); border-radius: 7px; padding: 10px 12px; }
+  .cuadrante-circle { width: 48px; height: 48px; border-radius: 50%; background: var(--verde-medio); color: white; display: flex; align-items: center; justify-content: center; font-size: 16pt; flex-shrink: 0; }
+  .cuadrante-docente-name { font-weight: 600; font-size: 10pt; color: var(--verde-oscuro); margin-bottom: 3px; }
+  .cuadrante-docente-implicacion { font-size: 8pt; color: var(--gris-medio); line-height: 1.5; }
+  .implicacion-box { margin-top: 5px; background: var(--verde-fondo); border-radius: 5px; padding: 6px 9px; font-size: 7.5pt; color: var(--verde-oscuro); line-height: 1.45; }
+  .implicacion-box strong { font-weight: 600; }
+
+  .fortaleza-doc-item { border: 0.75px solid var(--gris-linea); border-radius: 6px; padding: 8px 11px; margin-bottom: 6px; display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+  .fort-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--verde-claro); margin-top: 4px; flex-shrink: 0; }
+  .fort-dot.tierra { background: var(--tierra-claro); }
+  .fort-dot.ocre { background: var(--ocre); }
+  .fort-doc-name { font-weight: 600; font-size: 9pt; color: var(--gris-texto); margin-bottom: 2px; }
+  .fort-doc-evidencia { font-size: 8pt; color: var(--gris-suave); font-style: italic; margin-bottom: 3px; line-height: 1.4; }
+  .fort-doc-sugerencia { font-size: 8pt; color: var(--verde-oscuro); line-height: 1.4; background: var(--verde-fondo); border-radius: 4px; padding: 4px 7px; }
+  .fort-doc-sugerencia::before { content: '→ '; font-weight: 600; }
+
+  .contexto-item { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 0.5px solid var(--gris-linea); font-size: 8.5pt; }
+  .contexto-item:last-child { border-bottom: none; }
+  .contexto-nivel { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .nivel-moderado { background: #F59E0B; }
+  .nivel-bajo { background: #DC2626; }
+  .nivel-alto { background: #16A34A; }
+  .contexto-factor { font-weight: 500; color: var(--gris-texto); min-width: 90px; }
+  .contexto-desc { color: var(--gris-medio); line-height: 1.45; }
+
+  .alerta-block { border-radius: 8px; padding: 11px 14px; margin-bottom: 0; }
+  .alerta-amarilla { background: var(--amarillo-alerta-bg); border: 1.5px solid var(--amarillo-alerta-borde); }
+  .alerta-roja { background: var(--rojo-alerta-bg); border: 2px solid var(--rojo-alerta-borde); }
+  .alerta-verde { background: var(--verde-ok-bg); border: 1px solid var(--verde-ok-borde); }
+
+  .alerta-header { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .alerta-icon { font-size: 14pt; }
+  .alerta-nivel-label { font-size: 7pt; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; }
+  .alerta-amarilla .alerta-nivel-label { color: var(--amarillo-alerta-texto); }
+  .alerta-roja .alerta-nivel-label { color: var(--rojo-alerta-texto); }
+  .alerta-verde .alerta-nivel-label { color: var(--verde-ok-texto); }
+
+  .alerta-body-text { font-size: 8.5pt; line-height: 1.5; }
+  .alerta-amarilla .alerta-body-text { color: var(--amarillo-alerta-texto); }
+  .alerta-roja .alerta-body-text { color: var(--rojo-alerta-texto); }
+  .alerta-verde .alerta-body-text { color: var(--verde-ok-texto); }
+
+  .alerta-factores { margin-top: 6px; font-size: 8pt; }
+  .alerta-factor-item { display: flex; align-items: flex-start; gap: 5px; margin-bottom: 3px; }
+  .alerta-factor-bullet { font-weight: 700; flex-shrink: 0; }
+
+  .alerta-que-hacer { margin-top: 8px; padding-top: 7px; border-top: 0.75px solid rgba(245,158,11,0.3); font-size: 8pt; }
+  .alerta-roja .alerta-que-hacer { border-top-color: rgba(220,38,38,0.3); }
+  .alerta-que-hacer-title { font-weight: 700; font-size: 7pt; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+
+  .lineas-referencia { display: inline-flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .linea-badge { background: rgba(220,38,38,0.15); color: var(--rojo-alerta-texto); border: 0.75px solid rgba(220,38,38,0.4); border-radius: 20px; padding: 2px 9px; font-size: 7.5pt; font-weight: 600; }
+
+  .accion-item { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-bottom: 0.5px solid var(--gris-linea); font-size: 8.5pt; }
+  .accion-item:last-child { border-bottom: none; }
+  .accion-num { width: 22px; height: 22px; border-radius: 50%; background: var(--tierra); color: white; font-size: 8.5pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .accion-text { color: var(--gris-texto); line-height: 1.5; }
+  .accion-text strong { color: var(--verde-oscuro); font-weight: 600; }
+
+  .form-field { margin-bottom: 10px; }
+  .form-label { font-size: 7.5pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gris-suave); display: block; margin-bottom: 4px; }
+  .form-line { border-bottom: 1.5px solid var(--gris-linea); height: 22px; }
+  .form-lines-area { display: flex; flex-direction: column; gap: 16px; }
+  .form-checkbox-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .form-checkbox { display: flex; align-items: center; gap: 6px; font-size: 8.5pt; color: var(--gris-medio); }
+  .checkbox-box { width: 14px; height: 14px; border: 1.5px solid var(--gris-linea); border-radius: 3px; flex-shrink: 0; }
+
+  .disclaimer { background: #F5F4F1; border-radius: 5px; padding: 9px 12px; font-size: 6.5pt; color: var(--gris-suave); line-height: 1.55; border: 0.5px solid var(--gris-linea); }
+  .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
+
+  .page-footer {
+    position: absolute; bottom: 8mm; left: var(--page-padding); right: 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; font-size: 6.5pt; color: var(--gris-suave);
+  }
+  .footer-brand { font-weight: 600; color: var(--tierra); }
+  .footer-confid { font-style: italic; }
+
+  .page-number { position: absolute; bottom: 8mm; right: var(--page-padding); font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
+
+  @media print { body { background: white; } .page { box-shadow: none; margin: 0; } }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- ===================== PÁGINA 1 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="content">
+
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <span class="doc-tipo-badge">Ficha de acompañamiento · Uso exclusivo orientador</span>
+        <span style="font-size: 7.5pt; color: #9A9A9A;">Ficha de Acompañamiento · Grado 9°</span>
+      </div>
+    </div>
+
+    <div class="student-banner">
+      <h1>{{ nombre_completo }}</h1>
+      <div class="student-field">Institución: <span>{{ institucion or 'N/D' }}</span></div>
+      <div class="student-field">Municipio: <span>{{ municipio or 'N/D' }}</span></div>
+      <div class="student-field">Grado: <span>9°</span></div>
+      <div class="student-field">Docente orientador/a: <span>{{ orientador_nombre or 'N/D' }}</span></div>
+      <div class="student-field">Fecha de generación: <span>{{ fecha }}</span></div>
+      <div class="student-field">Sesiones analizadas: <span>4 conversaciones</span></div>
+    </div>
+
+    <!-- QUÉ ES ESTE DOCUMENTO -->
+    <div class="section">
+      <div class="section-label">¿Qué es este documento?</div>
+      <div class="que-es">
+        Esta ficha resume lo que {{ nombre_completo.split()[0] }} compartió en sus 4 conversaciones con rAÍz. <strong>No es un diagnóstico</strong> — es un punto de partida para que vos puedas acompañarlo/a mejor. Cada sección te explica qué significa la información y qué podés hacer con ella. El criterio profesional del orientador/a siempre prevalece sobre lo que acá se presenta.
+      </div>
+    </div>
+
+    <!-- PERFIL DE INTERESES -->
+    <div class="section">
+      <div class="section-label">Perfil de intereses</div>
+      <div class="cuadrante-docente">
+        <div class="cuadrante-circle">{{ cuadrante_icono }}</div>
+        <div>
+          <div class="cuadrante-docente-name">Cuadrante dominante: {{ cuadrante_nombre }}</div>
+          <div class="cuadrante-docente-implicacion">{{ cuadrante_descripcion_pedagogica }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORTALEZAS -->
+    {% set dot_classes = ['', 'tierra', 'ocre'] %}
+    <div class="section">
+      <div class="section-label">Fortalezas identificadas</div>
+      {% for f in fortalezas %}
+      {% set cls = dot_classes[loop.index0] if loop.index0 < 3 else '' %}
+      <div class="fortaleza-doc-item">
+        <div class="fort-dot {{ cls }}"></div>
+        <div>
+          <div class="fort-doc-name">{{ f.nombre }}</div>
+          <div class="fort-doc-evidencia">{{ f.evidencia }}</div>
+          <div class="fort-doc-sugerencia">{{ f.sugerencia }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
+    <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+  </div>
+  <div class="page-number">1 / 3</div>
+</div>
+
+
+<!-- ===================== PÁGINA 2 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="content">
+
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>{{ nombre_completo }}</strong> · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
+        <span style="font-size: 7.5pt;">Ficha de Acompañamiento · {{ fecha }}</span>
+      </div>
+    </div>
+
+    <!-- CONTEXTO DE VIDA -->
+    {% set cv = contexto_vida %}
+    {% set cf = cv.get('carga_familiar', {}) %}
+    {% set ra = cv.get('red_apoyo', {}) %}
+    {% set rs = cv.get('respaldo_estudio', {}) %}
+
+    <div class="section">
+      <div class="section-label">Contexto de vida relevante</div>
+      <div class="two-col">
+        <div class="info-box">
+          <div class="info-box-title">Carga familiar</div>
+          <div class="contexto-item">
+            <div class="contexto-nivel nivel-{{ cf.get('nivel', 'moderado') }}"></div>
+            <div>
+              <div class="contexto-factor">Carga {{ cf.get('nivel', '') }}</div>
+              <div class="contexto-desc">{{ cf.get('descripcion', '') }}</div>
+            </div>
+          </div>
+          {% if cf.get('nota') %}<div class="nota-pedagogica">{{ cf.get('nota', '') }}</div>{% endif %}
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">Red de apoyo</div>
+          <div class="contexto-item">
+            <div class="contexto-nivel nivel-{{ ra.get('nivel', 'moderado') }}"></div>
+            <div>
+              <div class="contexto-factor">Red {{ ra.get('nivel', '') }}</div>
+              <div class="contexto-desc">{{ ra.get('descripcion', '') }}</div>
+            </div>
+          </div>
+          {% if ra.get('nota') %}<div class="nota-pedagogica">{{ ra.get('nota', '') }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <div class="info-box">
+          <div class="info-box-title">Respaldo al estudio</div>
+          <div class="contexto-item">
+            <div class="contexto-nivel nivel-{{ rs.get('nivel', 'moderado') }}"></div>
+            <div>
+              <div class="contexto-factor">Respaldo {{ rs.get('nivel', '') }}</div>
+              <div class="contexto-desc">{{ rs.get('descripcion', '') }}</div>
+            </div>
+          </div>
+          {% if rs.get('nota') %}<div class="nota-pedagogica">{{ rs.get('nota', '') }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- LO QUE IMAGINA PARA SÍ MISMO/A -->
+    <div class="section">
+      <div class="section-label">Lo que {{ nombre_completo.split()[0] }} imagina para sí mismo/a</div>
+      <div class="two-col">
+        <div class="info-box">
+          <div class="info-box-title">Expectativa a corto plazo</div>
+          <div class="info-box-body" style="font-style: italic; color: #5A5A5A;">{{ expectativa_corto_plazo }}</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-box-title">Barreras que percibe</div>
+          <div class="info-box-body">
+            {% for barrera in barreras %}
+            <div class="contexto-item" style="padding: 3px 0;{% if loop.last %} border-bottom: none;{% endif %}">
+              <div class="contexto-nivel nivel-bajo"></div>
+              <div class="contexto-desc">{{ barrera }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÑALES DE ALERTA -->
+    <div class="section">
+      <div class="section-label">Señales de alerta detectadas</div>
+
+      {% if nivel_alerta == 'prioritario' %}
+      <div class="alerta-block alerta-roja">
+        <div class="alerta-header">
+          <span class="alerta-icon">🔴</span>
+          <div><div class="alerta-nivel-label">Nivel: Intervención urgente requerida</div></div>
+        </div>
+        <div class="alerta-body-text">Se identificaron señales significativas que requieren intervención inmediata. No esperes la próxima reunión — actuá hoy.</div>
+        <div class="alerta-factores" style="color: var(--rojo-alerta-texto);">
+          {% for f in factores_alerta %}
+          <div class="alerta-factor-item">
+            <span class="alerta-factor-bullet">·</span>
+            <span>{{ f }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% if acciones_sugeridas %}
+        <div class="alerta-que-hacer" style="color: var(--rojo-alerta-texto);">
+          <div class="alerta-que-hacer-title">¿Qué hacer?</div>
+          {{ acciones_sugeridas[0] }}
+        </div>
+        {% endif %}
+      </div>
+
+      {% elif nivel_alerta == 'activo' %}
+      <div class="alerta-block alerta-amarilla">
+        <div class="alerta-header">
+          <span class="alerta-icon">🟡</span>
+          <div><div class="alerta-nivel-label">Nivel: Acompañamiento activo</div></div>
+        </div>
+        <div class="alerta-body-text">Se identificaron factores que merecen atención continua pero no constituyen una situación de crisis. Requieren seguimiento sostenido.</div>
+        <div class="alerta-factores" style="color: #78350F;">
+          {% for f in factores_alerta %}
+          <div class="alerta-factor-item">
+            <span class="alerta-factor-bullet">·</span>
+            <span>{{ f }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% if acciones_sugeridas %}
+        <div class="alerta-que-hacer" style="color: #78350F;">
+          <div class="alerta-que-hacer-title">¿Qué hacer?</div>
+          {{ acciones_sugeridas[0] }}
+        </div>
+        {% endif %}
+      </div>
+
+      {% else %}
+      <div class="alerta-block alerta-verde">
+        <div class="alerta-header" style="margin-bottom: 0;">
+          <span class="alerta-icon">🟢</span>
+          <div class="alerta-nivel-label" style="color: var(--verde-ok-texto);">Sin señales de alerta relevantes</div>
+        </div>
+        <div class="alerta-body-text" style="margin-top: 4px; color: var(--verde-ok-texto);">
+          El/la estudiante muestra condiciones favorables para la continuidad educativa. Se recomienda acompañamiento de seguimiento regular.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ALERTAS CRÍTICAS -->
+    <div class="section">
+      <div class="section-label">Alertas críticas activas</div>
+      {% if alerta_critica %}
+      <div class="alerta-block alerta-roja">
+        <div class="alerta-header">
+          <span class="alerta-icon">⚠️</span>
+          <div><div class="alerta-nivel-label" style="color: var(--rojo-alerta-texto);">Alerta crítica — intervención inmediata requerida</div></div>
+        </div>
+        <div class="alerta-body-text" style="color: var(--rojo-alerta-texto);">
+          <strong>Tipo:</strong> {{ alerta_critica.tipo }}<br>
+          {{ alerta_critica.descripcion }}
+        </div>
+        <div class="alerta-que-hacer" style="color: var(--rojo-alerta-texto);">
+          <div class="alerta-que-hacer-title">Acción inmediata</div>
+          Activá el protocolo institucional de atención a situaciones de riesgo.
+          <div class="lineas-referencia">
+            <span class="linea-badge">Línea 106 – Salud mental</span>
+            <span class="linea-badge">Línea 141 – ICBF</span>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alerta-block alerta-verde" style="margin-bottom: 0;">
+        <div class="alerta-header" style="margin-bottom: 0;">
+          <span class="alerta-icon">✅</span>
+          <div class="alerta-nivel-label" style="color: var(--verde-ok-texto);">Sin alertas críticas</div>
+        </div>
+        <div class="alerta-body-text" style="margin-top: 4px; color: var(--verde-ok-texto);">
+          No se detectaron alertas críticas en este proceso.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
+    <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+  </div>
+  <div class="page-number">2 / 3</div>
+</div>
+
+
+<!-- ===================== PÁGINA 3 ===================== -->
+<div class="page">
+  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="content">
+
+    <div class="page-header">
+      <div class="logo-mark">
+        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-sub">Mentoría de proyecto de vida</span>
+      </div>
+      <div class="header-meta">
+        <strong>{{ nombre_completo }}</strong> · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
+        <span style="font-size: 7.5pt;">Ficha de Acompañamiento · {{ fecha }}</span>
+      </div>
+    </div>
+
+    <!-- ACCIONES CONCRETAS -->
+    <div class="section">
+      <div class="section-label">Acciones concretas sugeridas</div>
+      {% for accion in acciones_sugeridas %}
+      <div class="accion-item">
+        <div class="accion-num">{{ loop.index }}</div>
+        <div class="accion-text">{{ accion }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- ESPACIO DE SEGUIMIENTO -->
+    <div class="section">
+      <div class="section-label">Espacio de seguimiento</div>
+      <div style="background: var(--crema); border: 1px solid var(--gris-linea); border-radius: 8px; padding: 13px 15px;">
+
+        <div class="two-col" style="margin-bottom: 12px;">
+          <div class="form-field">
+            <label class="form-label">Fecha de reunión</label>
+            <div class="form-line"></div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Próxima reunión programada</label>
+            <div class="form-line"></div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Observaciones del orientador/a</label>
+          <div class="form-lines-area">
+            <div class="form-line"></div>
+            <div class="form-line"></div>
+            <div class="form-line"></div>
+            <div class="form-line"></div>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top: 13px;">
+          <label class="form-label">Compromisos acordados con el/la estudiante</label>
+          <div class="form-lines-area">
+            <div class="form-line"></div>
+            <div class="form-line"></div>
+            <div class="form-line"></div>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top: 13px;">
+          <label class="form-label">Próxima acción a seguir</label>
+          <div class="form-checkbox-row">
+            <div class="form-checkbox"><div class="checkbox-box"></div> Nueva reunión individual</div>
+            <div class="form-checkbox"><div class="checkbox-box"></div> Activar protocolo institucional</div>
+            <div class="form-checkbox"><div class="checkbox-box"></div> Informar a acudiente</div>
+            <div class="form-checkbox"><div class="checkbox-box"></div> Remitir a orientación especializada</div>
+            <div class="form-checkbox"><div class="checkbox-box"></div> Gestionar información de becas</div>
+            <div class="form-checkbox"><div class="checkbox-box"></div> Ninguna acción requerida ahora</div>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top: 10px;">
+          <label class="form-label">Firma del docente orientador/a</label>
+          <div style="height: 35px; border-bottom: 1.5px solid var(--gris-linea);"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="section">
+      <div class="disclaimer">{{ disclaimer | safe }}</div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
+    <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+  </div>
+  <div class="page-number">3 / 3</div>
+</div>
+
+</body>
+</html>
