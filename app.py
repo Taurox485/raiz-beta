@@ -72,9 +72,19 @@ def limpiar_etiquetas(texto: str) -> str:
 CHAT_KEY = f"chat_{estudiante['id']}"
 
 SALUDO_INICIAL = (
-    "¡Hola! Soy rAÍz. Para irnos conociendo, cuéntame: "
-    "un día normal tuyo, de lunes a viernes después de que suena la campana de salida, "
-    "¿cómo es? ¿Qué es lo primero que haces al llegar a la casa?"
+    "¡Hola! Soy rAÍz, tu mentor de proyecto de vida 🌱 "
+    "Soy una inteligencia artificial — un programa diseñado para acompañarte — "
+    "pero estoy aquí para escucharte de verdad. "
+    "Vamos a tener 4 conversaciones — cortitas, sin afán — "
+    "donde vamos a ir descubriendo juntos quién sos: "
+    "qué te gusta, qué se te da bien, cómo es tu mundo. "
+    "No hay respuestas buenas ni malas. "
+    "Lo que hablemos queda guardado de forma segura. "
+    "Tu profe orientador/a va a recibir un resumen de tus fortalezas e intereses — "
+    "no una copia de toda la conversación. "
+    "Lo que sea muy personal queda entre nosotros. "
+    "Y si algún día querés que borremos todo, podés pedírselo a tu orientador/a. "
+    "¿Listo/a para arrancar?"
 )
 
 if CHAT_KEY not in st.session_state:
