@@ -5,6 +5,29 @@
 
 ---
 
+## Flujo de trabajo — Deploy a producción
+
+El repositorio tiene dos branches:
+- `master` → desarrollo local
+- `main` → lo que Streamlit Cloud despliega
+
+**SIEMPRE hacer los dos pushes al deployar:**
+
+```bash
+# 1. Push normal de desarrollo
+git push origin master
+
+# 2. Sincronizar main para activar el deploy
+git push origin master:main
+```
+
+Streamlit Cloud detecta el push a `main` y redespliega automáticamente en 2-3 minutos.
+
+- **URL producción:** https://raiz-piloto.streamlit.app/
+- **Dashboard admin:** https://raiz-piloto.streamlit.app/?admin=1
+
+---
+
 ## PRIORIDAD CRÍTICA — Cambios que bloquean el piloto
 
 ### PENDIENTE 1 — Rediseño completo del flujo de registro
