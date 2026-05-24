@@ -461,3 +461,38 @@ def get_instituciones_por_municipio(municipio_id: int) -> list[dict]:
 ```
 
 **Nota:** Los datos ya están en Supabase correctamente relacionados (municipios → instituciones → sedes). Es solo un cambio de UX en el formulario de registro, sin cambios de schema.
+
+---
+
+### PENDIENTE 16 — Módulo de gestión de instituciones educativas para FCC
+
+**Prioridad:** Importante antes del piloto real
+**Archivo:** `admin_dashboard.py` — nueva Tab
+
+**Problema actual:** Los datos de contacto de instituciones (orientador, rector, emails, teléfonos) están vacíos en la DB. No hay forma de actualizarlos desde la app. FCC no tiene un módulo para gestionarlos.
+
+**Solución requerida:** Nueva pestaña en el dashboard admin (solo visible para rol `fcc`):
+
+"⚙️ Instituciones"
+
+Funcionalidades:
+1. Lista de todas las instituciones con sus sedes asociadas
+2. Botón "Editar" por institución que abre un formulario con:
+   - Nombre orientador/a
+   - Email orientador/a ← crítico para alertas
+   - Teléfono orientador/a
+   - Nombre rector/a
+   - Email rector/a ← crítico para alertas críticas
+3. Guardar cambios en Supabase
+
+**Métodos DB requeridos:**
+- `get_todas_instituciones() → list[dict]`
+- `update_institucion(id, datos) → None`
+
+**Por qué es crítico:** Sin emails de orientadores y rectores, las alertas críticas y los reportes PDF no llegan a nadie. Hoy solo funciona con updates manuales en SQL Editor de Supabase.
+
+**Workaround actual para pruebas:**
+```sql
+UPDATE instituciones SET orientador_email = 'jcreyesortiz@gmail.com'
+```
+ejecutado manualmente en Supabase SQL Editor.
