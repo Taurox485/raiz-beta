@@ -1,9 +1,4 @@
 import streamlit as st
-from google import genai
-from google.genai import types
-
-import auth
-import database as db
 
 # ── Configuración de página ────────────────────────────────────────────────────
 st.set_page_config(
@@ -13,10 +8,22 @@ st.set_page_config(
 )
 
 # ── Admin gate ─────────────────────────────────────────────────────────────────
-if st.query_params.get("admin") == "1":
+# Evaluar antes de cualquier import pesado para evitar efectos secundarios
+# en el primer render de Streamlit Cloud.
+# query_params puede retornar str o list según versión — normalizamos.
+_admin_val = st.query_params.get("admin", "")
+if isinstance(_admin_val, list):
+    _admin_val = _admin_val[0] if _admin_val else ""
+if _admin_val == "1":
     from admin_dashboard import mostrar_dashboard_admin
     mostrar_dashboard_admin()
     st.stop()
+
+from google import genai
+from google.genai import types
+
+import auth
+import database as db
 
 # ── Cliente Gemini ─────────────────────────────────────────────────────────────
 try:
