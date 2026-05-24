@@ -86,14 +86,24 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - SMTP Gmail con contraseña de aplicación
 - `enviar_id_registro()`, `enviar_id_recuperacion()`, `enviar_alerta_critica()`
 
+**Infraestructura:**
+- Supabase conectado y activo en producción (`doihxpicgfvmrcntzykl.supabase.co`)
+- Bucket `consentimientos` creado en Supabase Storage (subida de archivos de autorización activa)
+
 ### Pendiente (ver `raiz_claude_code_backlog.md` para detalle)
-- **PENDIENTE 3** — Derecho de supresión de datos (Ley 1581)
-- **PENDIENTE 4** — Tiempo de retención de datos (1 año calendario)
+
+**Críticos para el piloto:**
+- **PENDIENTE 3** — Derecho de supresión de datos (Ley 1581) — requerimiento legal
+- **PENDIENTE 4** — Tiempo de retención de datos (1 año calendario) — requerimiento legal
 - **PENDIENTE 5** — Row Level Security (RLS) en Supabase
-- **PENDIENTE 10** — Migrar auth admin a Supabase Auth (hoy: contraseña compartida)
-- **PENDIENTE 11** — Campo `jurisdiccion` para rol `secretaria`
-- **PENDIENTE 12** — Signed URLs para archivos de consentimiento
-- **PENDIENTE 13** — Crear bucket `consentimientos` en Supabase (paso manual pre-deploy)
+- **PENDIENTE 12** — Crear bucket `consentimientos` en Supabase *(paso manual — verificar si ya está hecho)*
+- **PENDIENTE 14** — Módulo WhatsApp re-engagement (5 mensajes, textos aprobados en backlog)
+- **PENDIENTE 15** — Selector en cascada municipio → institución → sede en dashboard admin
+
+**Para después del piloto:**
+- **PENDIENTE 10** — Migrar auth admin a Supabase Auth por usuario
+- **PENDIENTE 11** — Campo `jurisdiccion` para scope regional de rol `secretaria`
+- **PENDIENTE 13** — Signed URLs para archivos de consentimiento (hoy: bucket público)
 
 ---
 
