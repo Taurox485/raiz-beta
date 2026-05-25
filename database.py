@@ -1147,6 +1147,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
                i.nombre  AS institucion,
                m.nombre  AS municipio,
                e.sesion_actual,
+               e.momento_actual,
                e.perfil_riesgo,
                e.consentimiento_acudiente_verificado,
                CASE WHEN e.consentimiento_archivo_url IS NOT NULL THEN 1 ELSE 0 END
@@ -1163,7 +1164,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
         sb = _get_supabase()
         sel = (
             "id, estudiante_id, nombre, apellido, grado, sede_id, mentoria_completada, "
-            "sesion_actual, perfil_riesgo, consentimiento_acudiente_verificado, "
+            "sesion_actual, momento_actual, perfil_riesgo, consentimiento_acudiente_verificado, "
             "consentimiento_archivo_url, "
             "sedes(nombre, instituciones(nombre, municipios(nombre)))"
         )
@@ -1191,6 +1192,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
                 "institucion":                      inst_info.get("nombre", ""),
                 "municipio":                        mun_info.get("nombre", ""),
                 "sesion_actual":                    row["sesion_actual"],
+                "momento_actual":                   row["momento_actual"],
                 "perfil_riesgo":                    row["perfil_riesgo"],
                 "consentimiento_acudiente_verificado": row["consentimiento_acudiente_verificado"],
                 "tiene_archivo_consentimiento":     bool(row.get("consentimiento_archivo_url")),
