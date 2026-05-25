@@ -140,6 +140,13 @@ CREATE TABLE IF NOT EXISTS whatsapp_mensajes (
     enviado_at      TEXT    DEFAULT (datetime('now')),
     estado          TEXT    DEFAULT 'enviado'
 );
+CREATE TABLE IF NOT EXISTS envios_ficha (
+    id              TEXT    PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    estudiante_id   TEXT    NOT NULL,
+    orientador_email TEXT   NOT NULL,
+    exito           INTEGER NOT NULL,
+    timestamp       TEXT    DEFAULT (datetime('now'))
+);
 """
 
 # ── SQLite: datos seed ─────────────────────────────────────────────────────────
@@ -314,6 +321,19 @@ def _ensure_sqlite():
                 mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 1 AND 5),
                 enviado_at      TEXT    DEFAULT (datetime('now')),
                 estado          TEXT    DEFAULT 'enviado'
+            )
+            """
+        )
+
+        # ── Migración 006: envíos de ficha al orientador (idempotente) ───────────
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS envios_ficha (
+                id              TEXT    PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                estudiante_id   TEXT    NOT NULL,
+                orientador_email TEXT   NOT NULL,
+                exito           INTEGER NOT NULL,
+                timestamp       TEXT    DEFAULT (datetime('now'))
             )
             """
         )
@@ -1116,10 +1136,13 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
     consentimiento_acudiente_verificado, tiene_archivo_consentimiento.
     """
     _BASE = """
-        SELECT e.estudiante_id,
+        SELECT e.id,
+               e.estudiante_id,
                e.nombre,
                e.apellido,
                e.grado,
+               e.sede_id,
+               e.mentoria_completada,
                s.nombre  AS sede_nombre,
                i.nombre  AS institucion,
                m.nombre  AS municipio,
@@ -1139,8 +1162,8 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
     if _use_supabase():
         sb = _get_supabase()
         sel = (
-            "estudiante_id, nombre, apellido, grado, sesion_actual, "
-            "perfil_riesgo, consentimiento_acudiente_verificado, "
+            "id, estudiante_id, nombre, apellido, grado, sede_id, mentoria_completada, "
+            "sesion_actual, perfil_riesgo, consentimiento_acudiente_verificado, "
             "consentimiento_archivo_url, "
             "sedes(nombre, instituciones(nombre, municipios(nombre)))"
         )
@@ -1157,10 +1180,13 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
             inst_info = sede_info.get("instituciones") or {}
             mun_info  = inst_info.get("municipios") or {}
             result.append({
+                "id":                               row["id"],
                 "estudiante_id":                    row["estudiante_id"],
                 "nombre":                           row["nombre"],
                 "apellido":                         row["apellido"],
                 "grado":                            row["grado"],
+                "sede_id":                          row["sede_id"],
+                "mentoria_completada":              bool(row.get("mentoria_completada")),
                 "sede_nombre":                      sede_info.get("nombre", ""),
                 "institucion":                      inst_info.get("nombre", ""),
                 "municipio":                        mun_info.get("nombre", ""),
@@ -1185,6 +1211,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
             d = dict(r)
             d["tiene_archivo_consentimiento"] = bool(d["tiene_archivo_consentimiento"])
             d["consentimiento_acudiente_verificado"] = bool(d["consentimiento_acudiente_verificado"])
+            d["mentoria_completada"] = bool(d.get("mentoria_completada", 0))
             result.append(d)
         return result
 
@@ -1653,3 +1680,48 @@ def get_estudiantes_para_reengagement() -> list[dict]:
     return _aplicar_reglas_reengagement(
         [dict(r) for r in rows_est], wa_enviados, ultimo_chat, umbral_1d, umbral_2d, umbral_5d
     )
+
+
+# ── API pública: envíos de ficha al orientador ────────────────────────────────
+
+def registrar_envio_ficha(estudiante_id: str, orientador_email: str, exito: bool) -> None:
+    """Registra el intento de envío de la ficha de acompañamiento por email."""
+    if _use_supabase():
+        _get_supabase().table("envios_ficha").insert({
+            "estudiante_id":    estudiante_id,
+            "orientador_email": orientador_email,
+            "exito":            exito,
+        }).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """INSERT INTO envios_ficha (estudiante_id, orientador_email, exito)
+               VALUES (?, ?, ?)""",
+            (estudiante_id, orientador_email, int(exito)),
+        )
+
+
+def get_envio_ficha(estudiante_id: str) -> Optional[dict]:
+    """Retorna el último envío de ficha para un estudiante, o None si no hay."""
+    if _use_supabase():
+        result = (
+            _get_supabase().table("envios_ficha")
+            .select("*")
+            .eq("estudiante_id", estudiante_id)
+            .order("timestamp", desc=True)
+            .limit(1)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            """SELECT * FROM envios_ficha
+               WHERE estudiante_id = ?
+               ORDER BY timestamp DESC LIMIT 1""",
+            (estudiante_id,),
+        ).fetchone()
+        return dict(row) if row else None

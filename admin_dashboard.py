@@ -203,22 +203,87 @@ def _tab_lista_estudiantes(admin: dict):
                 "Usá la sección de supresión más abajo."
             )
 
+    # Pre-fetch envíos de ficha para todos los estudiantes
+    envios_ficha = {e["id"]: db.get_envio_ficha(e["id"]) for e in estudiantes}
+
+    def _ficha_status(estudiante_id: str) -> str:
+        envio = envios_ficha.get(estudiante_id)
+        if not envio:
+            return "—"
+        if envio["exito"]:
+            try:
+                from datetime import datetime as _dt
+                fecha = _dt.fromisoformat(envio["timestamp"]).strftime("%d/%m/%Y")
+            except Exception:
+                fecha = str(envio["timestamp"])[:10]
+            return f"✅ {fecha}"
+        return "⚠️ Error"
+
     filas = [
         {
-            "Código":        e["estudiante_id"],
-            "Nombre":        f"{e['nombre']} {e['apellido']}",
-            "Grado":         f"{e['grado']}°",
-            "Sede":          f"{e['sede_nombre']} — {e['municipio']}",
-            "Sesión":        e["sesion_actual"],
-            "Riesgo":        e["perfil_riesgo"],
-            "Autorización":  "✅" if e["consentimiento_acudiente_verificado"] else "⏳",
-            "Archivo":       "📎" if e["tiene_archivo_consentimiento"] else "—",
+            "Código":         e["estudiante_id"],
+            "Nombre":         f"{e['nombre']} {e['apellido']}",
+            "Grado":          f"{e['grado']}°",
+            "Sede":           f"{e['sede_nombre']} — {e['municipio']}",
+            "Sesión":         e["sesion_actual"],
+            "Riesgo":         e["perfil_riesgo"],
+            "Autorización":   "✅" if e["consentimiento_acudiente_verificado"] else "⏳",
+            "Ficha enviada":  _ficha_status(e["id"]),
         }
         for e in estudiantes
     ]
 
     st.dataframe(filas, use_container_width=True, hide_index=True)
     st.caption(f"{len(estudiantes)} estudiante(s) registrado(s).")
+
+    # Fichas bajo demanda para mentorías completadas
+    completados = [e for e in estudiantes if e.get("mentoria_completada")]
+    if completados:
+        with st.expander(
+            f"📄 Descargar fichas de orientador ({len(completados)} mentoría(s) completada(s))",
+            expanded=False,
+        ):
+            for e in completados:
+                c1, c2, c3 = st.columns([4, 1.2, 1.5])
+                with c1:
+                    st.markdown(f"`{e['estudiante_id']}` — {e['nombre']} {e['apellido']}")
+                with c2:
+                    pdf_key = f"pdf_ficha_{e['id']}"
+                    if st.button("📄 Ficha", key=f"ficha_{e['id']}"):
+                        with st.spinner("Generando ficha..."):
+                            try:
+                                from google import genai as _genai
+                                import pdf_generator as _pdf_gen
+                                _client = _genai.Client(
+                                    api_key=st.secrets["GEMINI_API_KEY"]
+                                )
+                                try:
+                                    with open("instrucciones.txt", "r", encoding="utf-8") as _f:
+                                        _sys = _f.read().strip()
+                                except FileNotFoundError:
+                                    _sys = ""
+                                historial = db.get_historial(e["id"])
+                                _, pdf_ori = _pdf_gen.generar_pdfs(
+                                    estudiante=e,
+                                    historial=historial,
+                                    client=_client,
+                                    model="gemini-3.1-flash-lite",
+                                    system_instruction=_sys,
+                                )
+                                nombre_f = f"{e.get('nombre','')}_{e.get('apellido','')}".lower().replace(" ", "_")
+                                st.session_state[pdf_key] = (pdf_ori, nombre_f)
+                            except Exception as e_pdf:
+                                st.error(f"Error generando ficha: {e_pdf}")
+                with c3:
+                    if pdf_key in st.session_state:
+                        pdf_data, nombre_f = st.session_state[pdf_key]
+                        st.download_button(
+                            label="⬇️ Descargar",
+                            data=pdf_data,
+                            file_name=f"ficha_orientador_{nombre_f}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_ficha_{e['id']}",
+                        )
 
     # ── Supresión de datos (solo fcc) ─────────────────────────────────────────
     if admin["rol"] != "fcc":

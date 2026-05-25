@@ -158,3 +158,44 @@ No responda a este correo.
         h.join(timeout=15)
 
     return resultados
+
+
+def enviar_ficha_orientador(destinatario: str, nombre_estudiante: str, pdf_bytes: bytes) -> bool:
+    """Envía la ficha de acompañamiento al orientador como adjunto PDF."""
+    try:
+        from email.mime.application import MIMEApplication
+        cfg = _config()
+
+        msg = MIMEMultipart()
+        msg["From"] = f"rAÍz <{cfg['user']}>"
+        msg["To"] = destinatario
+        msg["Subject"] = f"rAÍz — Ficha de Acompañamiento: {nombre_estudiante}"
+
+        cuerpo = f"""\
+Estimado/a docente orientador/a,
+
+{nombre_estudiante} ha completado su proceso de mentoría con rAÍz.
+
+Adjunto encontrará la Ficha de Acompañamiento con el perfil de intereses,
+fortalezas identificadas, contexto de vida y acciones sugeridas para su
+acompañamiento.
+
+Este documento es confidencial y de uso exclusivo del equipo docente.
+
+— rAÍz · Mentoría de proyecto de vida · Piloto Valle del Cauca 2026"""
+
+        msg.attach(MIMEText(cuerpo, "plain", "utf-8"))
+
+        filename = f"ficha_orientador_{nombre_estudiante.replace(' ', '_').lower()}.pdf"
+        adjunto = MIMEApplication(pdf_bytes, _subtype="pdf")
+        adjunto.add_header("Content-Disposition", "attachment", filename=filename)
+        msg.attach(adjunto)
+
+        with smtplib.SMTP(cfg["host"], cfg["port"]) as servidor:
+            servidor.starttls()
+            servidor.login(cfg["user"], cfg["password"])
+            servidor.sendmail(cfg["user"], destinatario, msg.as_string())
+
+        return True
+    except Exception:
+        return False

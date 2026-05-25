@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(
     page_title="rAÍz - Guía de Proyecto de Vida",
     page_icon="🌱",
-    layout="centered",
+    layout="wide",
 )
 
 # ── Admin gate ─────────────────────────────────────────────────────────────────
@@ -72,6 +72,11 @@ if not estudiante.get("consentimiento_acudiente_verificado"):
     )
     st.stop()
 
+st.markdown(
+    "<style>.block-container{max-width:800px !important;padding-left:2rem !important;"
+    "padding-right:2rem !important;}</style>",
+    unsafe_allow_html=True,
+)
 st.title("🌱 rAÍz")
 st.caption(f"**{estudiante['nombre']}** · ID: `{estudiante['estudiante_id']}`")
 
@@ -275,16 +280,32 @@ if st.session_state.fin_consejeria:
                     mime="application/pdf",
                     use_container_width=True,
                 )
-                if "pdf_orientador" in st.session_state and st.session_state["pdf_orientador"]:
-                    nombre = f"{st.session_state.estudiante.get('nombre','estudiante')}".lower().replace(' ', '_')
-                    st.download_button(
-                        label="📋 [TEMP] Descargar Ficha Orientador",
-                        data=st.session_state["pdf_orientador"],
-                        file_name=f"ficha_orientador_{nombre}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True,
-                    )
                 st.success("¡Tu Mapa rAÍz está listo! Descárgalo arriba.")
                 st.session_state["pdf_orientador"] = pdf_ori
+
+                # Enviar ficha al orientador por email
+                orientador_email = None
+                try:
+                    from email_service import enviar_ficha_orientador
+                    sede_info = db.get_sede_info(st.session_state.estudiante.get("sede_id", 0))
+                    orientador_email = sede_info.get("orientador_email") if sede_info else None
+                    if orientador_email:
+                        nombre_est = f"{st.session_state.estudiante.get('nombre','')} {st.session_state.estudiante.get('apellido','')}".strip()
+                        exito = enviar_ficha_orientador(
+                            destinatario=orientador_email,
+                            nombre_estudiante=nombre_est,
+                            pdf_bytes=pdf_ori,
+                        )
+                        db.registrar_envio_ficha(
+                            estudiante_id=st.session_state.estudiante["id"],
+                            orientador_email=orientador_email,
+                            exito=exito,
+                        )
+                except Exception as e_email:
+                    db.registrar_envio_ficha(
+                        estudiante_id=st.session_state.estudiante["id"],
+                        orientador_email=orientador_email if orientador_email else "desconocido",
+                        exito=False,
+                    )
             except Exception as e:
                 st.error(f"Hubo un problema generando el PDF. Intenta de nuevo o pídele ayuda a tu orientador/a. ({e})")
