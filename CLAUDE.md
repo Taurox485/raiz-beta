@@ -13,6 +13,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Base de datos: Supabase (prod) / SQLite (dev offline)
   - Supabase URL: `https://doihxpicgfvmrcntzykl.supabase.co`
   - Credenciales en `.streamlit/secrets.toml` (gitignored) y en Streamlit Cloud → Settings → Secrets
+- WhatsApp: Twilio WhatsApp API (`whatsapp_service.py`) — `twilio>=9.0.0`
 
 ## Deploy
 - **URL producción:** https://raiz-piloto.streamlit.app/
@@ -52,15 +53,39 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 **Dashboard administrador (`admin_dashboard.py`):**
 - Acceso vía `/?admin=1`, protegido con email + `ADMIN_PASSWORD` en secrets
 - Tres roles: `fcc` (todas las instituciones), `orientador` (su institución), `secretaria` (todas — lectura)
-- Tabs: registrar estudiante (con upload de autorización firmada), lista de estudiantes, alertas pendientes
+- Tabs (rol fcc): Registrar estudiante · Estudiantes registrados · Alertas pendientes · Instituciones · WhatsApp
+- Tabs (orientador/secretaria): Registrar estudiante · Estudiantes registrados · Alertas pendientes
 - Admin de prueba en Supabase: `admin@fcc.edu.co` / contraseña en `ADMIN_PASSWORD`
 
 **Base de datos (`database.py`):**
 - Adapter dual: Supabase (prod) / SQLite (dev offline, `raiz_local.db`)
 - Detección automática por `SUPABASE_URL` en secrets
-- Schema en `schema.sql` + migración `migrations/002_roles_y_consentimiento.sql` (aplicados en Supabase)
-- Tablas: `municipios`, `instituciones`, `sedes`, `estudiantes`, `mensajes`, `alertas`, `administradores`
+- Schema en `schema.sql` + migraciones 002–005 (ver sección de migraciones)
+- Tablas: `municipios`, `instituciones`, `sedes`, `estudiantes`, `mensajes`, `alertas`, `administradores`, `whatsapp_mensajes`
 - Seed data: 11 municipios y ~25 instituciones reales del Valle del Cauca
+
+**Selector en cascada (registro de estudiantes):**
+- Selectboxes Municipio → Institución → Sede fuera del form en `_tab_registrar_estudiante()`
+- Respeta rol: orientador solo ve su institución; fcc/secretaria ven todo
+
+**Supresión y retención de datos (Ley 1581/2012):**
+- Derecho de supresión: anonimiza nombre/email/celular, elimina mensajes y alertas (solo rol fcc)
+- Retención automática: banner de alerta al cargar el dashboard cuando `fecha_retencion_hasta < hoy`
+- `fecha_retencion_hasta` = 31 diciembre del año siguiente al registro
+- Búsqueda por nombre, código, institución o municipio dentro del expander de supresión
+
+**Gestión de instituciones (solo fcc):**
+- Tab "⚙️ Instituciones": edita orientador_nombre/email/telefono y rector_nombre/email por institución
+- Icono ✅/⚠️ según si los emails están configurados
+
+**WhatsApp re-engagement (`whatsapp_service.py`):**
+- Twilio WhatsApp API real (`from twilio.rest import Client`)
+- 5 mensajes según punto de abandono (ver tabla de reglas más abajo)
+- `preview_reengagement(db)` — vista previa sin enviar
+- `procesar_reengagement(db)` — envía y registra en `whatsapp_mensajes`
+- Tab "📱 WhatsApp" en dashboard (solo fcc): botón de vista previa + envío manual
+- Muestra aviso si faltan secrets de Twilio
+- Normalización E.164: números de 10 dígitos colombianos se convierten a `+57XXXXXXXXXX`
 
 **Chat y sesiones:**
 - Historial persistente en tabla `mensajes` (contenido crudo con etiquetas internas)
@@ -92,18 +117,16 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 
 ### Pendiente (ver `raiz_claude_code_backlog.md` para detalle)
 
-**Críticos para el piloto:**
-- **PENDIENTE 3** — Derecho de supresión de datos (Ley 1581) — requerimiento legal
-- **PENDIENTE 4** — Tiempo de retención de datos (1 año calendario) — requerimiento legal
+**Crítico para el piloto — único restante:**
 - **PENDIENTE 5** — Row Level Security (RLS) en Supabase
-- **PENDIENTE 12** — Crear bucket `consentimientos` en Supabase *(paso manual — verificar si ya está hecho)*
-- **PENDIENTE 14** — Módulo WhatsApp re-engagement (5 mensajes, textos aprobados en backlog)
-- **PENDIENTE 15** — Selector en cascada municipio → institución → sede en dashboard admin
 
 **Para después del piloto:**
 - **PENDIENTE 10** — Migrar auth admin a Supabase Auth por usuario
 - **PENDIENTE 11** — Campo `jurisdiccion` para scope regional de rol `secretaria`
 - **PENDIENTE 13** — Signed URLs para archivos de consentimiento (hoy: bucket público)
+
+**Deuda técnica registrada (backlog — sección DEUDAS TÉCNICAS PARA ESCALADA):**
+- **DEUDA TÉCNICA 1** — Migrar columna `celular` (texto plano, Opción B piloto) a AES antes de escalar a producción masiva
 
 ---
 
@@ -128,7 +151,8 @@ estudiante_id                     VARCHAR(25) UNIQUE  -- ej: ALC-9-2026-0042
 nombre, apellido                  VARCHAR
 grado                             INTEGER CHECK(9-11)
 email                             VARCHAR UNIQUE (nullable)
-celular_hash                      VARCHAR(64)  -- SHA-256
+celular_hash                      VARCHAR(64)  -- SHA-256, no reversible
+celular                           TEXT         -- texto plano para Twilio (Opción B piloto)
 sede_id                           FK → sedes
 asentimiento_estudiante           BOOLEAN  -- checkbox propio del estudiante
 fecha_asentimiento_estudiante     TIMESTAMPTZ
@@ -140,6 +164,10 @@ sesion_actual                     INTEGER DEFAULT 1
 momento_actual                    INTEGER DEFAULT 1
 perfil_riesgo                     VARCHAR(20) DEFAULT 'sin_evaluar'
 mentoria_completada               BOOLEAN DEFAULT FALSE
+suprimido                         BOOLEAN DEFAULT FALSE
+fecha_supresion                   TIMESTAMPTZ
+motivo_supresion                  TEXT
+fecha_retencion_hasta             DATE
 CONSTRAINT check_contacto_requerido CHECK (email IS NOT NULL OR celular_hash IS NOT NULL)
 ```
 
@@ -159,18 +187,42 @@ rector_nombre  VARCHAR(200)
 rector_email   VARCHAR(200)
 ```
 
+#### `whatsapp_mensajes`
+```
+id              UUID PK
+estudiante_id   UUID FK → estudiantes
+mensaje_numero  INTEGER CHECK(1-5)
+enviado_at      TIMESTAMPTZ
+estado          VARCHAR(20)  -- 'enviado' / 'fallido'
+```
+
 ### Migraciones aplicadas
 ```
 migrations/
-└── 002_roles_y_consentimiento.sql  ← aplicado en Supabase
+├── 002_roles_y_consentimiento.sql   ← aplicado en Supabase
+├── 003_rector_instituciones.sql     ← aplicado en Supabase
+├── 004_supresion_retencion.sql      ← aplicado en Supabase
+└── 005_whatsapp.sql                 ← aplicar en Supabase antes del próximo deploy
 ```
 
+### Reglas de activación WhatsApp (5 mensajes)
+| MSG | Condición |
+|-----|-----------|
+| 1 | `sesion=1, momento=1`, sin mensajes de chat, registrado hace >1 día |
+| 2 | `sesion=2, momento=1`, último chat hace >2 días |
+| 3 | `sesion=3, momento=1`, último chat hace >2 días |
+| 4 | `sesion=4, momento=1`, último chat hace >2 días |
+| 5 | `mentoria_completada=FALSE`, sin actividad hace >5 días (último intento) |
+
+Reglas invariables: máximo 1 mensaje por tipo por estudiante · nunca si `mentoria_completada=TRUE` · solo estudiantes con `celular IS NOT NULL`.
+
 ### Decisiones de arquitectura
-1. **Auth sin email:** Los estudiantes no usan Supabase Auth. Login = `SELECT * FROM estudiantes WHERE estudiante_id = ?`. Backend usa `service_role_key`. RLS desactivado en esta fase.
+1. **Auth sin email:** Los estudiantes no usan Supabase Auth. Login = `SELECT * FROM estudiantes WHERE estudiante_id = ?`. Backend usa `service_role_key`. RLS desactivado en esta fase (PENDIENTE 5).
 2. **Generación del ID:** `MUNICIPIO-GRADO-AÑO-XXXX`, correlativo por `(municipio_id, grado, año)`.
 3. **Fallback SQLite:** `database.py` detecta si `SUPABASE_URL` está configurado. Si no, usa SQLite. Mismo API, distinto backend.
-4. **Celular:** SHA-256 hash. No se usa para login.
+4. **Celular dual:** `celular_hash` (SHA-256, deduplicación) + `celular` (texto plano, necesario para Twilio). Ambos se limpian en supresión. `celular` será migrado a AES antes de escalar (DEUDA TÉCNICA 1).
 5. **Contacto flexible:** Al menos uno de email o celular_hash es obligatorio (CHECK constraint).
+6. **Cascading selectors:** Los selectboxes Municipio→Institución→Sede van **fuera** del `st.form` en Streamlit para actualización dinámica sin submit.
 
 ---
 
@@ -178,19 +230,23 @@ migrations/
 ```
 raiz/
 ├── app.py                    gate admin + auth gate + chat + PDF download + alertas
-├── admin_dashboard.py        dashboard admin (login, registro est., lista, alertas)
+├── admin_dashboard.py        dashboard admin (5 tabs para fcc, 3 para orientador/secretaria)
 ├── auth.py                   login estudiante, asentimiento, recuperación de ID
 ├── database.py               Supabase + SQLite adapter
 ├── email_service.py          SMTP Gmail (ID, recuperación, alerta crítica 3 destinatarios)
-├── pdf_generator.py          PDFs con Playwright + HTML/CSS
-├── instrucciones.txt         system prompt pedagógico
-├── schema.sql                schema PostgreSQL + seed data
+├── pdf_generator.py          PDFs con Playwright + HTML/CSS  ← NO TOCAR
+├── whatsapp_service.py       re-engagement por WhatsApp con Twilio real
+├── instrucciones.txt         system prompt pedagógico  ← NO TOCAR
+├── schema.sql                schema PostgreSQL + seed data  ← NO TOCAR
 ├── requirements.txt
 ├── templates/
 │   ├── mapa_estudiante.html  plantilla PDF estudiante
 │   └── ficha_orientador.html plantilla PDF orientador
 ├── migrations/
-│   └── 002_roles_y_consentimiento.sql
+│   ├── 002_roles_y_consentimiento.sql
+│   ├── 003_rector_instituciones.sql
+│   ├── 004_supresion_retencion.sql
+│   └── 005_whatsapp.sql
 └── .streamlit/
     └── secrets.toml          (gitignored — credenciales reales locales)
 ```
@@ -199,12 +255,16 @@ raiz/
 
 ## Secrets requeridos (Streamlit Cloud → Settings → Secrets)
 ```toml
-GEMINI_API_KEY       = "..."
-SUPABASE_URL         = "https://doihxpicgfvmrcntzykl.supabase.co"
-SUPABASE_SERVICE_KEY = "..."
-SMTP_EMAIL           = "..."
-SMTP_APP_PASSWORD    = "..."
-GRADOS_HABILITADOS   = "9"
-PEAS_EMAIL           = ""
-ADMIN_PASSWORD       = "raiz2026"
+GEMINI_API_KEY         = "..."
+SUPABASE_URL           = "https://doihxpicgfvmrcntzykl.supabase.co"
+SUPABASE_SERVICE_KEY   = "..."
+SMTP_EMAIL             = "..."
+SMTP_APP_PASSWORD      = "..."
+GRADOS_HABILITADOS     = "9"
+PEAS_EMAIL             = ""
+ADMIN_PASSWORD         = "raiz2026"
+TWILIO_ACCOUNT_SID     = "..."
+TWILIO_AUTH_TOKEN      = "..."
+TWILIO_WHATSAPP_NUMBER = "whatsapp:+57XXXXXXXXXX"
+APP_URL                = "https://raiz-piloto.streamlit.app"
 ```
