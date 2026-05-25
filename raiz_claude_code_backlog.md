@@ -453,3 +453,23 @@ CREATE TABLE whatsapp_mensajes (
 - Validación de formato email antes de guardar
 - `get_todas_instituciones()` y `update_institucion()` en `database.py` (Supabase + SQLite)
 - Migración correctiva: `migrations/003_rector_instituciones.sql` (columnas `rector_nombre`/`rector_email` no aplicadas en 002)
+
+---
+
+## DEUDAS TÉCNICAS PARA ESCALADA
+
+### DEUDA TÉCNICA 1 — Encriptación de celulares (antes de escalar a producción masiva)
+
+**Estado actual (piloto):**
+- `celular_hash` — SHA-256 del número, no reversible. Sirve para deduplicación pero no para enviar mensajes.
+- `celular` — texto plano agregado para el piloto (Opción B aprobada, mayo 2026). Necesario para que el módulo WhatsApp (P14) pueda enviar mensajes reales vía Twilio.
+
+**Riesgo:** Datos de menores de edad (número de teléfono) en texto plano en Supabase. Si hay una brecha, la SIC puede sancionar por negligencia en la protección de datos sensibles.
+
+**Solución requerida antes de escalar:**
+- Migrar la columna `celular` de texto plano a encriptación AES simétrica con llave secreta
+- La llave nunca toca la DB — solo vive en `secrets.toml` y Streamlit Cloud Secrets
+- `database.py` encripta al escribir y desencripta al leer — transparente para el resto de la app
+- Requiere script de migración para re-encriptar los registros existentes del piloto
+
+**Mitigación actual:** RLS en Supabase (P5) limita el acceso directo a la tabla.
