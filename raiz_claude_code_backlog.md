@@ -374,56 +374,23 @@ pip install twilio
 
 ---
 
-### PENDIENTE 14 — Módulo WhatsApp re-engagement
+### ~~PENDIENTE 14~~ — ✅ COMPLETADO — Módulo WhatsApp re-engagement
 
-**Prioridad:** Crítico para el piloto
-**Requiere:** Cuenta Twilio activa + `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER`, `APP_URL` en secrets.toml
+**Completado:** Mayo 2026 — commit `8a7de12`
+**Deploy:** `master:main` — activo en https://raiz-piloto.streamlit.app/?admin=1
 
-**Archivo a crear:** `whatsapp_service.py`
+**Implementado:**
+- `whatsapp_service.py` (nuevo) — Twilio WhatsApp API real, normalización E.164, `preview_reengagement()`, `procesar_reengagement()`
+- `migrations/005_whatsapp.sql` — columna `celular TEXT` en `estudiantes` + tabla `whatsapp_mensajes`
+- `database.py` — `celular` en DDL + migración 005, `registrar_whatsapp_mensaje()`, `get_estudiantes_para_reengagement()` con las 5 reglas
+- `admin_dashboard.py` — tab "📱 WhatsApp" (solo fcc): vista previa + botón de envío, aviso si faltan secrets Twilio; formulario de registro pasa `celular` en texto plano
+- `requirements.txt` — `twilio>=9.0.0`
+- `suprimir_estudiante()` también limpia el campo `celular`
+- **Acción manual Supabase requerida:** correr `migrations/005_whatsapp.sql` en SQL Editor
 
-**Lógica de activación — 5 mensajes según abandono:**
-- Mensaje 1: Día 1 tras registro sin entrar al chat
-- Mensaje 2: 2 días tras completar S1 sin entrar a S2
-- Mensaje 3: 2 días tras completar S2 sin entrar a S3
-- Mensaje 4: 2 días tras completar S3 sin entrar a S4
-- Mensaje 5: 5 días sin actividad en cualquier punto (último intento)
+**Textos usados:** Versión A (PENDIENTE 14), campo `mensaje_numero`
+**Trigger MSG5:** 5 días sin actividad
 
-**Textos aprobados** (variables: `{nombre}`, `{codigo}`, `{link}`):
-
-> **MSG1:** "Hola {nombre} 👋 Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!"
-
-> **MSG2:** "Hola {nombre}, completaste el primer paso en rAÍz 🌱 ¿Listo para continuar? Entrá con {codigo} en {link} — te falta poco para descubrir más sobre vos."
-
-> **MSG3:** "Hola {nombre}, vas muy bien en rAÍz ✨ Continuá tu recorrido en {link} con tu código {codigo}. Cada sesión te acerca más a tu proyecto de vida."
-
-> **MSG4:** "Hola {nombre}, ¡ya casi terminás! 🎯 Solo falta una sesión en rAÍz. Entrá con {codigo} en {link} y obtén tu Mapa rAÍz personalizado."
-
-> **MSG5:** "Hola {nombre}, tu recorrido en rAÍz te espera 🌿 Ingresá cuando puedas con tu código {codigo} en {link}. Tu orientador/a también está pendiente de ti."
-
-**PENDIENTE EDITORIAL:** Cuando FCC confirme las sorpresas de la rifa (primeras 300 personas que terminen), agregar al final de cada mensaje:
-> "Además, entre las primeras 300 personas que terminen, rifamos [SORPRESA POR DEFINIR] 🎁"
-
-**Tabla requerida en DB:**
-```sql
-CREATE TABLE whatsapp_mensajes (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    estudiante_id   UUID REFERENCES estudiantes(id),
-    mensaje_numero  INTEGER CHECK (mensaje_numero BETWEEN 1 AND 5),
-    enviado_at      TIMESTAMPTZ DEFAULT NOW(),
-    estado          VARCHAR(20) DEFAULT 'enviado'  -- enviado / fallido
-);
-```
-
-**Filtro importante:** Solo estudiantes con `celular_hash IS NOT NULL` reciben WhatsApp. Estudiantes con solo email → recordatorio por email (implementación futura).
-
-**Reglas invariables:**
-- NUNCA enviar más de 1 mensaje por número por estudiante
-- NUNCA enviar si `mentoria_completada = TRUE`
-- Horario de envío: entre 16:00 y 18:00 hora Colombia (UTC-5)
-
-**Costo estimado piloto:** ~$75 USD (300 estudiantes × 5 mensajes × $0.05 Twilio)
-
-**Archivos a crear/modificar:** `whatsapp_service.py` (nuevo), `database.py`, `schema.sql`, `migrations/003_whatsapp.sql`, `secrets.toml`, `requirements.txt` (agregar `twilio`)
 
 ---
 
