@@ -197,21 +197,21 @@ El asentimiento informado del estudiante en el primer login debe incluir consent
 - Ambos son requeridos para acceder al chat
 - El lenguaje debe ser simple y comprensible para un adolescente de 14-16 años
 
-### PENDIENTE 8 — Marca de agua en PDFs
+### ~~PENDIENTE 8~~ — ✅ COMPLETADO — Marca de agua en PDFs
 
-*(Ya estaba identificado en CLAUDE.md)*
+**Completado:** Mayo 2026
+**Implementado:** Marca de agua "PILOTO — MAYO 2026" incluida en ambos templates HTML (`mapa_estudiante.html` y `ficha_orientador.html`)
 
-Añadir marca de agua "PILOTO — MAYO 2026" en todos los PDFs generados por `pdf_generator.py`. Usar fpdf2 para overlay de texto diagonal semitransparente en cada página.
+### ~~PENDIENTE 9~~ — ✅ COMPLETADO — Envío de PDFs por email al completar mentoría
 
-### PENDIENTE 9 — Envío de PDFs por email al completar mentoría
-
-*(Ya estaba identificado en CLAUDE.md)*
-
-Conectar `pdf_generator.py` con `email_service.py`:
-- Al detectar `[FIN_CONSEJERIA]`, generar ambos PDFs
-- Enviar PDF estudiante a... (pendiente: ¿a qué email? el estudiante no tiene email verificado — revisar canal alternativo, posiblemente WhatsApp)
-- Enviar PDF orientador a `orientador_email` de la tabla `instituciones`
-- Con el nuevo esquema de alertas: copiar al rector si hay alertas activas
+**Completado:** Mayo 2026
+**Implementado:**
+- `enviar_ficha_orientador()` en `email_service.py` con PDF como adjunto
+- Llamada automática desde `app.py` al detectar `[FIN_CONSEJERIA]`
+- Tabla `envios_ficha` registra resultado (exito/fallido) por estudiante
+- `get_sede_info()` corregida para incluir `orientador_email`
+- Canal de entrega al estudiante: descarga directa desde la app (Opción A)
+- Canal de entrega al orientador: email automático + descarga desde dashboard
 
 ---
 
@@ -420,6 +420,19 @@ pip install twilio
 - Validación de formato email antes de guardar
 - `get_todas_instituciones()` y `update_institucion()` en `database.py` (Supabase + SQLite)
 - Migración correctiva: `migrations/003_rector_instituciones.sql` (columnas `rector_nombre`/`rector_email` no aplicadas en 002)
+
+---
+
+## VERIFICACIONES PENDIENTES ANTES DEL PILOTO
+
+### VERIFICACIÓN 1 — Twilio WhatsApp en producción
+**Estado:** Módulo implementado (`whatsapp_service.py`), secrets configurados en Streamlit Cloud, pero envío real no verificado con número Twilio activo.
+**Acción requerida:** Desde el dashboard admin (rol fcc) → tab "📱 WhatsApp" → vista previa → envío manual → confirmar recepción en celular de prueba.
+**Riesgo si no se verifica:** El piloto arranca sin saber si el re-engagement funciona, perdiendo la principal herramienta de retención.
+
+### VERIFICACIÓN 2 — Limpieza de código DEBUG
+**Estado:** `app.py` tiene varios `st.info()` y `st.warning()` de debug del flujo de email (commits marcados como `temp:`).
+**Acción requerida:** Eliminar todos los mensajes DEBUG de `app.py` antes del piloto — los estudiantes no deben ver mensajes técnicos en pantalla.
 
 ---
 

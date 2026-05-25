@@ -56,6 +56,11 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Tabs (rol fcc): Registrar estudiante · Estudiantes registrados · Alertas pendientes · Instituciones · WhatsApp
 - Tabs (orientador/secretaria): Registrar estudiante · Estudiantes registrados · Alertas pendientes
 - Admin de prueba en Supabase: `admin@fcc.edu.co` / contraseña en `ADMIN_PASSWORD`
+- Tabla de estudiantes rediseñada con `st.columns` (reemplaza `st.dataframe`)
+- Columna "Progreso": `S1 M3` / `✅ Completada` (reemplaza columna "Sesión")
+- Columna "Ficha orientador": botón Descargar + estado email (✅ fecha / ⚠️ Error / 📧 Pendiente)
+- `layout="wide"` en `set_page_config` con CSS override en chat del estudiante para centrar contenido
+- `momento_actual` añadido al SELECT de `get_estudiantes_por_admin()`
 
 **Base de datos (`database.py`):**
 - Adapter dual: Supabase (prod) / SQLite (dev offline, `raiz_local.db`)
@@ -99,17 +104,26 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Alertas pendientes visibles en el dashboard admin con "Marcar como vista"
 
 **Generación de PDFs (`pdf_generator.py`):**
-- Implementada con Playwright + plantillas HTML/CSS (`templates/`)
+- Migrado de Playwright a WeasyPrint (compatible con Streamlit Cloud)
+- Fuentes DM Sans y DM Serif Display descargadas localmente en `static/fonts/`
+- `@font-face` local reemplaza `@import` de Google Fonts en ambos templates
+- `packages.txt` creado con dependencias de sistema para WeasyPrint en Debian Trixie
+- Layout de encabezados corregido en ambos templates (CSS grid → flexbox)
+- Footer anclado al fondo en ambos templates (`position:absolute` → flex column)
+- Espacio de escritura manual ampliado en `mapa_estudiante.html` (margin-top 32px)
+- Handler del botón `[FIN_CONSEJERIA]` completado en `app.py`
 - `generar_pdfs(estudiante, historial, client, model, system_instruction) → (bytes, bytes)`
 - Llama a Gemini para extraer datos estructurados (Holland, fortalezas, nudges, riesgo)
-- PDF estudiante: "Mi Mapa rAÍz" | PDF orientador: "Ficha de Acompañamiento"
-- Incluye marca de agua de piloto
-- Se activa en `app.py` al detectar `[FIN_CONSEJERIA]`; botón "Descargar mi Perfil"
-- Envío por email al completar mentoría conectado vía `email_service.py`
+- PDF estudiante: "Mi Mapa rAÍz" descargable desde la app al completar mentoría
+- PDF orientador: "Ficha de Acompañamiento" enviado automáticamente por email al completar mentoría
 
-**Email (`email_service.py`):**
+**Email orientador (`email_service.py`):**
 - SMTP Gmail con contraseña de aplicación
 - `enviar_id_registro()`, `enviar_id_recuperacion()`, `enviar_alerta_critica()`
+- `enviar_ficha_orientador()` implementada — adjunta PDF orientador como attachment
+- `get_sede_info()` corregida para incluir `orientador_email`, `orientador_telefono`, `rector_email`
+- Tabla `envios_ficha` registra cada intento de envío (exitoso o fallido) por estudiante
+- Migración 006 aplicada en Supabase
 
 **Infraestructura:**
 - Supabase conectado y activo en producción (`doihxpicgfvmrcntzykl.supabase.co`)
@@ -117,8 +131,14 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 
 ### Pendiente (ver `raiz_claude_code_backlog.md` para detalle)
 
-**Crítico para el piloto — único restante:**
+**Crítico para el piloto:**
 - **PENDIENTE 5** — Row Level Security (RLS) en Supabase
+
+**Verificación pendiente:**
+- Twilio WhatsApp: módulo implementado pero envío real no verificado en producción. Hacer prueba manual desde tab "📱 WhatsApp" en dashboard y confirmar recepción.
+
+**Limpieza de código (antes del piloto):**
+- Eliminar `st.info`/`st.warning` de DEBUG del email en `app.py` (commits `temp: *`)
 
 **Para después del piloto:**
 - **PENDIENTE 10** — Migrar auth admin a Supabase Auth por usuario
@@ -202,7 +222,8 @@ migrations/
 ├── 002_roles_y_consentimiento.sql   ← aplicado en Supabase
 ├── 003_rector_instituciones.sql     ← aplicado en Supabase
 ├── 004_supresion_retencion.sql      ← aplicado en Supabase
-└── 005_whatsapp.sql                 ← aplicar en Supabase antes del próximo deploy
+├── 005_whatsapp.sql                 ← aplicado en Supabase
+└── 006_envios_ficha.sql             ← aplicado en Supabase
 ```
 
 ### Reglas de activación WhatsApp (5 mensajes)
@@ -234,19 +255,22 @@ raiz/
 ├── auth.py                   login estudiante, asentimiento, recuperación de ID
 ├── database.py               Supabase + SQLite adapter
 ├── email_service.py          SMTP Gmail (ID, recuperación, alerta crítica 3 destinatarios)
-├── pdf_generator.py          PDFs con Playwright + HTML/CSS  ← NO TOCAR
+├── pdf_generator.py          PDFs con WeasyPrint + HTML/CSS  ← NO TOCAR
 ├── whatsapp_service.py       re-engagement por WhatsApp con Twilio real
 ├── instrucciones.txt         system prompt pedagógico  ← NO TOCAR
 ├── schema.sql                schema PostgreSQL + seed data  ← NO TOCAR
 ├── requirements.txt
+├── packages.txt              dependencias apt para WeasyPrint en Streamlit Cloud
 ├── templates/
 │   ├── mapa_estudiante.html  plantilla PDF estudiante
 │   └── ficha_orientador.html plantilla PDF orientador
+├── static/fonts/             fuentes woff2 locales (DM Sans, DM Serif Display)
 ├── migrations/
 │   ├── 002_roles_y_consentimiento.sql
 │   ├── 003_rector_instituciones.sql
 │   ├── 004_supresion_retencion.sql
-│   └── 005_whatsapp.sql
+│   ├── 005_whatsapp.sql
+│   └── 006_envios_ficha.sql  tabla de registro de envíos al orientador
 └── .streamlit/
     └── secrets.toml          (gitignored — credenciales reales locales)
 ```
