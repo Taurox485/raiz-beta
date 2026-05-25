@@ -134,42 +134,28 @@ ALTER TABLE alertas
 
 ## PRIORIDAD ALTA — Cambios importantes antes de producción
 
-### PENDIENTE 3 — Derecho de supresión de datos (Ley 1581)
+### ~~PENDIENTE 3~~ — ✅ COMPLETADO — Derecho de supresión de datos (Ley 1581)
 
-**Contexto:**
-La Ley 1581 garantiza al titular (o su representante legal) el derecho a solicitar la eliminación de sus datos. El sistema actual no tiene mecanismo para esto.
+**Completado:** Mayo 2026 — commits `159bb70`, `1d70867`
+**Deploy:** `master:main` — activo en https://raiz-piloto.streamlit.app/?admin=1
 
-**Cambios requeridos en schema:**
+**Implementado:**
+- Migración `migrations/004_supresion_retencion.sql`: columnas `suprimido`, `fecha_supresion`, `motivo_supresion` en `estudiantes`
+- `suprimir_estudiante(uuid, motivo)` en `database.py`: borra mensajes + alertas, anonimiza nombre/apellido/email/celular
+- Sección "🗑️ Supresión de datos" en `_tab_lista_estudiantes()` (solo rol `fcc`): botón por estudiante → confirmation form con campo motivo + texto "CONFIRMAR" obligatorio
+- Buscador con filtro por nombre, apellido, código, institución, sede y municipio + caption "N de M estudiante(s)"
 
-```sql
-ALTER TABLE estudiantes
-    ADD COLUMN suprimido BOOLEAN DEFAULT FALSE,
-    ADD COLUMN fecha_supresion TIMESTAMPTZ,
-    ADD COLUMN motivo_supresion TEXT;
-```
+### ~~PENDIENTE 4~~ — ✅ COMPLETADO — Tiempo de retención de datos
 
-**Comportamiento requerido:**
-- Cuando `suprimido = TRUE`, anonimizar todos los datos personales identificables: nombre → 'SUPRIMIDO', apellido → 'SUPRIMIDO', celular_hash → NULL
-- Los mensajes asociados deben eliminarse de la tabla `mensajes`
-- Las alertas asociadas deben eliminarse de la tabla `alertas`
-- Mantener solo el registro anonimizado para estadísticas agregadas (municipio, grado, sesion_actual, perfil_riesgo)
-- El canal de solicitud de supresión es el orientador → escala a FCC → FCC ejecuta en el sistema
+**Completado:** Mayo 2026 — commit `159bb70`
+**Deploy:** `master:main` — activo en https://raiz-piloto.streamlit.app/?admin=1
 
-### PENDIENTE 4 — Tiempo de retención de datos
-
-**Contexto:**
-La Ley 1581 exige definir el período máximo de retención. Definición aprobada: un año calendario después de que el estudiante termine el año escolar en que usó rAÍz.
-
-**Cambios requeridos en schema:**
-
-```sql
-ALTER TABLE estudiantes
-    ADD COLUMN fecha_retencion_hasta DATE; -- calculada al registro: 31-dic del año siguiente
-```
-
-**Cambios requeridos en app.py o script separado:**
-- Proceso periódico (cron o trigger de Supabase) que identifique registros con `fecha_retencion_hasta < NOW()` y ejecute la supresión automática
-- Notificar a FCC antes de ejecutar supresiones masivas
+**Implementado:**
+- Migración `migrations/004_supresion_retencion.sql`: columna `fecha_retencion_hasta DATE` en `estudiantes`
+- `crear_estudiante_admin()` calcula automáticamente `fecha_retencion_hasta = 31-dic del año siguiente` al registrar
+- `get_estudiantes_vencidos()` en `database.py`: WHERE `fecha_retencion_hasta < hoy AND suprimido = FALSE`
+- Banner rojo en dashboard (solo `fcc`) cuando hay estudiantes con retención vencida
+- No usa pg_cron — chequeo al cargar el dashboard admin
 
 ### PENDIENTE 5 — Row Level Security (RLS) en Supabase para datos sensibles
 
