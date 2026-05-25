@@ -1438,6 +1438,8 @@ def suprimir_estudiante(estudiante_uuid: str, motivo: str) -> None:
 
     if _use_supabase():
         sb = _get_supabase()
+        sb.table("envios_ficha").delete().eq("estudiante_id", estudiante_uuid).execute()
+        sb.table("whatsapp_mensajes").delete().eq("estudiante_id", estudiante_uuid).execute()
         sb.table("mensajes").delete().eq("estudiante_id", estudiante_uuid).execute()
         sb.table("alertas").delete().eq("estudiante_id", estudiante_uuid).execute()
         sb.table("estudiantes").update({
@@ -1454,8 +1456,10 @@ def suprimir_estudiante(estudiante_uuid: str, motivo: str) -> None:
 
     _ensure_sqlite()
     with _conn() as conn:
-        conn.execute("DELETE FROM mensajes WHERE estudiante_id = ?", (estudiante_uuid,))
-        conn.execute("DELETE FROM alertas  WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute("DELETE FROM envios_ficha       WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute("DELETE FROM whatsapp_mensajes  WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute("DELETE FROM mensajes           WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute("DELETE FROM alertas            WHERE estudiante_id = ?", (estudiante_uuid,))
         conn.execute(
             """
             UPDATE estudiantes
