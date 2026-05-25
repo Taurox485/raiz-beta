@@ -146,8 +146,9 @@ def _tab_registrar_estudiante(admin: dict):
         return
 
     # ── Registro ──────────────────────────────────────────────────────────────
-    celular_hash = _hash_celular(celular) if celular.strip() else None
-    email_norm   = email_est.lower().strip() or None
+    celular_plain = celular.strip() or None
+    celular_hash  = _hash_celular(celular) if celular.strip() else None
+    email_norm    = email_est.lower().strip() or None
 
     try:
         est_id = db.crear_estudiante_admin(
@@ -158,6 +159,7 @@ def _tab_registrar_estudiante(admin: dict):
             admin_uuid=admin["id"],
             email=email_norm,
             celular_hash=celular_hash,
+            celular=celular_plain,
         )
         est = db.login_estudiante(est_id)
         db.set_consentimiento_acudiente(est["id"])
@@ -453,6 +455,69 @@ def _tab_instituciones(admin: dict):
                         st.rerun()
 
 
+# ── Tab 5: WhatsApp re-engagement (solo fcc) ──────────────────────────────────
+
+def _tab_whatsapp(admin: dict):
+    import whatsapp_service as wa
+
+    st.markdown("### Re-engagement por WhatsApp")
+    st.caption(
+        "Envía recordatorios a estudiantes que abandonaron su proceso. "
+        "Solo reciben mensajes los que tienen número de celular registrado."
+    )
+
+    tiene_twilio = bool(
+        st.secrets.get("TWILIO_ACCOUNT_SID", "")
+        and st.secrets.get("TWILIO_AUTH_TOKEN", "")
+        and st.secrets.get("TWILIO_WHATSAPP_NUMBER", "")
+    )
+    if not tiene_twilio:
+        st.warning(
+            "⚠️ Credenciales de Twilio no configuradas. "
+            "Agregá TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_WHATSAPP_NUMBER "
+            "en Settings → Secrets de Streamlit Cloud."
+        )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("👁 Vista previa", use_container_width=True):
+            with st.spinner("Calculando candidatos..."):
+                candidatos = wa.preview_reengagement(db)
+            st.session_state["wa_preview"] = candidatos
+
+    with c2:
+        if st.button(
+            "📤 Enviar ahora",
+            type="primary",
+            use_container_width=True,
+            disabled=not tiene_twilio,
+        ):
+            with st.spinner("Enviando mensajes..."):
+                resultado = wa.procesar_reengagement(db)
+            st.success(
+                f"Proceso completado: **{resultado['enviados']}** enviados, "
+                f"**{resultado['fallidos']}** fallidos "
+                f"de **{resultado['total']}** candidatos."
+            )
+            if "wa_preview" in st.session_state:
+                del st.session_state["wa_preview"]
+            st.rerun()
+
+    if "wa_preview" in st.session_state:
+        preview = st.session_state["wa_preview"]
+        if not preview:
+            st.info("No hay candidatos elegibles para re-engagement en este momento.")
+        else:
+            st.markdown(f"**{len(preview)} mensaje(s) a enviar:**")
+            for item in preview:
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{item['nombre']}** — `{item['estudiante_id']}` — "
+                        f"MSG{item['mensaje_numero']} — `{item['celular']}`"
+                    )
+                    st.caption(item["texto"])
+
+
 # ── API pública ────────────────────────────────────────────────────────────────
 
 def mostrar_dashboard_admin():
@@ -481,7 +546,7 @@ def mostrar_dashboard_admin():
         "🔔 Alertas pendientes",
     ]
     if admin["rol"] == "fcc":
-        tab_labels.append("⚙️ Instituciones")
+        tab_labels += ["⚙️ Instituciones", "📱 WhatsApp"]
 
     tabs = st.tabs(tab_labels)
 
@@ -494,3 +559,5 @@ def mostrar_dashboard_admin():
     if admin["rol"] == "fcc":
         with tabs[3]:
             _tab_instituciones(admin)
+        with tabs[4]:
+            _tab_whatsapp(admin)

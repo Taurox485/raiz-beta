@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS estudiantes (
     fecha_supresion                     TEXT,
     motivo_supresion                    TEXT,
     fecha_retencion_hasta               TEXT,
+    celular                             TEXT,
     CHECK (email IS NOT NULL OR celular_hash IS NOT NULL)
 );
 CREATE TABLE IF NOT EXISTS mensajes (
@@ -131,6 +132,13 @@ CREATE TABLE IF NOT EXISTS alertas (
     notificado_rector      INTEGER DEFAULT 0,
     notificado_peas        INTEGER DEFAULT 0,
     timestamp_notificacion TEXT
+);
+CREATE TABLE IF NOT EXISTS whatsapp_mensajes (
+    id              TEXT    PRIMARY KEY,
+    estudiante_id   TEXT    NOT NULL REFERENCES estudiantes(id),
+    mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 1 AND 5),
+    enviado_at      TEXT    DEFAULT (datetime('now')),
+    estado          TEXT    DEFAULT 'enviado'
 );
 """
 
@@ -295,6 +303,20 @@ def _ensure_sqlite():
         _add_col(conn, "estudiantes", "fecha_supresion",       "TEXT")
         _add_col(conn, "estudiantes", "motivo_supresion",      "TEXT")
         _add_col(conn, "estudiantes", "fecha_retencion_hasta", "TEXT")
+
+        # ── Migración 005: WhatsApp re-engagement (idempotente) ─────────────────
+        _add_col(conn, "estudiantes", "celular", "TEXT")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS whatsapp_mensajes (
+                id              TEXT    PRIMARY KEY,
+                estudiante_id   TEXT    NOT NULL REFERENCES estudiantes(id),
+                mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 1 AND 5),
+                enviado_at      TEXT    DEFAULT (datetime('now')),
+                estado          TEXT    DEFAULT 'enviado'
+            )
+            """
+        )
     _sqlite_ready = True
 
 
@@ -895,10 +917,12 @@ def crear_estudiante_admin(
     admin_uuid: str,
     email: Optional[str] = None,
     celular_hash: Optional[str] = None,
+    celular: Optional[str] = None,
 ) -> str:
     """
     Crea un estudiante desde el dashboard del administrador.
     Requiere al menos email o celular_hash.
+    celular: número en texto plano para WhatsApp (Opción B piloto — ver DEUDA TÉCNICA 1).
     consentimiento_acudiente_verificado se marca por separado con
     set_consentimiento_acudiente() una vez confirmada la firma física.
     Retorna el estudiante_id generado (ej. 'ALC-9-2026-0042').
@@ -925,6 +949,7 @@ def crear_estudiante_admin(
             "grado":                     grado,
             "email":                     email_norm,
             "celular_hash":              celular_hash,
+            "celular":                   celular,
             "sede_id":                   sede_id,
             "administrador_registro_id": admin_uuid,
             "fecha_retencion_hasta":     retencion,
@@ -938,12 +963,12 @@ def crear_estudiante_admin(
             """
             INSERT INTO estudiantes
                 (id, estudiante_id, nombre, apellido, grado,
-                 email, celular_hash, sede_id, administrador_registro_id,
+                 email, celular_hash, celular, sede_id, administrador_registro_id,
                  fecha_retencion_hasta)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (new_uuid, est_id, nombre, apellido, grado,
-             email_norm, celular_hash, sede_id, admin_uuid, retencion),
+             email_norm, celular_hash, celular, sede_id, admin_uuid, retencion),
         )
     return est_id
 
@@ -1373,6 +1398,7 @@ def suprimir_estudiante(estudiante_uuid: str, motivo: str) -> None:
             "apellido":         "SUPRIMIDO",
             "email":            None,
             "celular_hash":     None,
+            "celular":          None,
             "fecha_supresion":  now,
             "motivo_supresion": motivo,
         }).eq("id", estudiante_uuid).execute()
@@ -1390,6 +1416,7 @@ def suprimir_estudiante(estudiante_uuid: str, motivo: str) -> None:
                    apellido         = 'SUPRIMIDO',
                    email            = NULL,
                    celular_hash     = NULL,
+                   celular          = NULL,
                    fecha_supresion  = ?,
                    motivo_supresion = ?
             WHERE  id = ?
@@ -1457,3 +1484,172 @@ def get_estudiantes_vencidos() -> list[dict]:
             (today,),
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+# ── API pública: WhatsApp re-engagement (P14) ─────────────────────────────────
+
+def registrar_whatsapp_mensaje(
+    estudiante_uuid: str,
+    mensaje_numero: int,
+    estado: str,
+) -> None:
+    """Registra un mensaje WhatsApp enviado (o fallido) en la tabla whatsapp_mensajes."""
+    msg_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+
+    if _use_supabase():
+        _get_supabase().table("whatsapp_mensajes").insert({
+            "id":             msg_id,
+            "estudiante_id":  estudiante_uuid,
+            "mensaje_numero": mensaje_numero,
+            "estado":         estado,
+            "enviado_at":     now,
+        }).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO whatsapp_mensajes (id, estudiante_id, mensaje_numero, estado, enviado_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (msg_id, estudiante_uuid, mensaje_numero, estado, now),
+        )
+
+
+def _aplicar_reglas_reengagement(
+    estudiantes: list[dict],
+    wa_enviados: dict,
+    ultimo_chat: dict,
+    umbral_1d: str,
+    umbral_2d: str,
+    umbral_5d: str,
+) -> list[dict]:
+    """
+    Aplica las 5 reglas de re-engagement (backlog PENDIENTE 14) y retorna
+    los candidatos con su mensaje asignado.
+    MSG5 solo se asigna si no aplica ningún MSG1-4 en esta pasada.
+    """
+    resultado = []
+    for e in estudiantes:
+        uid = e["id"]
+        ya_enviados = wa_enviados.get(uid, set())
+        ultimo = ultimo_chat.get(uid)
+        sesion = e["sesion_actual"]
+        momento = e["momento_actual"]
+        registrado = e.get("fecha_registro") or ""
+
+        asignado = None
+
+        if sesion == 1 and momento == 1 and 1 not in ya_enviados:
+            if registrado and registrado < umbral_1d and ultimo is None:
+                asignado = 1
+        elif sesion == 2 and momento == 1 and 2 not in ya_enviados:
+            if ultimo and ultimo < umbral_2d:
+                asignado = 2
+        elif sesion == 3 and momento == 1 and 3 not in ya_enviados:
+            if ultimo and ultimo < umbral_2d:
+                asignado = 3
+        elif sesion == 4 and momento == 1 and 4 not in ya_enviados:
+            if ultimo and ultimo < umbral_2d:
+                asignado = 4
+
+        if asignado is None and 5 not in ya_enviados:
+            ref = ultimo or registrado
+            if ref and ref < umbral_5d:
+                asignado = 5
+
+        if asignado is not None:
+            resultado.append({
+                "id":             uid,
+                "nombre":         e["nombre"],
+                "estudiante_id":  e["estudiante_id"],
+                "celular":        e["celular"],
+                "mensaje_numero": asignado,
+            })
+
+    return resultado
+
+
+def get_estudiantes_para_reengagement() -> list[dict]:
+    """
+    Retorna candidatos elegibles para re-engagement por WhatsApp.
+    Solo estudiantes con celular IS NOT NULL, mentoria_completada=FALSE, suprimido=FALSE.
+    Aplica las 5 reglas del backlog PENDIENTE 14.
+    Cada dict: id, nombre, estudiante_id, celular, mensaje_numero
+    """
+    from datetime import datetime as _dt, timedelta
+    now = _dt.now(timezone.utc)
+    umbral_1d = (now - timedelta(days=1)).isoformat()
+    umbral_2d = (now - timedelta(days=2)).isoformat()
+    umbral_5d = (now - timedelta(days=5)).isoformat()
+
+    if _use_supabase():
+        sb = _get_supabase()
+        r_est = (
+            sb.table("estudiantes")
+            .select("id, nombre, estudiante_id, celular, sesion_actual, momento_actual, fecha_registro")
+            .eq("mentoria_completada", False)
+            .eq("suprimido", False)
+            .not_.is_("celular", "null")
+            .execute()
+        )
+        if not r_est.data:
+            return []
+        ids = [e["id"] for e in r_est.data]
+
+        r_wa = sb.table("whatsapp_mensajes").select("estudiante_id, mensaje_numero").in_("estudiante_id", ids).execute()
+        wa_enviados: dict = {}
+        for row in r_wa.data:
+            wa_enviados.setdefault(row["estudiante_id"], set()).add(row["mensaje_numero"])
+
+        r_msg = sb.table("mensajes").select("estudiante_id, timestamp").in_("estudiante_id", ids).execute()
+        ultimo_chat: dict = {}
+        for row in r_msg.data:
+            uid = row["estudiante_id"]
+            ts = row["timestamp"]
+            if uid not in ultimo_chat or ts > ultimo_chat[uid]:
+                ultimo_chat[uid] = ts
+
+        return _aplicar_reglas_reengagement(r_est.data, wa_enviados, ultimo_chat, umbral_1d, umbral_2d, umbral_5d)
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        rows_est = conn.execute(
+            """
+            SELECT id, nombre, estudiante_id, celular, sesion_actual, momento_actual, fecha_registro
+            FROM   estudiantes
+            WHERE  mentoria_completada = 0
+              AND  suprimido = 0
+              AND  celular IS NOT NULL
+            """
+        ).fetchall()
+        if not rows_est:
+            return []
+
+        ids = [r["id"] for r in rows_est]
+        placeholders = ",".join("?" * len(ids))
+
+        rows_wa = conn.execute(
+            f"SELECT estudiante_id, mensaje_numero FROM whatsapp_mensajes WHERE estudiante_id IN ({placeholders})",
+            ids,
+        ).fetchall()
+        wa_enviados = {}
+        for row in rows_wa:
+            wa_enviados.setdefault(row["estudiante_id"], set()).add(row["mensaje_numero"])
+
+        rows_msg = conn.execute(
+            f"""
+            SELECT estudiante_id, MAX(timestamp) AS ultimo
+            FROM   mensajes
+            WHERE  estudiante_id IN ({placeholders})
+            GROUP  BY estudiante_id
+            """,
+            ids,
+        ).fetchall()
+        ultimo_chat = {r["estudiante_id"]: r["ultimo"] for r in rows_msg}
+
+    return _aplicar_reglas_reengagement(
+        [dict(r) for r in rows_est], wa_enviados, ultimo_chat, umbral_1d, umbral_2d, umbral_5d
+    )
