@@ -441,26 +441,17 @@ CREATE TABLE whatsapp_mensajes (
 
 ---
 
-### PENDIENTE 15 — Selector en cascada en formulario de registro de estudiante
+### ~~PENDIENTE 15~~ — ✅ COMPLETADO — Selector en cascada en formulario de registro de estudiante
 
-**Prioridad:** Crítico para el piloto
-**Archivo:** `admin_dashboard.py` — Tab 1 "Registrar estudiante"
+**Completado:** Mayo 2026 — commit `a28add4`
+**Deploy:** `master:main` — activo en https://raiz-piloto.streamlit.app/?admin=1
 
-**Problema actual:** El formulario muestra todas las sedes mezcladas en un solo selectbox sin filtrar por municipio ni institución. Con 34 sedes en producción, el selector es inutilizable.
-
-**Solución requerida:** Reemplazar el selector de sede por tres selectores en cascada:
-
-1. **Municipio** (selectbox) → filtra las instituciones disponibles
-2. **Institución educativa** (selectbox) → se actualiza al elegir municipio, filtra las sedes
-3. **Sede** (selectbox) → se actualiza al elegir institución, este `sede_id` es el que se guarda en DB
-
-**Método DB requerido:**
-```python
-def get_instituciones_por_municipio(municipio_id: int) -> list[dict]:
-    # Retorna lista de {id, nombre} de instituciones del municipio
-```
-
-**Nota:** Los datos ya están en Supabase correctamente relacionados (municipios → instituciones → sedes). Es solo un cambio de UX en el formulario de registro, sin cambios de schema.
+**Implementado:**
+- 3 selectboxes en cascada fuera del form en `_tab_registrar_estudiante()`: Municipio → Institución educativa → Sede
+- Filtrado en memoria desde `get_sedes_disponibles()` (respeta rol: orientador solo ve su institución)
+- `sede_id` calculado antes del submit, pasado directo a `crear_estudiante_admin()`
+- Eliminado helper `_label_sede()` y el selectbox de sede del interior del form
+- Sin cambios de schema ni métodos DB nuevos (`get_municipios`, `get_instituciones`, `get_sedes` ya existían)
 
 ---
 
