@@ -1086,7 +1086,7 @@ def get_sedes_disponibles(admin_uuid: str, rol: str) -> list:
 def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
     """
     Retorna estudiantes dentro del scope del admin.
-    Cada dict: estudiante_id, nombre, apellido, grado, sede_nombre,
+    Cada dict: estudiante_id, nombre, apellido, grado, sede_nombre, institucion,
     municipio, sesion_actual, perfil_riesgo,
     consentimiento_acudiente_verificado, tiene_archivo_consentimiento.
     """
@@ -1096,6 +1096,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
                e.apellido,
                e.grado,
                s.nombre  AS sede_nombre,
+               i.nombre  AS institucion,
                m.nombre  AS municipio,
                e.sesion_actual,
                e.perfil_riesgo,
@@ -1136,6 +1137,7 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
                 "apellido":                         row["apellido"],
                 "grado":                            row["grado"],
                 "sede_nombre":                      sede_info.get("nombre", ""),
+                "institucion":                      inst_info.get("nombre", ""),
                 "municipio":                        mun_info.get("nombre", ""),
                 "sesion_actual":                    row["sesion_actual"],
                 "perfil_riesgo":                    row["perfil_riesgo"],

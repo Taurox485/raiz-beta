@@ -234,6 +234,24 @@ def _tab_lista_estudiantes(admin: dict):
             st.info("No hay estudiantes activos para suprimir.")
             return
 
+        busqueda = st.text_input(
+            "🔍 Buscar estudiante",
+            placeholder="Nombre, apellido, código, institución o municipio",
+        )
+        total = len(no_suprimidos)
+        if busqueda.strip():
+            q = busqueda.strip().lower()
+            no_suprimidos = [
+                e for e in no_suprimidos
+                if q in e["estudiante_id"].lower()
+                or q in e["nombre"].lower()
+                or q in e["apellido"].lower()
+                or q in e["municipio"].lower()
+                or q in e["sede_nombre"].lower()
+                or q in e["institucion"].lower()
+            ]
+        st.caption(f"{len(no_suprimidos)} de {total} estudiante(s)")
+
         for e in no_suprimidos:
             c1, c2 = st.columns([5, 1])
             with c1:
