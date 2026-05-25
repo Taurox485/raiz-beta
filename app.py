@@ -302,10 +302,14 @@ if st.session_state.fin_consejeria:
                             exito=exito,
                         )
                 except Exception as e_email:
-                    db.registrar_envio_ficha(
-                        estudiante_id=st.session_state.estudiante["id"],
-                        orientador_email=orientador_email if orientador_email else "desconocido",
-                        exito=False,
-                    )
+                    st.warning(f"DEBUG email error: {e_email}")
+                    try:
+                        db.registrar_envio_ficha(
+                            estudiante_id=st.session_state.estudiante["id"],
+                            orientador_email=orientador_email if orientador_email else "desconocido",
+                            exito=False,
+                        )
+                    except Exception:
+                        pass
             except Exception as e:
                 st.error(f"Hubo un problema generando el PDF. Intenta de nuevo o pídele ayuda a tu orientador/a. ({e})")
