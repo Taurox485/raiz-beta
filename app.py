@@ -275,6 +275,15 @@ if st.session_state.fin_consejeria:
                     mime="application/pdf",
                     use_container_width=True,
                 )
+                if "pdf_orientador" in st.session_state and st.session_state["pdf_orientador"]:
+                    nombre = f"{st.session_state.estudiante.get('nombre','estudiante')}".lower().replace(' ', '_')
+                    st.download_button(
+                        label="📋 [TEMP] Descargar Ficha Orientador",
+                        data=st.session_state["pdf_orientador"],
+                        file_name=f"ficha_orientador_{nombre}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
                 st.success("¡Tu Mapa rAÍz está listo! Descárgalo arriba.")
                 st.session_state["pdf_orientador"] = pdf_ori
             except Exception as e:
