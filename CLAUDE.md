@@ -134,6 +134,10 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 **Crítico para el piloto:**
 - **PENDIENTE 5** — Row Level Security (RLS) en Supabase
 
+**Supresión de datos (Ley 1581/2012):**
+- El check constraint `check_contacto_requerido` en la tabla `estudiantes` fue eliminado de Supabase (bloqueaba la anonimización al poner celular/email en NULL). Ejecutado: `ALTER TABLE estudiantes DROP CONSTRAINT check_contacto_requerido;`
+- `suprimir_estudiante()` en `database.py` ya incluye DELETE de `envios_ficha` y `whatsapp_mensajes` antes de `mensajes` y `alertas` (orden correcto para FKs)
+
 **Verificación pendiente:**
 - Twilio WhatsApp: módulo implementado pero envío real no verificado en producción. Hacer prueba manual desde tab "📱 WhatsApp" en dashboard y confirmar recepción.
 

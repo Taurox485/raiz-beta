@@ -434,6 +434,16 @@ pip install twilio
 **Estado:** `app.py` tiene varios `st.info()` y `st.warning()` de debug del flujo de email (commits marcados como `temp:`).
 **Acción requerida:** Eliminar todos los mensajes DEBUG de `app.py` antes del piloto — los estudiantes no deben ver mensajes técnicos en pantalla.
 
+### ✅ RESUELTO — Supresión de datos (Ley 1581/2012)
+**Fecha:** Mayo 2026
+**Problema:** `suprimir_estudiante()` fallaba con dos errores:
+1. FKs sin CASCADE: `envios_ficha` y `whatsapp_mensajes` bloqueaban el UPDATE
+2. Check constraint `check_contacto_requerido` bloqueaba poner celular/email en NULL
+**Solución:**
+- Añadidos DELETE de `envios_ficha` y `whatsapp_mensajes` al inicio de `suprimir_estudiante()` en ambos adapters (Supabase y SQLite)
+- Eliminado constraint en Supabase: `ALTER TABLE estudiantes DROP CONSTRAINT check_contacto_requerido;`
+**Estado:** Verificado funcionando en producción con ALC-9-2026-0004
+
 ---
 
 ## DEUDAS TÉCNICAS PARA ESCALADA
