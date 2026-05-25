@@ -90,6 +90,8 @@
     overflow: hidden;
     page-break-after: always;
     box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
   }
 
   .watermark {
@@ -100,7 +102,7 @@
     pointer-events: none; z-index: 0; user-select: none;
   }
 
-  .content { position: relative; z-index: 1; }
+  .content { position: relative; z-index: 1; flex: 1; }
 
   .page-header {
     display: flex; justify-content: space-between; align-items: flex-end;
@@ -119,10 +121,10 @@
   .student-banner {
     background: var(--tierra-palido); border-left: 4px solid var(--tierra-claro);
     border-radius: 0 6px 6px 0; padding: 9px 13px; margin-bottom: 11px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 3px 20px;
+    display: flex; flex-wrap: wrap; gap: 3px 8px;
   }
-  .student-banner h1 { font-family: var(--font-display); font-size: 14pt; color: var(--tierra); grid-column: 1 / -1; margin-bottom: 3px; }
-  .student-field { font-size: 7.5pt; color: var(--gris-medio); }
+  .student-banner h1 { font-family: var(--font-display); font-size: 14pt; color: var(--tierra); width: 100%; margin-bottom: 3px; }
+  .student-field { font-size: 7.5pt; color: var(--gris-medio); min-width: 120px; }
   .student-field span { font-weight: 500; color: var(--gris-texto); }
 
   .section { margin-bottom: 11px; }
@@ -215,14 +217,14 @@
   .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
 
   .page-footer {
-    position: absolute; bottom: 8mm; left: var(--page-padding); right: 40px;
+    margin-top: auto;
     display: flex; justify-content: space-between; align-items: center;
-    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; font-size: 6.5pt; color: var(--gris-suave);
+    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; padding-bottom: 8mm; font-size: 6.5pt; color: var(--gris-suave);
   }
   .footer-brand { font-weight: 600; color: var(--tierra); }
   .footer-confid { font-style: italic; }
 
-  .page-number { position: absolute; bottom: 8mm; right: var(--page-padding); font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
+  .page-number { font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
 
   @media print { body { background: white; } .page { box-shadow: none; margin: 0; } }
   @page { size: A4; margin: 0; }
@@ -298,8 +300,8 @@
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
     <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+    <span class="page-number">1 / 3</span>
   </div>
-  <div class="page-number">1 / 3</div>
 </div>
 
 
@@ -494,8 +496,8 @@
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
     <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+    <span class="page-number">2 / 3</span>
   </div>
-  <div class="page-number">2 / 3</div>
 </div>
 
 
@@ -591,8 +593,8 @@
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
     <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+    <span class="page-number">3 / 3</span>
   </div>
-  <div class="page-number">3 / 3</div>
 </div>
 
 </body>

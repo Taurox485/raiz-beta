@@ -81,6 +81,8 @@
     overflow: hidden;
     page-break-after: always;
     box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
   }
 
   .watermark {
@@ -99,7 +101,7 @@
     user-select: none;
   }
 
-  .content { position: relative; z-index: 1; }
+  .content { position: relative; z-index: 1; flex: 1; }
 
   .page-header {
     display: flex;
@@ -118,7 +120,7 @@
   .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; }
   .header-meta strong { color: var(--gris-medio); font-weight: 500; }
 
-  .page-number { position: absolute; bottom: 8mm; right: var(--page-padding); font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
+  .page-number { font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
 
   .student-header {
     background: var(--verde-fondo);
@@ -126,13 +128,13 @@
     border-radius: 0 6px 6px 0;
     padding: 10px 14px;
     margin-bottom: 14px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
   }
 
-  .student-header h1 { font-family: var(--font-display); font-size: 15pt; color: var(--verde-oscuro); grid-column: 1 / -1; margin-bottom: 4px; line-height: 1.2; }
-  .student-field { font-size: 8pt; color: var(--gris-medio); }
+  .student-header h1 { font-family: var(--font-display); font-size: 15pt; color: var(--verde-oscuro); width: 100%; margin-bottom: 4px; line-height: 1.2; }
+  .student-field { font-size: 8pt; color: var(--gris-medio); min-width: 120px; }
   .student-field span { font-weight: 500; color: var(--gris-texto); }
 
   .section { margin-bottom: 13px; }
@@ -188,9 +190,9 @@
   .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
 
   .page-footer {
-    position: absolute; bottom: 8mm; left: var(--page-padding); right: 40px;
+    margin-top: auto;
     display: flex; justify-content: space-between; align-items: center;
-    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; font-size: 6.5pt; color: var(--gris-suave);
+    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; padding-bottom: 8mm; font-size: 6.5pt; color: var(--gris-suave);
   }
   .footer-brand { font-weight: 500; color: var(--verde-oscuro); }
 
@@ -283,8 +285,8 @@
   <div class="page-footer">
     <span class="footer-brand">rAÍz</span>
     <span>{{ pie }}</span>
+    <span class="page-number">1 / 2</span>
   </div>
-  <div class="page-number">1 / 2</div>
 </div>
 
 
@@ -323,9 +325,9 @@
       <div style="font-family: 'DM Serif Display', Georgia, serif; font-size: 12pt; color: #2A2A2A; line-height: 1.5; font-style: italic;">
         Si en diez años alguien te pregunta qué hiciste para mejorar tu comunidad,<br>¿qué querés poder responderle?
       </div>
-      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
-      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
-      <div style="margin-top: 14px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
+      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
       <div style="font-size: 7pt; color: #9A9A9A; margin-top: 8px;">Tu respuesta · espacio para escribir</div>
     </div>
 
@@ -339,8 +341,8 @@
   <div class="page-footer">
     <span class="footer-brand">rAÍz</span>
     <span>{{ pie }}</span>
+    <span class="page-number">2 / 2</span>
   </div>
-  <div class="page-number">2 / 2</div>
 </div>
 
 </body>
