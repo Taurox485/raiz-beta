@@ -191,6 +191,16 @@ def _tab_lista_estudiantes(admin: dict):
         st.info("No hay estudiantes registrados aún en tu institución.")
         return
 
+    # ── Banner de retención vencida (solo fcc) ─────────────────────────────────
+    if admin["rol"] == "fcc":
+        vencidos = db.get_estudiantes_vencidos()
+        if vencidos:
+            st.error(
+                f"⚠️ **{len(vencidos)} estudiante(s) con período de retención vencido** — "
+                "la supresión es obligatoria por Ley 1581/2012. "
+                "Usá la sección de supresión más abajo."
+            )
+
     filas = [
         {
             "Código":        e["estudiante_id"],
@@ -207,6 +217,77 @@ def _tab_lista_estudiantes(admin: dict):
 
     st.dataframe(filas, use_container_width=True, hide_index=True)
     st.caption(f"{len(estudiantes)} estudiante(s) registrado(s).")
+
+    # ── Supresión de datos (solo fcc) ─────────────────────────────────────────
+    if admin["rol"] != "fcc":
+        return
+
+    with st.expander("🗑️ Supresión de datos (Ley 1581/2012)", expanded=False):
+        st.caption(
+            "Acción irreversible. Anonimiza nombre, email y celular; elimina mensajes y alertas. "
+            "Conserva municipio, grado y perfil de riesgo para estadísticas."
+        )
+
+        # Excluir estudiantes ya suprimidos de la lista
+        no_suprimidos = [e for e in estudiantes if e["nombre"] != "SUPRIMIDO"]
+        if not no_suprimidos:
+            st.info("No hay estudiantes activos para suprimir.")
+            return
+
+        for e in no_suprimidos:
+            c1, c2 = st.columns([5, 1])
+            with c1:
+                st.markdown(
+                    f"`{e['estudiante_id']}` — {e['nombre']} {e['apellido']} "
+                    f"({e['grado']}°, {e['municipio']})"
+                )
+            with c2:
+                if st.button(
+                    "🗑️",
+                    key=f"sup_btn_{e['estudiante_id']}",
+                    help="Suprimir datos de este estudiante",
+                    use_container_width=True,
+                ):
+                    st.session_state["suprimiendo"] = e["estudiante_id"]
+
+        if "suprimiendo" not in st.session_state:
+            return
+
+        est_id_sup = st.session_state["suprimiendo"]
+        st.warning(
+            f"⚠️ Estás a punto de suprimir los datos de **`{est_id_sup}`**. "
+            "Esta acción no se puede deshacer."
+        )
+
+        with st.form("form_confirmacion_supresion"):
+            motivo    = st.text_input("Motivo de la supresión *", placeholder="Solicitud del acudiente")
+            confirmar = st.text_input("Escribí CONFIRMAR para continuar")
+            c1, c2 = st.columns(2)
+            with c1:
+                ejecutar = st.form_submit_button(
+                    "🗑️ Ejecutar supresión", type="primary", use_container_width=True
+                )
+            with c2:
+                cancelar = st.form_submit_button("Cancelar", use_container_width=True)
+
+        if cancelar:
+            del st.session_state["suprimiendo"]
+            st.rerun()
+
+        if ejecutar:
+            if not motivo.strip():
+                st.error("El motivo es obligatorio.")
+            elif confirmar != "CONFIRMAR":
+                st.error("Escribí exactamente CONFIRMAR (en mayúsculas) para continuar.")
+            else:
+                est_data = db.login_estudiante(est_id_sup)
+                if est_data:
+                    db.suprimir_estudiante(est_data["id"], motivo.strip())
+                    del st.session_state["suprimiendo"]
+                    st.success(f"Datos de `{est_id_sup}` suprimidos correctamente.")
+                    st.rerun()
+                else:
+                    st.error(f"No se encontró el estudiante {est_id_sup}.")
 
 
 # ── Tab 3: Alertas pendientes ─────────────────────────────────────────────────

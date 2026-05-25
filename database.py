@@ -104,6 +104,10 @@ CREATE TABLE IF NOT EXISTS estudiantes (
     perfil_riesgo                       TEXT    DEFAULT 'sin_evaluar',
     mentoria_completada                 INTEGER DEFAULT 0,
     consentimiento_archivo_url          TEXT,
+    suprimido                           INTEGER DEFAULT 0,
+    fecha_supresion                     TEXT,
+    motivo_supresion                    TEXT,
+    fecha_retencion_hasta               TEXT,
     CHECK (email IS NOT NULL OR celular_hash IS NOT NULL)
 );
 CREATE TABLE IF NOT EXISTS mensajes (
@@ -285,6 +289,12 @@ def _ensure_sqlite():
         # la restricción la aplica la capa de aplicación (formulario del administrador).
         _add_col(conn, "estudiantes", "celular_hash",              "TEXT")
         _add_col(conn, "estudiantes", "consentimiento_archivo_url", "TEXT")
+
+        # ── Migración 004: supresión y retención (idempotente) ─────────────────
+        _add_col(conn, "estudiantes", "suprimido",             "INTEGER DEFAULT 0")
+        _add_col(conn, "estudiantes", "fecha_supresion",       "TEXT")
+        _add_col(conn, "estudiantes", "motivo_supresion",      "TEXT")
+        _add_col(conn, "estudiantes", "fecha_retencion_hasta", "TEXT")
     _sqlite_ready = True
 
 
@@ -900,21 +910,24 @@ def crear_estudiante_admin(
 
     email_norm = email.lower().strip() if email else None
     new_uuid = str(uuid.uuid4())
+    from datetime import date as _date
+    retencion = _date(datetime.now().year + 1, 12, 31).isoformat()
 
     if _use_supabase():
         est_id = _get_supabase().rpc(
             "generar_estudiante_id", {"p_sede_id": sede_id, "p_grado": grado}
         ).execute().data
         _get_supabase().table("estudiantes").insert({
-            "id":                      new_uuid,
-            "estudiante_id":           est_id,
-            "nombre":                  nombre,
-            "apellido":                apellido,
-            "grado":                   grado,
-            "email":                   email_norm,
-            "celular_hash":            celular_hash,
-            "sede_id":                 sede_id,
+            "id":                        new_uuid,
+            "estudiante_id":             est_id,
+            "nombre":                    nombre,
+            "apellido":                  apellido,
+            "grado":                     grado,
+            "email":                     email_norm,
+            "celular_hash":              celular_hash,
+            "sede_id":                   sede_id,
             "administrador_registro_id": admin_uuid,
+            "fecha_retencion_hasta":     retencion,
         }).execute()
         return est_id
 
@@ -925,11 +938,12 @@ def crear_estudiante_admin(
             """
             INSERT INTO estudiantes
                 (id, estudiante_id, nombre, apellido, grado,
-                 email, celular_hash, sede_id, administrador_registro_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 email, celular_hash, sede_id, administrador_registro_id,
+                 fecha_retencion_hasta)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (new_uuid, est_id, nombre, apellido, grado,
-             email_norm, celular_hash, sede_id, admin_uuid),
+             email_norm, celular_hash, sede_id, admin_uuid, retencion),
         )
     return est_id
 
@@ -1332,3 +1346,112 @@ def update_institucion(inst_id: int, datos: dict) -> None:
                 inst_id,
             ),
         )
+
+
+# ── API pública: supresión y retención (P3 + P4, Ley 1581/2012) ──────────────
+
+def suprimir_estudiante(estudiante_uuid: str, motivo: str) -> None:
+    """
+    Ejecuta el derecho de supresión (Ley 1581/2012).
+    1. Elimina todos los mensajes del estudiante.
+    2. Elimina todas las alertas del estudiante.
+    3. Anonimiza el registro: nombre/apellido → 'SUPRIMIDO', email/celular_hash → NULL.
+    Conserva municipio, grado, sesion_actual y perfil_riesgo para estadísticas agregadas.
+    Solo el rol fcc puede llamar este método desde el dashboard.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+
+    if _use_supabase():
+        sb = _get_supabase()
+        sb.table("mensajes").delete().eq("estudiante_id", estudiante_uuid).execute()
+        sb.table("alertas").delete().eq("estudiante_id", estudiante_uuid).execute()
+        sb.table("estudiantes").update({
+            "suprimido":        True,
+            "nombre":           "SUPRIMIDO",
+            "apellido":         "SUPRIMIDO",
+            "email":            None,
+            "celular_hash":     None,
+            "fecha_supresion":  now,
+            "motivo_supresion": motivo,
+        }).eq("id", estudiante_uuid).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute("DELETE FROM mensajes WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute("DELETE FROM alertas  WHERE estudiante_id = ?", (estudiante_uuid,))
+        conn.execute(
+            """
+            UPDATE estudiantes
+            SET    suprimido        = 1,
+                   nombre           = 'SUPRIMIDO',
+                   apellido         = 'SUPRIMIDO',
+                   email            = NULL,
+                   celular_hash     = NULL,
+                   fecha_supresion  = ?,
+                   motivo_supresion = ?
+            WHERE  id = ?
+            """,
+            (now, motivo, estudiante_uuid),
+        )
+
+
+def get_estudiantes_vencidos() -> list[dict]:
+    """
+    Retorna estudiantes cuyo período de retención expiró (fecha_retencion_hasta < hoy)
+    y que aún no han sido suprimidos.
+    Cada dict: estudiante_id, nombre, apellido, grado, fecha_retencion_hasta, municipio.
+    Uso exclusivo del rol fcc para mostrar el banner de alerta en el dashboard.
+    """
+    from datetime import date as _date
+    today = _date.today().isoformat()
+
+    if _use_supabase():
+        r = (
+            _get_supabase()
+            .table("estudiantes")
+            .select(
+                "estudiante_id, nombre, apellido, grado, fecha_retencion_hasta, "
+                "sedes(instituciones(municipios(nombre)))"
+            )
+            .lt("fecha_retencion_hasta", today)
+            .eq("suprimido", False)
+            .order("fecha_retencion_hasta")
+            .execute()
+        )
+        result = []
+        for row in r.data:
+            sede_info = row.get("sedes") or {}
+            inst_info = sede_info.get("instituciones") or {}
+            mun_info  = inst_info.get("municipios") or {}
+            result.append({
+                "estudiante_id":          row["estudiante_id"],
+                "nombre":                 row["nombre"],
+                "apellido":               row["apellido"],
+                "grado":                  row["grado"],
+                "fecha_retencion_hasta":  row["fecha_retencion_hasta"],
+                "municipio":              mun_info.get("nombre", ""),
+            })
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT e.estudiante_id,
+                   e.nombre,
+                   e.apellido,
+                   e.grado,
+                   e.fecha_retencion_hasta,
+                   m.nombre AS municipio
+            FROM   estudiantes   e
+            JOIN   sedes         s ON e.sede_id         = s.id
+            JOIN   instituciones i ON s.institucion_id  = i.id
+            JOIN   municipios    m ON i.municipio_id    = m.id
+            WHERE  e.fecha_retencion_hasta < ?
+              AND  e.suprimido = 0
+            ORDER  BY e.fecha_retencion_hasta
+            """,
+            (today,),
+        ).fetchall()
+        return [dict(r) for r in rows]
