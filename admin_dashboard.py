@@ -26,10 +26,6 @@ def _hash_celular(celular: str) -> str:
     return hashlib.sha256(celular.strip().encode("utf-8")).hexdigest()
 
 
-def _label_sede(s: dict) -> str:
-    return f"{s['nombre']} — {s['municipio']}"
-
-
 # ── Auth de admin ─────────────────────────────────────────────────────────────
 
 def esta_autenticado_admin() -> bool:
@@ -75,12 +71,29 @@ def _tab_registrar_estudiante(admin: dict):
         "El acudiente debe haber firmado la autorización física antes de registrar al estudiante."
     )
 
-    sedes = db.get_sedes_disponibles(admin["id"], admin["rol"])
-    if not sedes:
+    sedes_all = db.get_sedes_disponibles(admin["id"], admin["rol"])
+    if not sedes_all:
         st.warning("No hay sedes disponibles para tu perfil. Contactá al equipo rAÍz.")
         return
 
-    sede_labels = [_label_sede(s) for s in sedes]
+    # ── Selector en cascada (fuera del form para actualización dinámica) ──────
+    municipios = sorted({s["municipio"] for s in sedes_all})
+    mun_sel = st.selectbox("Municipio *", municipios, key="reg_municipio")
+
+    instituciones = sorted({
+        s["institucion"] for s in sedes_all if s["municipio"] == mun_sel
+    })
+    inst_sel = st.selectbox("Institución educativa *", instituciones, key="reg_institucion")
+
+    sedes_inst = [
+        s for s in sedes_all
+        if s["municipio"] == mun_sel and s["institucion"] == inst_sel
+    ]
+    sede_nombres = [s["nombre"] for s in sedes_inst]
+    sede_sel = st.selectbox("Sede *", sede_nombres, key="reg_sede")
+    sede_id = sedes_inst[sede_nombres.index(sede_sel)]["id"]
+
+    st.markdown("---")
 
     with st.form("form_registro_est", clear_on_submit=True):
         c1, c2 = st.columns(2)
@@ -89,11 +102,7 @@ def _tab_registrar_estudiante(admin: dict):
         with c2:
             apellido = st.text_input("Apellido(s) *")
 
-        c3, c4 = st.columns(2)
-        with c3:
-            grado = st.selectbox("Grado *", [9, 10, 11])
-        with c4:
-            sede_sel = st.selectbox("Sede *", sede_labels)
+        grado = st.selectbox("Grado *", [9, 10, 11])
 
         st.markdown("**Contacto del estudiante** *(al menos uno)*")
         c5, c6 = st.columns(2)
@@ -137,8 +146,6 @@ def _tab_registrar_estudiante(admin: dict):
         return
 
     # ── Registro ──────────────────────────────────────────────────────────────
-    sede_idx     = sede_labels.index(sede_sel)
-    sede_id      = sedes[sede_idx]["id"]
     celular_hash = _hash_celular(celular) if celular.strip() else None
     email_norm   = email_est.lower().strip() or None
 
