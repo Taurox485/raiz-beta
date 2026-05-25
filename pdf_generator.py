@@ -25,7 +25,7 @@ from pathlib import Path
 
 from google.genai import types
 from jinja2 import Environment, FileSystemLoader
-from playwright.sync_api import sync_playwright
+from weasyprint import HTML as WeasyHTML
 
 import database as db
 
@@ -95,22 +95,8 @@ def _llamar_gemini_json(
 
 
 def _html_a_pdf(html_content: str) -> bytes:
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.set_content(html_content, wait_until="networkidle")
-        pdf_bytes = page.pdf(
-            format="A4",
-            print_background=True,
-            margin={
-                "top": "0mm",
-                "bottom": "0mm",
-                "left": "0mm",
-                "right": "0mm",
-            }
-        )
-        browser.close()
-    return pdf_bytes
+    base_url = str(Path(__file__).parent)
+    return WeasyHTML(string=html_content, base_url=base_url).write_pdf()
 
 
 def _renderizar_plantilla(nombre_template: str, contexto: dict) -> str:

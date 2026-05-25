@@ -257,4 +257,25 @@ if user_input and not st.session_state.fin_consejeria:
 if st.session_state.fin_consejeria:
     st.success("¡Has completado tu mapa de exploración rAÍz!")
     if st.button("📥 Descargar mi Perfil de Talentos"):
-        st.info("Conectando con el motor de generación de PDFs...")
+        with st.spinner("Generando tu Mapa rAÍz... esto toma unos segundos ⏳"):
+            try:
+                import pdf_generator
+                pdf_est, pdf_ori = pdf_generator.generar_pdfs(
+                    estudiante=st.session_state.estudiante,
+                    historial=db.get_historial(st.session_state.estudiante["id"]),
+                    client=client,
+                    model=MODEL,
+                    system_instruction=system_instruction,
+                )
+                nombre = f"{st.session_state.estudiante.get('nombre', 'estudiante')}".lower().replace(' ', '_')
+                st.download_button(
+                    label="📄 Descargar Mi Mapa rAÍz (PDF)",
+                    data=pdf_est,
+                    file_name=f"mapa_raiz_{nombre}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+                st.success("¡Tu Mapa rAÍz está listo! Descárgalo arriba.")
+                st.session_state["pdf_orientador"] = pdf_ori
+            except Exception as e:
+                st.error(f"Hubo un problema generando el PDF. Intenta de nuevo o pídele ayuda a tu orientador/a. ({e})")
