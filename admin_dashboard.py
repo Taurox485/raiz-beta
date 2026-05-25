@@ -246,6 +246,107 @@ def _tab_alertas(admin: dict):
                     st.rerun()
 
 
+# ── Tab 4: Instituciones (solo fcc) ───────────────────────────────────────────
+
+def _tab_instituciones(admin: dict):
+    st.markdown("### Gestión de instituciones educativas")
+    st.info(
+        "Los emails de orientador/a y rector/a son críticos: se usan para enviar alertas "
+        "automáticas cuando un estudiante necesita atención. Sin estos datos, las "
+        "notificaciones no llegan."
+    )
+
+    if st.button("🔄 Actualizar lista", key="refresh_instituciones"):
+        st.rerun()
+
+    instituciones = db.get_todas_instituciones()
+
+    if not instituciones:
+        st.warning("No hay instituciones registradas.")
+        return
+
+    st.caption(f"{len(instituciones)} institución(es) registrada(s).")
+
+    for inst in instituciones:
+        sedes_str   = ", ".join(inst["sedes"]) if inst["sedes"] else "—"
+        tiene_emails = bool(inst["orientador_email"]) and bool(inst["rector_email"])
+        icono        = "✅" if tiene_emails else "⚠️"
+
+        with st.expander(
+            f"{icono} {inst['nombre']} — {inst['municipio_nombre']}",
+            expanded=False,
+        ):
+            st.caption(f"Sedes: {sedes_str}")
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown("**Orientador/a actual**")
+                st.markdown(f"Nombre: {inst['orientador_nombre'] or '—'}")
+                if inst["orientador_email"]:
+                    st.markdown(f"Email: `{inst['orientador_email']}`")
+                else:
+                    st.warning("Email: no configurado — necesario para alertas")
+                st.markdown(f"Tel: {inst['orientador_telefono'] or '—'}")
+            with col_b:
+                st.markdown("**Rector/a actual**")
+                st.markdown(f"Nombre: {inst['rector_nombre'] or '—'}")
+                if inst["rector_email"]:
+                    st.markdown(f"Email: `{inst['rector_email']}`")
+                else:
+                    st.warning("Email: no configurado — necesario para alertas críticas")
+
+            st.markdown("---")
+
+            with st.form(f"form_inst_{inst['id']}"):
+                st.markdown("**Actualizar datos de contacto**")
+                c1, c2 = st.columns(2)
+                with c1:
+                    ori_nombre = st.text_input(
+                        "Nombre orientador/a",
+                        value=inst["orientador_nombre"],
+                    )
+                    ori_email = st.text_input(
+                        "Email orientador/a ✉️",
+                        value=inst["orientador_email"],
+                        placeholder="orientador@colegio.edu.co",
+                    )
+                    ori_tel = st.text_input(
+                        "Teléfono orientador/a",
+                        value=inst["orientador_telefono"],
+                        placeholder="3001234567",
+                    )
+                with c2:
+                    rec_nombre = st.text_input(
+                        "Nombre rector/a",
+                        value=inst["rector_nombre"],
+                    )
+                    rec_email = st.text_input(
+                        "Email rector/a ✉️",
+                        value=inst["rector_email"],
+                        placeholder="rector@colegio.edu.co",
+                    )
+
+                if st.form_submit_button("💾 Guardar cambios", type="primary"):
+                    errores = []
+                    if ori_email.strip() and "@" not in ori_email:
+                        errores.append("El email del orientador/a no parece válido.")
+                    if rec_email.strip() and "@" not in rec_email:
+                        errores.append("El email del rector/a no parece válido.")
+                    if errores:
+                        for e in errores:
+                            st.error(e)
+                    else:
+                        db.update_institucion(inst["id"], {
+                            "orientador_nombre":   ori_nombre.strip() or None,
+                            "orientador_email":    ori_email.strip().lower() or None,
+                            "orientador_telefono": ori_tel.strip() or None,
+                            "rector_nombre":       rec_nombre.strip() or None,
+                            "rector_email":        rec_email.strip().lower() or None,
+                        })
+                        st.success(f"Datos de **{inst['nombre']}** actualizados.")
+                        st.rerun()
+
+
 # ── API pública ────────────────────────────────────────────────────────────────
 
 def mostrar_dashboard_admin():
@@ -268,15 +369,22 @@ def mostrar_dashboard_admin():
     # ── Contenido ─────────────────────────────────────────────────────────────
     st.title("🌱 rAÍz — Administración")
 
-    tab1, tab2, tab3 = st.tabs([
+    tab_labels = [
         "➕ Registrar estudiante",
         "👥 Estudiantes registrados",
         "🔔 Alertas pendientes",
-    ])
+    ]
+    if admin["rol"] == "fcc":
+        tab_labels.append("⚙️ Instituciones")
 
-    with tab1:
+    tabs = st.tabs(tab_labels)
+
+    with tabs[0]:
         _tab_registrar_estudiante(admin)
-    with tab2:
+    with tabs[1]:
         _tab_lista_estudiantes(admin)
-    with tab3:
+    with tabs[2]:
         _tab_alertas(admin)
+    if admin["rol"] == "fcc":
+        with tabs[3]:
+            _tab_instituciones(admin)

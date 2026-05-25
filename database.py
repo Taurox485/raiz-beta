@@ -1218,3 +1218,117 @@ def marcar_alerta_vista(alerta_id: str) -> None:
             "UPDATE alertas SET estado = 'vista' WHERE id = ?",
             (alerta_id,),
         )
+
+
+# ── API pública: gestión de instituciones (rol fcc) ───────────────────────────
+
+def get_todas_instituciones() -> list[dict]:
+    """
+    Retorna todas las instituciones con datos de contacto y sedes.
+    Uso exclusivo del rol fcc en el dashboard de administración.
+    Cada dict: id, nombre, municipio_nombre, orientador_nombre, orientador_email,
+    orientador_telefono, rector_nombre, rector_email, sedes (lista de nombres).
+    """
+    if _use_supabase():
+        r = (
+            _get_supabase()
+            .table("instituciones")
+            .select(
+                "id, nombre, orientador_nombre, orientador_email, orientador_telefono, "
+                "rector_nombre, rector_email, "
+                "municipios(nombre), "
+                "sedes(nombre)"
+            )
+            .order("nombre")
+            .execute()
+        )
+        result = []
+        for row in r.data:
+            mun   = row.get("municipios") or {}
+            sedes = sorted(s["nombre"] for s in (row.get("sedes") or []))
+            result.append({
+                "id":                  row["id"],
+                "nombre":              row["nombre"],
+                "municipio_nombre":    mun.get("nombre", ""),
+                "orientador_nombre":   row.get("orientador_nombre") or "",
+                "orientador_email":    row.get("orientador_email") or "",
+                "orientador_telefono": row.get("orientador_telefono") or "",
+                "rector_nombre":       row.get("rector_nombre") or "",
+                "rector_email":        row.get("rector_email") or "",
+                "sedes":               sedes,
+            })
+        result.sort(key=lambda x: (x["municipio_nombre"], x["nombre"]))
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT i.id                  AS inst_id,
+                   i.nombre              AS inst_nombre,
+                   i.orientador_nombre,
+                   i.orientador_email,
+                   i.orientador_telefono,
+                   i.rector_nombre,
+                   i.rector_email,
+                   m.nombre              AS municipio_nombre,
+                   s.nombre              AS sede_nombre
+            FROM   instituciones  i
+            JOIN   municipios     m ON i.municipio_id   = m.id
+            LEFT JOIN sedes       s ON s.institucion_id = i.id
+            ORDER  BY m.nombre, i.nombre, s.nombre
+            """
+        ).fetchall()
+
+    from collections import OrderedDict
+    instituciones: "OrderedDict[int, dict]" = OrderedDict()
+    for row in rows:
+        iid = row["inst_id"]
+        if iid not in instituciones:
+            instituciones[iid] = {
+                "id":                  iid,
+                "nombre":              row["inst_nombre"],
+                "municipio_nombre":    row["municipio_nombre"] or "",
+                "orientador_nombre":   row["orientador_nombre"] or "",
+                "orientador_email":    row["orientador_email"] or "",
+                "orientador_telefono": row["orientador_telefono"] or "",
+                "rector_nombre":       row["rector_nombre"] or "",
+                "rector_email":        row["rector_email"] or "",
+                "sedes":               [],
+            }
+        if row["sede_nombre"]:
+            instituciones[iid]["sedes"].append(row["sede_nombre"])
+    return list(instituciones.values())
+
+
+def update_institucion(inst_id: int, datos: dict) -> None:
+    """
+    Actualiza datos de contacto de una institución.
+    datos: dict con claves orientador_nombre, orientador_email, orientador_telefono,
+    rector_nombre, rector_email (todos opcionales; None para limpiar el campo).
+    """
+    if _use_supabase():
+        _get_supabase().table("instituciones").update(datos).eq("id", inst_id).execute()
+        return
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute(
+            """
+            UPDATE instituciones
+            SET    orientador_nombre    = ?,
+                   orientador_email     = ?,
+                   orientador_telefono  = ?,
+                   rector_nombre        = ?,
+                   rector_email         = ?
+            WHERE  id = ?
+            """,
+            (
+                datos.get("orientador_nombre"),
+                datos.get("orientador_email"),
+                datos.get("orientador_telefono"),
+                datos.get("rector_nombre"),
+                datos.get("rector_email"),
+                inst_id,
+            ),
+        )
