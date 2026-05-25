@@ -288,19 +288,25 @@ if st.session_state.fin_consejeria:
                 try:
                     from email_service import enviar_ficha_orientador
                     sede_info = db.get_sede_info(st.session_state.estudiante.get("sede_id", 0))
+                    st.info(f"DEBUG sede_info: {sede_info}")
                     orientador_email = sede_info.get("orientador_email") if sede_info else None
+                    st.info(f"DEBUG orientador_email: {orientador_email}")
                     if orientador_email:
                         nombre_est = f"{st.session_state.estudiante.get('nombre','')} {st.session_state.estudiante.get('apellido','')}".strip()
+                        st.info(f"DEBUG intentando enviar a {orientador_email}")
                         exito = enviar_ficha_orientador(
                             destinatario=orientador_email,
                             nombre_estudiante=nombre_est,
                             pdf_bytes=pdf_ori,
                         )
+                        st.info(f"DEBUG resultado envío: {exito}")
                         db.registrar_envio_ficha(
                             estudiante_id=st.session_state.estudiante["id"],
                             orientador_email=orientador_email,
                             exito=exito,
                         )
+                    else:
+                        st.warning("DEBUG: orientador_email es None o vacío")
                 except Exception as e_email:
                     st.warning(f"DEBUG email error: {e_email}")
                     try:
