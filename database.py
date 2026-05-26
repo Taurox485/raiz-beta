@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS alertas (
 CREATE TABLE IF NOT EXISTS whatsapp_mensajes (
     id              TEXT    PRIMARY KEY,
     estudiante_id   TEXT    NOT NULL REFERENCES estudiantes(id),
-    mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 1 AND 5),
+    mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 0 AND 5),
     enviado_at      TEXT    DEFAULT (datetime('now')),
     estado          TEXT    DEFAULT 'enviado'
 );
@@ -318,7 +318,7 @@ def _ensure_sqlite():
             CREATE TABLE IF NOT EXISTS whatsapp_mensajes (
                 id              TEXT    PRIMARY KEY,
                 estudiante_id   TEXT    NOT NULL REFERENCES estudiantes(id),
-                mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 1 AND 5),
+                mensaje_numero  INTEGER NOT NULL CHECK (mensaje_numero BETWEEN 0 AND 5),
                 enviado_at      TEXT    DEFAULT (datetime('now')),
                 estado          TEXT    DEFAULT 'enviado'
             )

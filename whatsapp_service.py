@@ -11,6 +11,7 @@ Requiere en secrets.toml:
     APP_URL                = "https://raiz-piloto.streamlit.app"
 
 Reglas de activación (backlog PENDIENTE 14):
+  MSG0 — Mensaje de bienvenida inmediata al registro
   MSG1 — día 1 tras registro, nunca entró al chat
   MSG2 — 2 días tras completar S1 sin iniciar S2
   MSG3 — 2 días tras completar S2 sin iniciar S3
@@ -24,9 +25,10 @@ import re
 import streamlit as st
 
 MENSAJES = {
+    0: "¡Hola, {nombre}! 🌱 Soy rAÍz, tu mentor de proyecto de vida. Tu orientador/a ya dejó tu cuenta lista para que empecemos este viaje. Vamos a tener 4 charlas cortitas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. Tu código de acceso único es: *{codigo}* ¿Listo/a para arrancar? Entrá acá: {link}",
     1: "Hola {nombre} 👋 Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!",
-    2: "Hola {nombre}, completaste el primer paso en rAÍz 🌱 ¿Listo para continuar? Entrá con {codigo} en {link} — te falta poco para descubrir más sobre vos.",
-    3: "Hola {nombre}, vas muy bien en rAÍz ✨ Continuá tu recorrido en {link} con tu código {codigo}. Cada sesión te acerca más a tu proyecto de vida.",
+    2: "¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote 🌿 En la próxima charla vamos a seguir conversando sobre ti. Quiero saber más de ti! Tu código: {codigo} ¿Seguimos? Entrá acá: {link}",
+    3: "¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos. Ahora sigue otra parte muy interesante: hablar de lo que imaginás para tu futuro 🌱 Tu código: {codigo} ¿Le damos? Entrá acá: {link}",
     4: "Hola {nombre}, ¡ya casi terminás! 🎯 Solo falta una sesión en rAÍz. Entrá con {codigo} en {link} y obtén tu Mapa rAÍz personalizado.",
     5: "Hola {nombre}, tu recorrido en rAÍz te espera 🌿 Ingresá cuando puedas con tu código {codigo} en {link}. Tu orientador/a también está pendiente de ti.",
 }
@@ -73,6 +75,12 @@ def _formatear(template: str, nombre: str, codigo: str) -> str:
     except Exception:
         link = "https://raiz-piloto.streamlit.app"
     return template.format(nombre=nombre.split()[0], codigo=codigo, link=link)
+
+
+def enviar_bienvenida(celular: str, nombre: str, codigo: str) -> bool:
+    """Envía el Mensaje Cero (Bienvenida Inmediata) tras el registro."""
+    texto = _formatear(MENSAJES[0], nombre, codigo)
+    return _enviar_mensaje(celular, texto)
 
 
 def preview_reengagement(database) -> list[dict]:

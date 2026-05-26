@@ -42,27 +42,41 @@ def _enviar(destinatario: str, asunto: str, cuerpo: str) -> None:
         servidor.sendmail(cfg["user"], destinatario, msg.as_string())
 
 
-def enviar_id_registro(email: str, nombre: str, estudiante_id: str) -> None:
+def enviar_bienvenida(email: str, nombre: str, estudiante_id: str) -> None:
     """
-    Envía el ID recién generado al correo del estudiante tras el registro exitoso.
-    Si falla, lanza la excepción para que auth.py muestre el ID en pantalla.
+    Envía el email de bienvenida inmediata (Mensaje Cero) tras el registro.
+    Tono alineado con el mensaje de WhatsApp.
     """
+    try:
+        link = st.secrets.get("APP_URL", "https://raiz-piloto.streamlit.app")
+    except Exception:
+        link = "https://raiz-piloto.streamlit.app"
+
     cuerpo = f"""\
-¡Hola, {nombre}!
+¡Hola, {nombre.split()[0]}! 🌱
 
-Bienvenido/a a rAÍz, tu guía de proyecto de vida.
+Soy rAÍz, tu mentor de proyecto de vida. Tu orientador/a ya dejó tu cuenta lista para que empecemos este viaje.
 
-Tu ID de rAÍz es:
+Vamos a tener 4 charlas cortitas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. No hay respuestas correctas o incorrectas, solo queremos conocerte mejor.
+
+Tu código de acceso único es:
 
     {estudiante_id}
 
-Guárdalo bien — lo necesitarás cada vez que quieras retomar
-tu proceso de orientación.
+¿Listo/a para arrancar? Entrá acá:
+{link}
 
 ¡Nos vemos adentro!
 El equipo rAÍz
 """
-    _enviar(email, "Tu ID de rAÍz — guárdalo", cuerpo)
+    _enviar(email, "🌱 ¡Bienvenido/a a rAÍz! — Tu código de acceso", cuerpo)
+
+
+def enviar_id_registro(email: str, nombre: str, estudiante_id: str) -> None:
+    """
+    Wrapper de enviar_bienvenida para mantener compatibilidad con llamadas existentes.
+    """
+    enviar_bienvenida(email, nombre, estudiante_id)
 
 
 def enviar_id_recuperacion(email: str, nombre: str, estudiante_id: str) -> None:

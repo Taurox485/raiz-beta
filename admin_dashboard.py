@@ -18,6 +18,8 @@ import hashlib
 import streamlit as st
 
 import database as db
+import email_service
+import whatsapp_service
 
 
 # ── Helpers internos ───────────────────────────────────────────────────────────
@@ -174,6 +176,26 @@ def _tab_registrar_estudiante(admin: dict):
             f"Código de acceso: **`{est_id}`**\n\n"
             f"Compartí este código con el estudiante para que pueda acceder a rAÍz."
         )
+
+        # ── Disparo de Mensaje Cero (Bienvenida) ──────────────────────────────
+        with st.status("Enviando mensajes de bienvenida...") as status:
+            if celular_plain:
+                ok_wa = whatsapp_service.enviar_bienvenida(celular_plain, nombre, est_id)
+                if ok_wa:
+                    st.write("✅ Mensaje de WhatsApp enviado.")
+                    db.registrar_whatsapp_mensaje(est["id"], 0, "enviado")
+                else:
+                    st.write("⚠️ Falló el envío de WhatsApp.")
+                    db.registrar_whatsapp_mensaje(est["id"], 0, "fallido")
+
+            if email_norm:
+                try:
+                    email_service.enviar_bienvenida(email_norm, nombre, est_id)
+                    st.write("✅ Email de bienvenida enviado.")
+                except Exception as e_mail:
+                    st.write(f"⚠️ Falló el envío de Email: {e_mail}")
+
+            status.update(label="Proceso de bienvenida completado", state="complete")
 
     except ValueError as exc:
         st.error(str(exc))
