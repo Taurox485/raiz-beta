@@ -5,36 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Mapa rAÍz — {{ nombre_completo }}</title>
 <style>
-  @font-face {
-    font-family: 'DM Sans';
-    font-style: normal;
-    font-weight: 400;
-    src: url('../static/fonts/dm-sans-400.woff2') format('woff2');
-  }
-  @font-face {
-    font-family: 'DM Sans';
-    font-style: normal;
-    font-weight: 500;
-    src: url('../static/fonts/dm-sans-500.woff2') format('woff2');
-  }
-  @font-face {
-    font-family: 'DM Sans';
-    font-style: normal;
-    font-weight: 600;
-    src: url('../static/fonts/dm-sans-600.woff2') format('woff2');
-  }
-  @font-face {
-    font-family: 'DM Serif Display';
-    font-style: normal;
-    font-weight: 400;
-    src: url('../static/fonts/dm-serif-display-normal.woff2') format('woff2');
-  }
-  @font-face {
-    font-family: 'DM Serif Display';
-    font-style: italic;
-    font-weight: 400;
-    src: url('../static/fonts/dm-serif-display-italic.woff2') format('woff2');
-  }
+  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 400; src: url('../static/fonts/dm-sans-400.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 500; src: url('../static/fonts/dm-sans-500.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 600; src: url('../static/fonts/dm-sans-600.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Serif Display'; font-style: normal; font-weight: 400; src: url('../static/fonts/dm-serif-display-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'DM Serif Display'; font-style: italic; font-weight: 400; src: url('../static/fonts/dm-serif-display-italic.woff2') format('woff2'); }
 
   :root {
     --verde-oscuro: #2D5016;
@@ -56,7 +31,6 @@
     --gris-linea: #E0DDD8;
     --font-display: 'DM Serif Display', Georgia, serif;
     --font-body: 'DM Sans', system-ui, sans-serif;
-    --page-width: 210mm;
     --page-padding: 14mm;
   }
 
@@ -72,7 +46,7 @@
   }
 
   .page {
-    width: var(--page-width);
+    width: 210mm;
     min-height: 297mm;
     margin: 8mm auto;
     background: var(--blanco);
@@ -86,113 +60,105 @@
   }
 
   .watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-35deg);
-    font-family: var(--font-body);
-    font-size: 36pt;
-    font-weight: 600;
-    color: rgba(180, 175, 165, 0.10);
-    white-space: nowrap;
-    letter-spacing: 0.08em;
-    pointer-events: none;
-    z-index: 0;
-    user-select: none;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%) rotate(-35deg);
+    font-family: var(--font-body); font-size: 36pt; font-weight: 600;
+    color: rgba(180,175,165,0.10); white-space: nowrap; letter-spacing: 0.08em;
+    pointer-events: none; z-index: 0; user-select: none;
   }
 
   .content { position: relative; z-index: 1; flex: 1; }
 
+  /* ── Header ── */
   .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1.5px solid var(--verde-medio);
-    padding-bottom: 7px;
-    margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 1.5px solid var(--verde-medio); padding-bottom: 7px; margin-bottom: 12px;
   }
-
-  .logo-mark { display: flex; align-items: baseline; gap: 0; }
+  .logo-mark { display: flex; align-items: baseline; }
   .logo-r { font-family: var(--font-display); font-size: 22pt; color: var(--verde-oscuro); line-height: 1; }
   .logo-raiz { font-family: var(--font-display); font-size: 15pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
   .logo-sub { font-size: 7pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 2px; }
-
   .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; }
   .header-meta strong { color: var(--gris-medio); font-weight: 500; }
 
-  .page-number { font-size: 7.5pt; color: var(--gris-suave); letter-spacing: 0.04em; }
-
+  /* ── Banner estudiante ── */
   .student-header {
-    background: var(--verde-fondo);
-    border-left: 4px solid var(--verde-claro);
-    border-radius: 0 6px 6px 0;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
+    background: var(--verde-fondo); border-left: 4px solid var(--verde-claro);
+    border-radius: 0 6px 6px 0; padding: 10px 14px; margin-bottom: 14px;
+    display: flex; flex-wrap: wrap; gap: 4px 8px;
   }
-
   .student-header h1 { font-family: var(--font-display); font-size: 15pt; color: var(--verde-oscuro); width: 100%; margin-bottom: 4px; line-height: 1.2; }
   .student-field { font-size: 8pt; color: var(--gris-medio); min-width: 120px; }
   .student-field span { font-weight: 500; color: var(--gris-texto); }
 
+  /* ── Secciones ── */
   .section { margin-bottom: 13px; }
-
   .section-label {
     font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
     color: var(--verde-medio); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
   }
   .section-label::after { content: ''; flex: 1; height: 1px; background: var(--verde-palido); }
 
-  .cuadrante-card {
-    background: var(--crema); border: 1px solid var(--gris-linea); border-radius: 8px;
-    padding: 12px 14px; display: flex; gap: 14px; align-items: flex-start;
+  /* ── Holland ── */
+  .holland-intro { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.55; margin-bottom: 8px; }
+  .holland-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+  .cuad-card {
+    border-radius: 8px; padding: 9px 12px;
+    display: flex; gap: 10px; align-items: flex-start;
   }
-  .cuadrante-badge {
-    width: 56px; height: 56px; border-radius: 50%; background: var(--verde-medio);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 1px;
+  .cuad-card.dominante { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
+  .cuad-card.debil { background: var(--crema); border: 1px solid var(--gris-linea); }
+  .cuad-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16pt; flex-shrink: 0;
   }
-  .cuadrante-icon { font-size: 18pt; line-height: 1; }
-  .cuadrante-name { font-family: var(--font-display); font-size: 11pt; color: var(--verde-oscuro); margin-bottom: 3px; }
-  .cuadrante-desc { font-size: 9pt; color: var(--gris-medio); line-height: 1.5; }
-  .cuadrante-tag { display: inline-block; background: var(--verde-palido); color: var(--verde-oscuro); font-size: 7pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-bottom: 5px; }
+  .dominante .cuad-circle { background: var(--verde-medio); }
+  .debil .cuad-circle { background: var(--gris-linea); }
+  .cuad-tag-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+  .dominante .cuad-tag-label { color: var(--verde-oscuro); }
+  .debil .cuad-tag-label { color: var(--gris-suave); }
+  .cuad-nombre { font-size: 9.5pt; font-weight: 600; margin-bottom: 3px; }
+  .dominante .cuad-nombre { color: var(--verde-oscuro); }
+  .debil .cuad-nombre { color: var(--gris-suave); }
+  .cuad-desc { font-size: 8pt; line-height: 1.45; }
+  .dominante .cuad-desc { color: var(--gris-medio); }
+  .debil .cuad-desc { color: var(--gris-suave); }
 
-  .fortalezas-grid { display: flex; flex-direction: column; gap: 7px; }
+  /* ── Catálogo fortalezas y valores en dos columnas ── */
+  .catalogo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .catalogo-col { border: 1px solid var(--gris-linea); border-radius: 8px; padding: 10px 12px; }
+  .catalogo-col-title { font-size: 8pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--verde-palido); }
+  .catalogo-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
+  .catalogo-item:last-child { border-bottom: none; }
+  .catalogo-nombre { font-size: 9pt; font-weight: 600; color: var(--verde-oscuro); }
+  .catalogo-desc { font-size: 8pt; color: var(--gris-suave); line-height: 1.4; margin-top: 1px; }
 
-  .fortaleza-card { border: 1px solid var(--gris-linea); border-radius: 7px; overflow: hidden; display: flex; }
-  .fortaleza-accent { width: 5px; flex-shrink: 0; background: var(--verde-claro); }
-  .fortaleza-accent.tierra { background: var(--tierra-claro); }
-  .fortaleza-accent.ocre { background: var(--ocre); }
-  .fortaleza-body { padding: 8px 11px; flex: 1; }
-  .fortaleza-name { font-weight: 600; font-size: 9.5pt; color: var(--verde-oscuro); margin-bottom: 2px; }
-  .fortaleza-name.tierra { color: var(--tierra); }
-  .fortaleza-name.ocre { color: #7A5A10; }
-  .fortaleza-evidencia { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.45; }
-  .evidencia-label { font-size: 7pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gris-suave); display: block; margin-top: 3px; margin-bottom: 1px; }
-
-  .valor-card { display: flex; align-items: center; gap: 12px; background: var(--tierra-palido); border-radius: 7px; padding: 10px 14px; }
-  .valor-icon { font-size: 20pt; flex-shrink: 0; }
-  .valor-name { font-family: var(--font-display); font-size: 13pt; color: var(--tierra); margin-bottom: 2px; }
-  .valor-desc { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.45; }
-
-  .proposito-card {
-    background: var(--ocre-fondo); border-left: 3px solid var(--ocre); border-radius: 0 7px 7px 0;
-    padding: 10px 14px; font-size: 10pt; color: var(--gris-texto); line-height: 1.5; font-style: italic;
+  /* ── Sueño principal ── */
+  .sueno-card {
+    background: var(--ocre-fondo); border-left: 3px solid var(--ocre);
+    border-radius: 0 8px 8px 0; padding: 11px 14px;
   }
-  .proposito-card::before { content: '\201C'; font-family: var(--font-display); font-size: 24pt; color: var(--ocre-claro); line-height: 0.6; display: block; margin-bottom: 4px; }
+  .sueno-quote-mark { font-family: var(--font-display); font-size: 28pt; color: var(--ocre-claro); line-height: 0.6; display: block; margin-bottom: 5px; }
+  .sueno-texto { font-size: 10.5pt; color: var(--gris-texto); line-height: 1.5; font-style: italic; margin-bottom: 8px; }
+  .sueno-nota { font-size: 8pt; color: var(--tierra); background: var(--tierra-palido); border-radius: 5px; padding: 5px 9px; line-height: 1.45; }
+  .sueno-nota::before { content: '💡 '; }
 
-  .reflexiones-strip { background: var(--verde-palido); border-radius: 7px; padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; }
-  .reflexion-item { display: flex; gap: 8px; align-items: flex-start; font-size: 9pt; color: var(--verde-oscuro); line-height: 1.45; }
-  .reflexion-bullet { width: 18px; height: 18px; border-radius: 50%; background: var(--verde-medio); color: white; font-size: 8pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.5px; }
+  /* ── Tips ── */
+  .tips-strip { background: var(--verde-palido); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; }
+  .tip-item { display: flex; gap: 9px; align-items: flex-start; font-size: 9pt; color: var(--verde-oscuro); line-height: 1.5; }
+  .tip-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--verde-medio); color: white; font-size: 8pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
 
-  .disclaimer { background: #F5F4F1; border-radius: 5px; padding: 9px 12px; font-size: 6.5pt; color: var(--gris-suave); line-height: 1.55; border: 0.5px solid var(--gris-linea); }
+  /* ── Disclaimer ── */
+  .disclaimer { background: #F5F4F1; border-radius: 6px; padding: 10px 13px; font-size: 7pt; color: var(--gris-suave); line-height: 1.6; border: 0.5px solid var(--gris-linea); }
   .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
 
+  /* ── Footer ── */
   .page-footer {
     margin-top: auto;
     display: flex; justify-content: space-between; align-items: center;
-    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; padding-bottom: 8mm; font-size: 6.5pt; color: var(--gris-suave);
+    border-top: 0.75px solid var(--gris-linea); padding-top: 5px; padding-bottom: 8mm;
+    font-size: 6.5pt; color: var(--gris-suave);
   }
   .footer-brand { font-weight: 500; color: var(--verde-oscuro); }
 
@@ -202,7 +168,9 @@
 </head>
 <body>
 
-<!-- ===================== PÁGINA 1 ===================== -->
+{% set nombre_corto = nombre_completo.split()[0] %}
+
+<!-- ═══════════════════════ PÁGINA 1 ═══════════════════════ -->
 <div class="page">
   <div class="watermark">PILOTO — MAYO 2026</div>
   <div class="content">
@@ -226,71 +194,79 @@
       <div class="student-field">Fecha: <span>{{ fecha }}</span></div>
     </div>
 
-    <!-- SECCIÓN 1: PERFIL DE INTERESES -->
+    <!-- PERFIL DE INTERESES HOLLAND -->
     <div class="section">
       <div class="section-label">Tu perfil de intereses</div>
-      <div class="cuadrante-card">
-        <div class="cuadrante-badge">
-          <span class="cuadrante-icon">{{ cuadrante_icono }}</span>
-        </div>
-        <div>
-          <span class="cuadrante-tag">Cuadrante dominante</span>
-          <div class="cuadrante-name">{{ cuadrante_nombre }}</div>
-          <div class="cuadrante-desc">{{ cuadrante_descripcion }}</div>
-        </div>
+      <div class="holland-intro">
+        Hay cuatro grandes tipos de actividades que le gustan a la gente: <strong>Personas</strong> (conectar, ayudar, liderar), <strong>Ideas</strong> (crear, inventar, imaginar), <strong>Datos</strong> (organizar, analizar, calcular) y <strong>Cosas</strong> (construir, arreglar, trabajar con las manos). A continuación encontrás cuáles te llamaron más la atención y cuáles menos — y eso ya dice mucho sobre quién sos.
       </div>
-    </div>
 
-    <!-- SECCIÓN 2: FORTALEZAS -->
-    {% set accent_classes = ['', 'tierra', 'ocre'] %}
-    <div class="section">
-      <div class="section-label">Tus fortalezas</div>
-      <div class="fortalezas-grid">
-        {% for f in fortalezas %}
-        {% set cls = accent_classes[loop.index0] if loop.index0 < 3 else '' %}
-        <div class="fortaleza-card">
-          <div class="fortaleza-accent {{ cls }}"></div>
-          <div class="fortaleza-body">
-            <div class="fortaleza-name {{ cls }}">{{ f.nombre }}</div>
-            <span class="evidencia-label">Lo que contaste</span>
-            <div class="fortaleza-evidencia">{{ f.evidencia }}</div>
+      <!-- Dominantes -->
+      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--verde-oscuro);margin-bottom:4px;">Lo que más te llama la atención</div>
+      <div class="holland-grid">
+        {% for c in cuadrantes_dominantes %}
+        <div class="cuad-card dominante">
+          <div class="cuad-circle">{{ c.icono }}</div>
+          <div>
+            <div class="cuad-tag-label">Área dominante</div>
+            <div class="cuad-nombre">{{ c.nombre }}</div>
+            <div class="cuad-desc">{{ c.descripcion_positiva }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Débiles -->
+      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--gris-suave);margin-bottom:4px;margin-top:5px;">Lo que hoy no te llama tanto la atención</div>
+      <div class="holland-grid">
+        {% for c in cuadrantes_debiles %}
+        <div class="cuad-card debil">
+          <div class="cuad-circle">{{ c.icono }}</div>
+          <div>
+            <div class="cuad-tag-label">Menor preferencia actual</div>
+            <div class="cuad-nombre">{{ c.nombre }}</div>
+            <div class="cuad-desc">{{ c.descripcion_donotham }}</div>
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <!-- SECCIÓN 3: LO QUE TE MUEVE -->
+    <!-- FORTALEZAS Y VALORES EN DOS COLUMNAS -->
     <div class="section">
-      <div class="section-label">Lo que te mueve</div>
-      <div class="valor-card">
-        <div class="valor-icon">{{ valor_icono }}</div>
-        <div>
-          <div class="valor-name">{{ valor_central }}</div>
-          <div class="valor-desc">{{ valor_descripcion }}</div>
+      <div class="section-label">Tus fortalezas y valores</div>
+      <div class="catalogo-cols">
+        <div class="catalogo-col">
+          <div class="catalogo-col-title">🌟 Tus fortalezas</div>
+          {% for f in fortalezas %}
+          <div class="catalogo-item">
+            <div class="catalogo-nombre">{{ f.nombre }}</div>
+            <div class="catalogo-desc">{{ f.descripcion_catalogo }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="catalogo-col">
+          <div class="catalogo-col-title">🧭 Lo que te mueve</div>
+          {% for v in valores %}
+          <div class="catalogo-item">
+            <div class="catalogo-nombre">{{ v.nombre }}</div>
+            <div class="catalogo-desc">{{ v.descripcion_catalogo }}</div>
+          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- SECCIÓN 4: TU PROPÓSITO -->
-    {% if proposito %}
-    <div class="section">
-      <div class="section-label">Tu propósito</div>
-      <div class="proposito-card">{{ proposito }}</div>
-    </div>
-    {% endif %}
-
   </div>
-
   <div class="page-footer">
     <span class="footer-brand">rAÍz</span>
     <span>{{ pie }}</span>
-    <span class="page-number">1 / 2</span>
+    <span>1 / 2</span>
   </div>
 </div>
 
 
-<!-- ===================== PÁGINA 2 ===================== -->
+<!-- ═══════════════════════ PÁGINA 2 ═══════════════════════ -->
 <div class="page">
   <div class="watermark">PILOTO — MAYO 2026</div>
   <div class="content">
@@ -306,29 +282,34 @@
       </div>
     </div>
 
-    <!-- SECCIÓN 5: REFLEXIONES -->
+    <!-- SUEÑO PRINCIPAL -->
+    {% if sueno_principal %}
     <div class="section">
-      <div class="section-label">Reflexiones hacia el futuro</div>
-      <div class="reflexiones-strip">
-        {% for r in reflexiones %}
-        <div class="reflexion-item">
-          <div class="reflexion-bullet">{{ loop.index }}</div>
-          <div>{{ r }}</div>
-        </div>
-        {% endfor %}
+      <div class="section-label">Tu sueño principal</div>
+      <div class="sueno-card">
+        <span class="sueno-quote-mark">&ldquo;</span>
+        <div class="sueno-texto">{{ sueno_principal }}</div>
+        {% if nota_sueno %}
+        <div class="sueno-nota">{{ nota_sueno }}</div>
+        {% endif %}
       </div>
     </div>
+    {% endif %}
 
-    <!-- ESPACIO PARA ESCRIBIR -->
-    <div style="margin: 14px 0; padding: 12px 14px; background: var(--crema); border-radius: 7px; border: 1px solid #E0DDD8;">
-      <div style="font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase; color: #4A7C2A; margin-bottom: 8px;">Una última pregunta para vos</div>
-      <div style="font-family: 'DM Serif Display', Georgia, serif; font-size: 12pt; color: #2A2A2A; line-height: 1.5; font-style: italic;">
-        Si en diez años alguien te pregunta qué hiciste para mejorar tu comunidad,<br>¿qué querés poder responderle?
+    <!-- TIPS PERSONALIZADOS -->
+    <div class="section">
+      <div class="section-label">Para seguir construyendo tu camino</div>
+      <div class="tips-strip">
+        {% set tips_list = tips if tips is iterable and tips is not string else [tips] %}
+        {% for tip in tips_list %}
+        {% if tip %}
+        <div class="tip-item">
+          <div class="tip-bullet">{{ loop.index }}</div>
+          <div>{{ tip }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
       </div>
-      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
-      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
-      <div style="margin-top: 32px; border-bottom: 1px solid #C8C4BC; height: 1px;"></div>
-      <div style="font-size: 7pt; color: #9A9A9A; margin-top: 8px;">Tu respuesta · espacio para escribir</div>
     </div>
 
     <!-- DISCLAIMER -->
@@ -337,11 +318,10 @@
     </div>
 
   </div>
-
   <div class="page-footer">
     <span class="footer-brand">rAÍz</span>
     <span>{{ pie }}</span>
-    <span class="page-number">2 / 2</span>
+    <span>2 / 2</span>
   </div>
 </div>
 
