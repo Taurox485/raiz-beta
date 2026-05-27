@@ -25,7 +25,7 @@ import re
 import streamlit as st
 
 MENSAJES = {
-    0: "¡Hola, {nombre}! 🌱 Soy rAÍz, tu mentor de proyecto de vida. Tu orientador/a ya dejó tu cuenta lista para que empecemos este viaje. Vamos a tener 4 charlas cortitas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. Tu código de acceso único es: *{codigo}* ¿Listo/a para arrancar? Entrá acá: {link}",
+    0: "¡Hola, {nombre}! Soy rAÍz, tu mentor de proyecto de vida. Ya dejamos tu cuenta lista para que empecemos este viaje. Vamos a tener 4 charlas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. Tu código de acceso único es: {codigo} ¿Listo/a para arrancar? Entrá acá: {link}",
     1: "Hola {nombre} 👋 Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!",
     2: "¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote 🌿 En la próxima charla vamos a seguir conversando sobre ti. Quiero saber más de ti! Tu código: {codigo} ¿Seguimos? Entrá acá: {link}",
     3: "¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos. Ahora sigue otra parte muy interesante: hablar de lo que imaginás para tu futuro 🌱 Tu código: {codigo} ¿Le damos? Entrá acá: {link}",
