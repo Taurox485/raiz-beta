@@ -326,6 +326,12 @@ if CHAT_KEY not in st.session_state:
                 system_instruction=system_instruction,
                 temperature=0.5,
             ),
+            history=[
+                types.Content(
+                    role="model",
+                    parts=[types.Part(text=SALUDO_INICIAL)],
+                )
+            ]
         )
         st.session_state.history_ui = [{"role": "model", "text": SALUDO_INICIAL}]
         db.guardar_mensaje(
