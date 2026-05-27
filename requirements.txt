@@ -21,3 +21,6 @@ playwright>=1.40.0
 
 # WhatsApp re-engagement (P14)
 twilio>=9.0.0
+
+# UI: Arrastrar y soltar para la Ronda Relámpago
+streamlit-sortables>=0.3.0

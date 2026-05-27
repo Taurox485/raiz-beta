@@ -24,6 +24,7 @@ from google.genai import types
 
 import auth
 import database as db
+from streamlit_sortables import sort_items
 
 # ── Cliente Gemini ─────────────────────────────────────────────────────────────
 try:
@@ -163,113 +164,119 @@ def _procesar_etiquetas(raw: str, est: dict, sesion_actual: int) -> bool:
 
     return tiene_alerta
 
-# ── Ronda Relámpago — 52 micro-situaciones Holland ────────────────────────────
-# Organizadas en 4 cuadrantes adaptados al Valle del Cauca.
+# ── Ronda Relámpago — 7 Escenarios Estándar ──────────────────────────────────
+# Test ipsativo: el estudiante arrastra para ordenar 4 opciones por escenario.
 # Se activa cuando el modelo emite [INICIAR_RONDA_RELAMPAGO].
-# El estudiante selecciona actividades y presiona "Listo", y el sistema
-# inyecta el resultado como mensaje de usuario en el chat.
 
-RONDA_RELAMPAGO = {
-    "🤝 Personas": [
-        "Darle consejos a un amigo en problemas",
-        "Trabajar en equipo sin pelear",
-        "Organizar a la gente para un trabajo",
-        "Hacerle preguntas a alguien nuevo",
-        "Ser el líder o capitán del grupo",
-        "Convencer a otros de un trato",
-        "Hablar con personas que no conozco",
-        "Hablar en público o actuar en tarima",
-        "Calmar los ánimos en una pelea",
-        "Vender cosas para un negocio o colegio",
-        "Ayudar a alguien que lo necesita mucho",
-        "Explicarle una tarea a un compañero",
-        "Escuchar a alguien que se siente mal",
-    ],
-    "💡 Ideas": [
-        "Inventar algo nuevo desde cero",
-        "Imaginar cómo se va a ver algo",
-        "Hacer dibujos o bocetos",
-        "Buscar cómo hacer algo mejor o más rápido",
-        "Pensar en ideas locas o diferentes",
-        "Inventarse una solución con lo que hay",
-        "Buscar en internet por qué pasa algo",
-        "Aprender un tema nuevo por pura curiosidad",
-        "Encontrarle la vuelta a un problema difícil",
-        "Preguntar por qué las cosas son así",
-        "Leer historias, artículos o libros",
-        "Profundizar en un tema que me gusta",
-        "Escribir historias, rimas o ideas",
-    ],
-    "📊 Datos": [
-        "Revisar que las cuentas de plata cuadren",
-        "Calcular la plata para un paseo o compra",
-        "Hacer cuentas matemáticas mentalmente rápido",
-        "Manejar datos en un computador o celular",
-        "Encontrarle los errores a un texto o cuenta",
-        "Comparar datos para ver en qué se parecen",
-        "Anotar todo para que no se pierda la info",
-        "Pulir un trabajo para que quede presentable",
-        "Calcular qué va a pasar usando los datos",
-        "Ordenar cosas alfabéticamente o por fechas",
-        "Aprenderme datos o números exactos de memoria",
-        "Chequear que todo esté en perfecto orden",
-        "Llevar los horarios y las fechas de entrega",
-    ],
-    "🔧 Cosas": [
-        "Armar las partes de un aparato o mueble",
-        "Construir o fabricar cosas con herramientas",
-        "Ayudar en la cosecha o recoger materiales",
-        "Revisar si un producto o cultivo tiene daños",
-        "Contar cuántas cosas hay en una bodega",
-        "Hacerle mantenimiento a la bici o a la moto",
-        "Vigilar que una máquina esté funcionando bien",
-        "Manejar maquinaria o equipos pesados",
-        "Alistar y empacar cosas en cajas o costales",
-        "Buscar los mejores materiales para un arreglo",
-        "Arreglar un aparato que se dañó en la casa",
-        "Probar si un equipo o motor quedó funcionando",
-        "Llevar mercancía o manejar un vehículo",
-    ],
-}
+SITUACIONES_RONDA = [
+    {
+        "titulo": "En el estudio",
+        "opciones": [
+            "Explicar tarea a compañero (Personas)",
+            "Proponer forma distinta de hacer proyecto (Ideas)",
+            "Organizar apuntes en calendario (Datos)",
+            "Construir maqueta o experimento manual (Cosas)"
+        ]
+    },
+    {
+        "titulo": "En el trabajo",
+        "opciones": [
+            "Coordinar al equipo (Personas)",
+            "Inventar mejor método de trabajo (Ideas)",
+            "Llevar cuentas exactas de gastos (Datos)",
+            "Reparar herramientas de trabajo (Cosas)"
+        ]
+    },
+    {
+        "titulo": "En el tiempo libre",
+        "opciones": [
+            "Organizar salida con amigos o barrio (Personas)",
+            "Imaginar historias o nuevos juegos (Ideas)",
+            "Comparar estadísticas de equipos (Datos)",
+            "Arreglar o desarmar aparatos viejos (Cosas)"
+        ]
+    },
+    {
+        "titulo": "Resolviendo problemas",
+        "opciones": [
+            "Escuchar para aconsejar (Personas)",
+            "Pensar en solución ingeniosa (Ideas)",
+            "Analizar hechos fríos y datos (Datos)",
+            "Arreglar falla técnica con herramientas (Cosas)"
+        ]
+    },
+    {
+        "titulo": "En un proyecto grupal",
+        "opciones": [
+            "Motivar al grupo para que nadie se quede atrás (Personas)",
+            "Diseñar concepto creativo visual (Ideas)",
+            "Escribir informe y organizar datos (Datos)",
+            "Encargarse de la parte mecánica o física (Cosas)"
+        ]
+    },
+    {
+        "titulo": "Aprendiendo algo nuevo",
+        "opciones": [
+            "Aprender a mediar conflictos (Personas)",
+            "Aprender el 'porqué' profundo de las cosas (Ideas)",
+            "Aprender a leer gráficos y tablas (Datos)",
+            "Aprender a usar una máquina o herramienta nueva (Cosas)"
+        ]
+    },
+    {
+        "titulo": "Tu futuro",
+        "opciones": [
+            "Ser alguien que guía y apoya a su comunidad (Personas)",
+            "Ser alguien que crea cosas nuevas (Ideas)",
+            "Ser alguien que planea y analiza para tener éxito (Datos)",
+            "Ser experto en un oficio o trabajo técnico (Cosas)"
+        ]
+    }
+]
 
 def renderizar_ronda_relampago() -> str | None:
     """
-    Renderiza el componente táctil de la Ronda Relámpago.
-    Muestra las 52 micro-situaciones agrupadas por cuadrante usando st.pills.
-    Al presionar "Listo", construye el mensaje de resultado.
-    Retorna el mensaje de resultado (str) si el estudiante envió, None si no.
+    Renderiza el componente de arrastrar y soltar de la Ronda Relámpago.
+    Muestra las 7 situaciones para que el estudiante ordene sus 4 opciones.
+    Calcula los puntos y retorna el string de resultado al chat.
     """
     st.markdown("---")
-    st.markdown("#### 🌟 Ronda Relámpago — marcá todo lo que te llame la atención")
-    st.caption(
-        "No te lo pienses mucho. Podés marcar todas las que quieras — "
-        "o ninguna si no hay ninguna que te llame."
-    )
+    st.markdown("#### 🌟 Ronda Relámpago — Arrastra y ordena")
+    st.caption("Ordena las 4 opciones en cada situación. Pon **arriba (1°)** la que más te llame la atención y **abajo (4°)** la que menos.")
 
-    seleccionadas = []
-    for cuadrante, opciones in RONDA_RELAMPAGO.items():
-        st.markdown(f"**{cuadrante}**")
-        resultado = st.pills(
-            label=cuadrante,
-            options=opciones,
-            selection_mode="multi",
-            key=f"ronda_{cuadrante}",
-            label_visibility="collapsed",
+    if "ronda_respuestas" not in st.session_state:
+        # Inicializar el estado local con las opciones predeterminadas
+        st.session_state.ronda_respuestas = [list(s["opciones"]) for s in SITUACIONES_RONDA]
+
+    for i, situacion in enumerate(SITUACIONES_RONDA):
+        st.markdown(f"**{i+1}. {situacion['titulo']}**")
+        st.session_state.ronda_respuestas[i] = sort_items(
+            st.session_state.ronda_respuestas[i],
+            key=f"ronda_sort_{i}"
         )
-        if resultado:
-            seleccionadas.extend(resultado)
+        st.write("")  # Espaciador
 
     st.markdown("---")
-    if st.button(
-        "✅ Listo, eso es lo que me llama la atención",
-        use_container_width=True,
-        type="primary",
-        key="btn_enviar_ronda",
-    ):
-        if seleccionadas:
-            return "He seleccionado estas actividades: " + ", ".join(seleccionadas)
-        else:
-            return "He seleccionado estas actividades: ninguna en particular"
+    if st.button("✅ Listo, he ordenado todas las situaciones", use_container_width=True, type="primary", key="btn_enviar_ronda"):
+        # Cálculo de puntos: 1ro=4pts, 2do=3pts, 3ro=2pts, 4to=1pt
+        puntos = {"Personas": 0, "Ideas": 0, "Datos": 0, "Cosas": 0}
+        
+        for respuestas in st.session_state.ronda_respuestas:
+            for idx, opc in enumerate(respuestas):
+                puntaje = 4 - idx
+                if "(Personas)" in opc:
+                    puntos["Personas"] += puntaje
+                elif "(Ideas)" in opc:
+                    puntos["Ideas"] += puntaje
+                elif "(Datos)" in opc:
+                    puntos["Datos"] += puntaje
+                elif "(Cosas)" in opc:
+                    puntos["Cosas"] += puntaje
+
+        # Limpiar el session_state para la próxima iteración si se vuelve a llamar
+        del st.session_state["ronda_respuestas"]
+        
+        return f"He completado la Ronda Relámpago. Resultados: Personas=[{puntos['Personas']}], Ideas=[{puntos['Ideas']}], Datos=[{puntos['Datos']}], Cosas=[{puntos['Cosas']}]"
 
     return None
 
