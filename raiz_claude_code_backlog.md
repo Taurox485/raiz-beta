@@ -438,6 +438,23 @@ pip install twilio
 
 ---
 
+### ~~PENDIENTE 17~~ — ✅ COMPLETADO — Implementar Ronda Relámpago ipsativa con 7 escenarios
+
+**Completado:** Mayo 2026
+**Implementado:**
+- Reemplazo de la interfaz de 52 micro-situaciones táctiles por una de arrastrar y soltar (`streamlit-sortables`).
+- Integración de los 7 escenarios estándar para la evaluación de intereses ipsativos.
+- Cálculo de puntos del 1° (4pts) al 4° (1pt) y normalización del mensaje de respuesta para rAÍz.
+
+---
+
+## BACKLOG DE MEJORAS
+
+- Validar el impacto pedagógico de la nueva jerarquización en los primeros 10 estudiantes.
+- Refinar el algoritmo de cálculo de puntajes si se detecta fatiga cognitiva en los estudiantes.
+
+---
+
 ## VERIFICACIONES PENDIENTES ANTES DEL PILOTO
 
 ### VERIFICACIÓN 1 — Twilio WhatsApp en producción

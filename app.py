@@ -240,21 +240,24 @@ def renderizar_ronda_relampago() -> str | None:
     Muestra las 7 situaciones para que el estudiante ordene sus 4 opciones.
     Calcula los puntos y retorna el string de resultado al chat.
     """
-    st.markdown("---")
-    st.markdown("#### 🌟 Ronda Relámpago — Arrastra y ordena")
-    st.caption("Ordena las 4 opciones en cada situación. Pon **arriba (1°)** la que más te llame la atención y **abajo (4°)** la que menos.")
+    st.subheader("Tu Mapa de Intereses")
+    
+    nombre_estudiante = st.session_state.estudiante.get("nombre", "") if "estudiante" in st.session_state else ""
+    st.write(f"{nombre_estudiante}, ordena estas situaciones del 1 al 4 (de lo que más te gusta a lo que menos).")
 
     if "ronda_respuestas" not in st.session_state:
         # Inicializar el estado local con las opciones predeterminadas
         st.session_state.ronda_respuestas = [list(s["opciones"]) for s in SITUACIONES_RONDA]
 
     for i, situacion in enumerate(SITUACIONES_RONDA):
-        st.markdown(f"**{i+1}. {situacion['titulo']}**")
-        st.session_state.ronda_respuestas[i] = sort_items(
-            st.session_state.ronda_respuestas[i],
-            key=f"ronda_sort_{i}"
-        )
-        st.write("")  # Espaciador
+        with st.container():
+            st.write(f"#### {situacion['titulo']}")
+            st.session_state.ronda_respuestas[i] = sort_items(
+                st.session_state.ronda_respuestas[i],
+                direction='vertical',
+                key=f"ronda_sort_{i}"
+            )
+            st.divider()  # Añade una línea visual entre cada escenario
 
     st.markdown("---")
     if st.button("✅ Listo, he ordenado todas las situaciones", use_container_width=True, type="primary", key="btn_enviar_ronda"):

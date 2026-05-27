@@ -14,6 +14,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
   - Supabase URL: `https://doihxpicgfvmrcntzykl.supabase.co`
   - Credenciales en `.streamlit/secrets.toml` (gitignored) y en Streamlit Cloud → Settings → Secrets
 - WhatsApp: Twilio WhatsApp API (`whatsapp_service.py`) — `twilio>=9.0.0`
+- UI Ronda Relámpago: `streamlit-sortables>=0.3.0`
 
 ## Deploy
 - **URL producción:** https://raiz-piloto.streamlit.app/
@@ -25,6 +26,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
   git push origin master:main     # activa redeploy en Streamlit Cloud
   ```
   Streamlit Cloud redespliega automáticamente en 2-3 minutos tras el push a `main`.
+  *Nota: Al requerir `streamlit-sortables>=0.3.0`, el proceso de build en Streamlit Cloud tomará tiempo adicional para instalar el componente externo.*
 
 ## Arquitectura pedagógica (leer instrucciones.txt completo)
 - 4 sesiones × 5 momentos, avance estrictamente secuencial
