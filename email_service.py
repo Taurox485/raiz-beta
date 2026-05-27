@@ -211,5 +211,8 @@ Este documento es confidencial y de uso exclusivo del equipo docente.
             servidor.sendmail(cfg["user"], destinatario, msg.as_string())
 
         return True
-    except Exception:
+    except Exception as e:
+        print(f"ERROR ENVIANDO FICHA ORIENTADOR: {type(e).__name__} - {e}")
+        import traceback
+        traceback.print_exc()
         return False
