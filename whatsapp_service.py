@@ -26,11 +26,11 @@ import streamlit as st
 
 MENSAJES = {
     0: "¡Hola, {nombre}! Soy rAÍz, tu mentor de proyecto de vida. Ya dejamos tu cuenta lista para que empecemos este viaje. Vamos a tener 4 charlas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. Tu código de acceso único es: {codigo} ¿Listo/a para arrancar? Entrá acá: {link}",
-    1: "Hola {nombre} 👋 Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!",
-    2: "¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote 🌿 En la próxima charla vamos a seguir conversando sobre ti. Quiero saber más de ti! Tu código: {codigo} ¿Seguimos? Entrá acá: {link}",
-    3: "¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos. Ahora sigue otra parte muy interesante: hablar de lo que imaginás para tu futuro 🌱 Tu código: {codigo} ¿Le damos? Entrá acá: {link}",
-    4: "Hola {nombre}, ¡ya casi terminás! 🎯 Solo falta una sesión en rAÍz. Entrá con {codigo} en {link} y obtén tu Mapa rAÍz personalizado.",
-    5: "Hola {nombre}, tu recorrido en rAÍz te espera 🌿 Ingresá cuando puedas con tu código {codigo} en {link}. Tu orientador/a también está pendiente de ti.",
+    1: "Hola {nombre} Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!",
+    2: "¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote En la próxima charla vamos a seguir conversando sobre ti. ¡Quiero saber más de ti! Tu código: {codigo} ¿Seguimos? Entrá acá: {link}",
+    3: "¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos. Ahora sigue otra parte muy interesante: hablar de lo que imaginás para tu futuro Tu código: {codigo} ¿Le damos? Entrá acá: {link}",
+    4: "Hola {nombre}, ¡ya casi terminás! Solo falta una sesión en rAÍz. Entrá con {codigo} en {link} y obtén tu Mapa rAÍz personalizado.",
+    5: "Hola {nombre}, tu recorrido en rAÍz te espera Ingresá cuando puedas con tu código {codigo} en {link}. Tu orientador/a también está pendiente de ti.",
 }
 
 
@@ -132,5 +132,5 @@ def procesar_reengagement(database) -> dict:
 
 def enviar_mapa_estudiante(celular: str, nombre_estudiante: str, url_pdf: str) -> bool:
     """Envía el Mapa rAÍz (URL del PDF temporal) al estudiante vía WhatsApp."""
-    texto = f"¡Felicitaciones, {nombre_estudiante.split()[0]}! 🎉\n\nHas completado tu proceso de mentoría con rAÍz 🌱. Aquí te compartimos tu *Mapa rAÍz* con el resumen de todo lo que descubrimos juntos.\n\n¡Mucho éxito en tu camino!"
+    texto = f"¡Felicitaciones, {nombre_estudiante.split()[0]}! \n\nHas completado tu proceso de mentoría con rAÍz Aquí te compartimos tu Mapa rAÍz con el resumen de todo lo que descubrimos juntos.\n\n¡Mucho éxito en tu camino!"
     return _enviar_mensaje(celular, texto, media_url=url_pdf)
