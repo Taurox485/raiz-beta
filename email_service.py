@@ -216,3 +216,48 @@ Este documento es confidencial y de uso exclusivo del equipo docente.
         import traceback
         traceback.print_exc()
         return False
+
+
+def enviar_mapa_estudiante(destinatario: str, nombre_estudiante: str, pdf_bytes: bytes) -> bool:
+    """Envía el Mapa rAÍz al estudiante como adjunto PDF."""
+    try:
+        from email.mime.application import MIMEApplication
+        cfg = _config()
+
+        msg = MIMEMultipart()
+        msg["From"] = f"rAÍz <{cfg['user']}>"
+        msg["To"] = destinatario
+        msg["Subject"] = "¡Felicitaciones! Aquí tienes tu Mapa rAÍz 🌱"
+
+        cuerpo = f"""\
+¡Hola, {nombre_estudiante.split()[0]}!
+
+Felicitaciones por haber completado tu proceso de mentoría con rAÍz.
+
+Adjunto encontrarás tu "Mapa rAÍz". Es un resumen de todo lo que conversamos:
+tus fortalezas, tus valores, tus intereses y los siguientes pasos que puedes dar
+para seguir construyendo tu proyecto de vida.
+
+Guárdalo, léelo cuando necesites recordar todo tu potencial y compártelo
+con las personas que te apoyan.
+
+¡Mucho éxito en tu camino!
+
+— El equipo rAÍz"""
+
+        msg.attach(MIMEText(cuerpo, "plain", "utf-8"))
+
+        filename = f"mi_mapa_raiz_{nombre_estudiante.replace(' ', '_').lower()}.pdf"
+        adjunto = MIMEApplication(pdf_bytes, _subtype="pdf")
+        adjunto.add_header("Content-Disposition", "attachment", filename=filename)
+        msg.attach(adjunto)
+
+        with smtplib.SMTP(cfg["host"], cfg["port"]) as servidor:
+            servidor.starttls()
+            servidor.login(cfg["user"], cfg["password"])
+            servidor.sendmail(cfg["user"], destinatario, msg.as_string())
+
+        return True
+    except Exception as e:
+        print(f"ERROR ENVIANDO MAPA ESTUDIANTE: {type(e).__name__} - {e}")
+        return False

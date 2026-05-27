@@ -44,7 +44,7 @@ def _normalizar_celular(celular: str) -> str:
     return celular
 
 
-def _enviar_mensaje(celular: str, texto: str) -> bool:
+def _enviar_mensaje(celular: str, texto: str, media_url: str = None) -> bool:
     """Envía un mensaje WhatsApp vía Twilio. Retorna True si fue exitoso."""
     try:
         account_sid   = st.secrets["TWILIO_ACCOUNT_SID"]
@@ -58,11 +58,15 @@ def _enviar_mensaje(celular: str, texto: str) -> bool:
         from twilio.rest import Client
         celular_norm = _normalizar_celular(celular)
         client = Client(account_sid, auth_token)
-        client.messages.create(
-            from_=from_whatsapp,
-            to=f"whatsapp:{celular_norm}",
-            body=texto,
-        )
+        kwargs = {
+            "from_": from_whatsapp,
+            "to": f"whatsapp:{celular_norm}",
+            "body": texto,
+        }
+        if media_url:
+            kwargs["media_url"] = [media_url]
+            
+        client.messages.create(**kwargs)
         return True
     except Exception as e:
         logging.error("WhatsApp: error al enviar a %s*** — %s", celular[:4], e)
@@ -124,3 +128,9 @@ def procesar_reengagement(database) -> dict:
             fallidos += 1
 
     return {"enviados": enviados, "fallidos": fallidos, "total": len(candidatos)}
+
+
+def enviar_mapa_estudiante(celular: str, nombre_estudiante: str, url_pdf: str) -> bool:
+    """Envía el Mapa rAÍz (URL del PDF temporal) al estudiante vía WhatsApp."""
+    texto = f"¡Felicitaciones, {nombre_estudiante.split()[0]}! 🎉\n\nHas completado tu proceso de mentoría con rAÍz 🌱. Aquí te compartimos tu *Mapa rAÍz* con el resumen de todo lo que descubrimos juntos.\n\n¡Mucho éxito en tu camino!"
+    return _enviar_mensaje(celular, texto, media_url=url_pdf)

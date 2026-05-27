@@ -1750,3 +1750,27 @@ def get_envio_ficha(estudiante_id: str) -> Optional[dict]:
             (estudiante_id,),
         ).fetchone()
         return dict(row) if row else None
+
+
+def subir_pdf_temporal_whatsapp(pdf_bytes: bytes) -> Optional[str]:
+    """
+    Sube el PDF temporalmente al bucket público (consentimientos) con nombre ofuscado
+    y retorna la URL pública para poder enviarlo vía Twilio WhatsApp.
+    """
+    import uuid
+    if not _use_supabase():
+        return None
+
+    nombre_archivo = f"temp_mapa_{uuid.uuid4().hex}.pdf"
+    ruta = f"whatsapp/{nombre_archivo}"
+    try:
+        _get_supabase().storage.from_("consentimientos").upload(
+            ruta,
+            pdf_bytes,
+            {"content-type": "application/pdf"}
+        )
+        return _get_supabase().storage.from_("consentimientos").get_public_url(ruta)
+    except Exception as e:
+        import logging
+        logging.error("Error subiendo PDF temporal a Supabase: %s", e)
+        return None

@@ -537,13 +537,26 @@ if st.session_state.fin_consejeria:
                         except Exception:
                             pass
 
-                    # TODO (Fase 2): Enviar el PDF del estudiante (pdf_est) al propio
-                    # estudiante al completar la mentoría.
-                    # Canales candidatos: email y/o WhatsApp (mayor penetración en la
-                    # población objetivo del Valle del Cauca).
-                    # Para WhatsApp: integrar Twilio API (TWILIO_SID + TWILIO_TOKEN en secrets).
-                    # Para email: usar email_service.py (infraestructura SMTP ya configurada).
-                    # Decisión pendiente: definir canal(es) y flujo de consentimiento.
+                    # ── Enviar el PDF del estudiante al propio estudiante ──
+                    est_email = st.session_state.estudiante.get("email")
+                    est_celular = st.session_state.estudiante.get("celular")
+                    nombre_est_completo = f"{st.session_state.estudiante.get('nombre', '')} {st.session_state.estudiante.get('apellido', '')}".strip()
+
+                    if est_email:
+                        try:
+                            from email_service import enviar_mapa_estudiante
+                            enviar_mapa_estudiante(est_email, nombre_est_completo, pdf_est)
+                        except Exception:
+                            pass
+                    
+                    if est_celular:
+                        try:
+                            from whatsapp_service import enviar_mapa_estudiante as enviar_mapa_wa
+                            url_pdf = db.subir_pdf_temporal_whatsapp(pdf_est)
+                            if url_pdf:
+                                enviar_mapa_wa(est_celular, nombre_est_completo, url_pdf)
+                        except Exception:
+                            pass
 
                     st.rerun()  # Rerun para mostrar el botón de descarga
 
