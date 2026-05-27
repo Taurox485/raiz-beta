@@ -12,45 +12,42 @@
   @font-face { font-family: 'DM Serif Display'; font-style: italic; font-weight: 400; src: url('../static/fonts/dm-serif-display-italic.woff2') format('woff2'); }
 
   :root {
-    --verde-oscuro: #2D5016;
-    --verde-medio: #4A7C2A;
-    --verde-claro: #7AB648;
-    --verde-palido: #D4EDBA;
-    --verde-fondo: #EEF7E4;
-    --verde-ok-bg: #F0FDF4;
-    --verde-ok-borde: #16A34A;
-    --verde-ok-texto: #14532D;
-    --tierra: #8B5E3C;
-    --tierra-claro: #C49A6C;
+    --verde-oscuro:  #2D5016;
+    --verde-medio:   #4A7C2A;
+    --verde-claro:   #7AB648;
+    --verde-palido:  #D4EDBA;
+    --verde-fondo:   #EEF7E4;
+    --tierra:        #8B5E3C;
+    --tierra-claro:  #C49A6C;
     --tierra-palido: #F0E4D4;
-    --ocre: #C8892A;
-    --ocre-claro: #F2D589;
-    --ocre-fondo: #FDF6E3;
-    --naranja-bg: #FFF7ED;
-    --naranja-borde: #F97316;
-    --naranja-texto: #7C2D12;
-    --rojo-bg: #FEF2F2;
-    --rojo-borde: #DC2626;
-    --rojo-texto: #7F1D1D;
-    --amarillo-bg: #FFFBEB;
-    --amarillo-borde: #F59E0B;
-    --amarillo-texto: #78350F;
-    --crema: #FAF7F2;
-    --blanco: #FFFFFF;
-    --gris-texto: #2A2A2A;
-    --gris-medio: #5A5A5A;
-    --gris-suave: #9A9A9A;
-    --gris-linea: #E0DDD8;
-    --font-display: 'DM Serif Display', Georgia, serif;
-    --font-body: 'DM Sans', system-ui, sans-serif;
-    --page-padding: 13mm;
+    --ocre:          #C8892A;
+    --ocre-claro:    #F2D589;
+    --ocre-fondo:    #FDF6E3;
+    --azul-ref:      #1B4F8A;
+    --azul-palido:   #E8F0F9;
+    --rojo-alerta:   #C0392B;
+    --rojo-palido:   #FDEDEC;
+    --naranja:       #E67E22;
+    --naranja-palido:#FEF5EC;
+    --verde-semaforo:#27AE60;
+    --verde-semaforo-palido: #EAFAF1;
+    --crema:         #FAF7F2;
+    --blanco:        #FFFFFF;
+    --gris-texto:    #2A2A2A;
+    --gris-medio:    #5A5A5A;
+    --gris-suave:    #9A9A9A;
+    --gris-linea:    #E0DDD8;
+    --gris-fondo:    #F5F4F1;
+    --font-display:  'DM Serif Display', Georgia, serif;
+    --font-body:     'DM Sans', system-ui, sans-serif;
+    --page-padding:  13mm;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: var(--font-body);
-    background: #E8E4DC;
+    background: #E0DCd4;
     color: var(--gris-texto);
     font-size: 9pt;
     line-height: 1.55;
@@ -73,9 +70,9 @@
 
   .watermark {
     position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) rotate(-35deg);
-    font-family: var(--font-body); font-size: 36pt; font-weight: 600;
-    color: rgba(180,175,165,0.09); white-space: nowrap; letter-spacing: 0.08em;
+    transform: translate(-50%,-50%) rotate(-35deg);
+    font-family: var(--font-body); font-size: 34pt; font-weight: 600;
+    color: rgba(180,175,165,0.08); white-space: nowrap; letter-spacing: 0.08em;
     pointer-events: none; z-index: 0; user-select: none;
   }
 
@@ -84,157 +81,241 @@
   /* ── Header ── */
   .page-header {
     display: flex; justify-content: space-between; align-items: flex-end;
-    border-bottom: 2px solid var(--tierra-claro); padding-bottom: 7px; margin-bottom: 11px;
+    border-bottom: 1.5px solid var(--verde-medio); padding-bottom: 7px; margin-bottom: 10px;
   }
   .logo-mark { display: flex; align-items: baseline; }
-  .logo-r { font-family: var(--font-display); font-size: 22pt; color: var(--verde-oscuro); line-height: 1; }
-  .logo-raiz { font-family: var(--font-display); font-size: 15pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
-  .logo-sub { font-size: 7pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 2px; }
-  .doc-tipo-badge { background: var(--tierra-palido); color: var(--tierra); font-size: 6.5pt; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; border: 0.75px solid var(--tierra-claro); }
-  .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .logo-r    { font-family: var(--font-display); font-size: 42pt; color: var(--verde-oscuro); line-height: 1; }
+  .logo-ai   { font-family: var(--font-display); font-size: 28pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
+  .logo-sub  { font-size: 6.5pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 8px; }
+  .header-meta { text-align: right; font-size: 7pt; color: var(--gris-suave); line-height: 1.5; }
+  .header-meta strong { color: var(--gris-medio); font-weight: 500; }
+  .confidencial-badge {
+    display: inline-block; font-size: 9pt; font-weight: 800; letter-spacing: 0.10em;
+    text-transform: uppercase; color: var(--rojo-alerta); background: var(--rojo-palido);
+    border-radius: 4px; padding: 3px 8px; margin-top: 4px;
+  }
+  .disclaimer {
+    background: var(--rojo-palido); border: 1.5px solid var(--rojo-alerta); border-radius: 6px;
+    padding: 10px 13px; font-size: 8.5pt; color: #1a1a1a; line-height: 1.5;
+    margin-top: 10px;
+  }
+  .disclaimer-title {
+    font-size: 8.5pt; font-weight: 800; color: var(--rojo-alerta); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .disclaimer strong { font-weight: 700; color: #000; }
 
   /* ── Banner estudiante ── */
-  .student-banner {
-    background: var(--tierra-palido); border-left: 4px solid var(--tierra-claro);
+  .student-header {
+    background: var(--gris-fondo); border-left: 4px solid var(--verde-medio);
     border-radius: 0 6px 6px 0; padding: 9px 13px; margin-bottom: 11px;
-    display: flex; flex-wrap: wrap; gap: 3px 8px;
+    display: flex; flex-wrap: wrap; gap: 3px 10px;
   }
-  .student-banner h1 { font-family: var(--font-display); font-size: 14pt; color: var(--tierra); width: 100%; margin-bottom: 3px; }
-  .student-field { font-size: 7.5pt; color: var(--gris-medio); min-width: 120px; }
+  .student-header h1 { font-family: var(--font-display); font-size: 13pt; color: var(--verde-oscuro); width: 100%; margin-bottom: 3px; line-height: 1.2; }
+  .student-field { font-size: 7pt; color: var(--gris-medio); min-width: 110px; }
   .student-field span { font-weight: 500; color: var(--gris-texto); }
 
   /* ── Secciones ── */
   .section { margin-bottom: 11px; }
   .section-label {
-    font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
-    color: var(--tierra); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
+    font-size: 6.5pt; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--verde-medio); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
   }
-  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--tierra-palido); }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--verde-palido); }
 
-  /* ── Recuadros genéricos ── */
-  .que-es { background: #F8F6F2; border-radius: 7px; padding: 9px 13px; font-size: 8.5pt; color: var(--gris-medio); line-height: 1.55; border: 0.75px solid var(--gris-linea); }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-  .info-box { background: var(--crema); border: 0.75px solid var(--gris-linea); border-radius: 7px; padding: 9px 12px; }
-  .info-box-title { font-size: 8pt; font-weight: 600; color: var(--gris-texto); margin-bottom: 5px; }
-
-  /* ── Recuadro cerebro adolescente ── */
-  .cerebro-box {
-    background: linear-gradient(135deg, #EEF7E4 0%, #FDF6E3 100%);
-    border: 1px solid var(--verde-palido);
-    border-left: 4px solid var(--verde-medio);
-    border-radius: 0 7px 7px 0;
-    padding: 10px 14px;
+  /* ── Intro del documento ── */
+  .doc-intro {
+    background: var(--azul-palido); border-radius: 6px; padding: 9px 13px;
+    font-size: 8pt; color: var(--azul-ref); line-height: 1.55;
+    border-left: 3px solid var(--azul-ref);
   }
-  .cerebro-box-title { font-size: 8pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
-  .cerebro-box-body { font-size: 8pt; color: var(--gris-medio); line-height: 1.55; }
-  .cerebro-box-fuente { font-size: 6.5pt; color: var(--gris-suave); margin-top: 5px; font-style: italic; }
+  .doc-intro strong { font-weight: 600; }
 
-  /* ── Holland ── */
-  .holland-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
-  .cuadrante-card-doc {
-    border-radius: 7px; padding: 8px 11px;
-    display: flex; gap: 9px; align-items: flex-start;
+  /* ── Semáforo de alerta estructural ── */
+  .alerta-card {
+    border-radius: 8px; padding: 11px 14px;
+    display: flex; gap: 13px; align-items: flex-start;
   }
-  .cuadrante-card-doc.dominante { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
-  .cuadrante-card-doc.debil { background: var(--crema); border: 1px solid var(--gris-linea); }
-  .cuad-badge-circle {
-    width: 34px; height: 34px; border-radius: 50%;
+  .alerta-card.regular   { background: var(--verde-semaforo-palido); border: 1.5px solid var(--verde-semaforo); }
+  .alerta-card.activo    { background: var(--naranja-palido);         border: 1.5px solid var(--naranja); }
+  .alerta-card.prioritario { background: var(--rojo-palido);          border: 1.5px solid var(--rojo-alerta); }
+  .alerta-emoji { font-size: 22pt; flex-shrink: 0; line-height: 1; }
+  .alerta-nivel-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; margin-bottom: 2px; }
+  .regular    .alerta-nivel-label { color: var(--verde-semaforo); }
+  .activo     .alerta-nivel-label { color: var(--naranja); }
+  .prioritario .alerta-nivel-label { color: var(--rojo-alerta); }
+  .alerta-nivel-titulo { font-size: 10.5pt; font-weight: 600; margin-bottom: 4px; }
+  .regular    .alerta-nivel-titulo { color: var(--verde-semaforo); }
+  .activo     .alerta-nivel-titulo { color: var(--naranja); }
+  .prioritario .alerta-nivel-titulo { color: var(--rojo-alerta); }
+  .alerta-descripcion { font-size: 8pt; color: var(--gris-texto); line-height: 1.5; }
+  .alerta-factores { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .alerta-factor { font-size: 7.5pt; color: var(--gris-medio); padding-left: 10px; position: relative; line-height: 1.4; }
+  .alerta-factor::before { content: '·'; position: absolute; left: 2px; color: var(--gris-suave); }
+  .factores-protectores-list { margin-top: 7px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.07); }
+  .fp-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--verde-medio); margin-bottom: 3px; }
+  .fp-item { font-size: 7.5pt; color: var(--gris-medio); padding-left: 14px; position: relative; line-height: 1.4; }
+  .fp-item::before { content: '✓'; position: absolute; left: 1px; color: var(--verde-claro); font-size: 7pt; }
+
+  /* ── Bloque neurociencias ── */
+  .neuro-card {
+    background: var(--gris-fondo); border-radius: 7px; padding: 10px 13px;
+    border-left: 3px solid var(--azul-ref);
+  }
+  .neuro-title { font-size: 8.5pt; font-weight: 600; color: var(--azul-ref); margin-bottom: 5px; }
+  .neuro-body  { font-size: 7.5pt; color: var(--gris-medio); line-height: 1.6; }
+  .neuro-refs  { font-size: 6.5pt; color: var(--gris-suave); margin-top: 6px; font-style: italic; line-height: 1.5; }
+
+  /* ── Bloque A: Contexto de vida ── */
+  .semaforo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .semaforo-item { border-radius: 6px; padding: 8px 10px; }
+  .semaforo-item.dot-verde    { background: var(--verde-semaforo-palido); border: 1px solid var(--verde-semaforo); }
+  .semaforo-item.dot-naranja  { background: var(--naranja-palido);        border: 1px solid var(--naranja); }
+  .semaforo-item.dot-rojo     { background: var(--rojo-palido);           border: 1px solid var(--rojo-alerta); }
+  .semaforo-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-bottom: 4px; }
+  .dot-verde  .semaforo-dot { background: var(--verde-semaforo); }
+  .dot-naranja .semaforo-dot { background: var(--naranja); }
+  .dot-rojo   .semaforo-dot { background: var(--rojo-alerta); }
+  .semaforo-dim-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-suave); margin-bottom: 2px; }
+  .semaforo-nivel { font-size: 8pt; font-weight: 600; margin-bottom: 3px; text-transform: capitalize; }
+  .dot-verde  .semaforo-nivel { color: var(--verde-semaforo); }
+  .dot-naranja .semaforo-nivel { color: var(--naranja); }
+  .dot-rojo   .semaforo-nivel { color: var(--rojo-alerta); }
+  .semaforo-desc { font-size: 7pt; color: var(--gris-texto); line-height: 1.4; margin-bottom: 4px; }
+  .semaforo-evidencia { font-size: 6.5pt; color: var(--gris-suave); line-height: 1.4; font-style: italic; }
+  .semaforo-leyenda { font-size: 6.5pt; color: var(--gris-suave); margin-top: 4px; line-height: 1.4; }
+
+  /* ── Bloque Prediger orientador ── */
+  .prediger-explainer {
+    background: var(--azul-palido); border-radius: 6px; padding: 9px 12px;
+    font-size: 7.5pt; color: var(--azul-ref); line-height: 1.6; margin-bottom: 8px;
+    border-left: 3px solid var(--azul-ref);
+  }
+  .prediger-explainer strong { font-weight: 600; }
+  .polo-grid-ori { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 5px; }
+  .polo-card-ori {
+    border-radius: 6px; padding: 8px 10px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .polo-card-ori.dominante { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
+  .polo-card-ori.debil     { background: var(--crema);       border: 1px solid var(--gris-linea); }
+  .polo-circle-ori {
+    width: 30px; height: 30px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 14pt; flex-shrink: 0;
+    font-size: 13pt; flex-shrink: 0;
   }
-  .dominante .cuad-badge-circle { background: var(--verde-medio); }
-  .debil .cuad-badge-circle { background: var(--gris-linea); }
-  .cuad-tag { font-size: 6pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
-  .dominante .cuad-tag { color: var(--verde-oscuro); }
-  .debil .cuad-tag { color: var(--gris-suave); }
-  .cuad-nombre { font-size: 9pt; font-weight: 600; margin-bottom: 3px; }
-  .dominante .cuad-nombre { color: var(--verde-oscuro); }
-  .debil .cuad-nombre { color: var(--gris-medio); }
-  .cuad-desc { font-size: 7.5pt; line-height: 1.45; }
-  .dominante .cuad-desc { color: var(--gris-medio); }
-  .debil .cuad-desc { color: var(--gris-suave); }
+  .dominante .polo-circle-ori { background: var(--verde-medio); }
+  .debil     .polo-circle-ori { background: var(--gris-linea); }
+  .polo-tag-ori { font-size: 5.5pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1px; }
+  .dominante .polo-tag-ori { color: var(--verde-oscuro); }
+  .debil     .polo-tag-ori { color: var(--gris-suave); }
+  .polo-nombre-ori { font-size: 8.5pt; font-weight: 600; margin-bottom: 2px; }
+  .dominante .polo-nombre-ori { color: var(--verde-oscuro); }
+  .debil     .polo-nombre-ori { color: var(--gris-suave); }
+  .polo-desc-ori { font-size: 7pt; line-height: 1.4; }
+  .dominante .polo-desc-ori { color: var(--gris-medio); }
+  .debil     .polo-desc-ori { color: var(--gris-suave); }
+  .prediger-sublabel-ori { font-size: 6pt; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+  .prediger-sublabel-ori.dominante { color: var(--verde-oscuro); }
+  .prediger-sublabel-ori.debil     { color: var(--gris-suave); }
+  .prediger-evidencia-box {
+    background: var(--tierra-palido); border-radius: 5px; padding: 6px 10px;
+    font-size: 7.5pt; color: var(--tierra); line-height: 1.45; font-style: italic;
+    border-left: 2px solid var(--tierra-claro); margin-top: 5px;
+  }
+  .prediger-evidencia-box::before { content: '📝 Actividad reportada: '; font-style: normal; font-weight: 600; }
 
-  /* ── Fortalezas y valores en columnas ── */
-  .catalogo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .catalogo-col-title { font-size: 7.5pt; font-weight: 600; color: var(--gris-texto); margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid var(--gris-linea); }
-  .catalogo-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
-  .catalogo-item:last-child { border-bottom: none; }
-  .catalogo-nombre { font-size: 8.5pt; font-weight: 600; color: var(--verde-oscuro); }
-  .catalogo-desc { font-size: 7.5pt; color: var(--gris-suave); line-height: 1.4; margin-top: 1px; }
-  .catalogo-evidencia { font-size: 7.5pt; color: var(--gris-medio); line-height: 1.4; margin-top: 2px; font-style: italic; }
-  .catalogo-evidencia::before { content: '→ '; font-style: normal; font-weight: 600; color: var(--verde-claro); }
+  /* ── Bloque C: Fortalezas y valores orientador ── */
+  .via-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .via-col  { border: 1px solid var(--gris-linea); border-radius: 7px; padding: 9px 11px; }
+  .via-col-title { font-size: 7.5pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--verde-palido); }
+  .via-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
+  .via-item:last-child { border-bottom: none; }
+  .via-nombre { font-size: 8pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 1px; }
+  .via-desc   { font-size: 6.5pt; color: var(--gris-suave); line-height: 1.4; margin-bottom: 3px; }
+  .via-evidencia {
+    font-size: 6.5pt; color: var(--tierra); background: var(--tierra-palido);
+    border-radius: 4px; padding: 2px 6px; font-style: italic; line-height: 1.4;
+    border-left: 2px solid var(--tierra-claro);
+  }
 
-  /* ── Semáforo contexto de vida ── */
-  .semaforo-row { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; border-bottom: 0.5px solid var(--gris-linea); }
-  .semaforo-row:last-child { border-bottom: none; }
-  .semaforo-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-  .dot-verde { background: #16A34A; }
-  .dot-naranja { background: #F97316; }
-  .dot-rojo { background: #DC2626; }
-  .semaforo-label { font-weight: 600; font-size: 8pt; color: var(--gris-texto); min-width: 80px; }
-  .semaforo-body { font-size: 8pt; color: var(--gris-medio); line-height: 1.45; }
-  .evidencia-invest { font-size: 7pt; color: var(--gris-suave); font-style: italic; margin-top: 3px; line-height: 1.4; }
-  .evidencia-invest::before { content: '📖 '; font-style: normal; }
+  /* ── Bloque D: SCCT ── */
+  .scct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .scct-card { border-radius: 6px; padding: 9px 11px; }
+  .scct-card.metas      { background: var(--verde-fondo);  border: 1px solid var(--verde-palido); grid-column: 1 / -1; }
+  .scct-card.barreras   { background: var(--rojo-palido);  border: 1px solid #F1948A; }
+  .scct-card.oportunidades { background: var(--azul-palido); border: 1px solid #AED6F1; }
+  .scct-card-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 5px; }
+  .metas .scct-card-label       { color: var(--verde-oscuro); }
+  .barreras .scct-card-label    { color: var(--rojo-alerta); }
+  .oportunidades .scct-card-label { color: var(--azul-ref); }
+  .scct-metas-texto { font-size: 8.5pt; color: var(--gris-texto); line-height: 1.5; font-style: italic; }
+  .scct-list { display: flex; flex-direction: column; gap: 3px; }
+  .scct-list-item { font-size: 7.5pt; color: var(--gris-medio); padding-left: 12px; position: relative; line-height: 1.4; }
+  .barreras .scct-list-item::before    { content: '·'; position: absolute; left: 2px; color: var(--rojo-alerta); font-weight: 700; }
+  .oportunidades .scct-list-item::before { content: '→'; position: absolute; left: 1px; color: var(--azul-ref); font-size: 7pt; }
 
-  /* ── Disclaimer alertas ── */
-  .disclaimer-alertas {
-    background: #FAFAF8; border: 0.75px solid var(--gris-linea);
+  /* ── Sección engagement ── */
+  .engagement-card {
+    background: var(--gris-fondo); border-radius: 6px; padding: 9px 12px;
+    font-size: 8pt; color: var(--gris-texto); line-height: 1.55;
     border-left: 3px solid var(--gris-suave);
-    border-radius: 0 6px 6px 0;
-    padding: 8px 12px; font-size: 7.5pt; color: var(--gris-medio); line-height: 1.5;
-    margin-bottom: 8px;
   }
-  .disclaimer-alertas strong { color: var(--gris-texto); }
 
-  /* ── Alertas ── */
-  .alerta-block { border-radius: 8px; padding: 10px 13px; }
-  .alerta-roja { background: var(--rojo-bg); border: 1.5px solid var(--rojo-borde); }
-  .alerta-amarilla { background: var(--amarillo-bg); border: 1.5px solid var(--amarillo-borde); }
-  .alerta-verde { background: var(--verde-ok-bg); border: 1px solid var(--verde-ok-borde); }
-  .alerta-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .alerta-icon { font-size: 13pt; }
-  .alerta-nivel-label { font-size: 7pt; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
-  .alerta-roja .alerta-nivel-label { color: var(--rojo-texto); }
-  .alerta-amarilla .alerta-nivel-label { color: var(--amarillo-texto); }
-  .alerta-verde .alerta-nivel-label { color: var(--verde-ok-texto); }
-  .alerta-descripcion { font-size: 8.5pt; line-height: 1.5; margin-bottom: 6px; }
-  .alerta-roja .alerta-descripcion { color: var(--rojo-texto); }
-  .alerta-amarilla .alerta-descripcion { color: var(--amarillo-texto); }
-  .alerta-verde .alerta-descripcion { color: var(--verde-ok-texto); }
-  .alerta-factores-list { margin-top: 5px; }
-  .alerta-factor-item { display: flex; gap: 5px; font-size: 8pt; margin-bottom: 3px; line-height: 1.4; }
-  .alerta-factor-bullet { font-weight: 700; flex-shrink: 0; }
-  .alerta-roja .alerta-factor-item { color: var(--rojo-texto); }
-  .alerta-amarilla .alerta-factor-item { color: var(--amarillo-texto); }
-  .protectores-list { margin-top: 6px; padding-top: 6px; border-top: 0.75px solid rgba(22,163,74,0.2); }
-  .protectores-title { font-size: 6.5pt; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--verde-oscuro); margin-bottom: 3px; }
-  .protector-item { font-size: 7.5pt; color: var(--verde-ok-texto); display: flex; gap: 5px; margin-bottom: 2px; }
-  .lineas-referencia { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-  .linea-badge { background: rgba(220,38,38,0.12); color: var(--rojo-texto); border: 0.75px solid rgba(220,38,38,0.35); border-radius: 20px; padding: 2px 9px; font-size: 7.5pt; font-weight: 600; }
+  /* ── Alerta crítica ── */
+  .alerta-critica-card {
+    background: var(--rojo-palido); border: 2px solid var(--rojo-alerta);
+    border-radius: 7px; padding: 11px 14px;
+  }
+  .alerta-critica-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .alerta-critica-icon   { font-size: 16pt; }
+  .alerta-critica-title  { font-size: 9pt; font-weight: 600; color: var(--rojo-alerta); }
+  .alerta-critica-tipo   { font-size: 7.5pt; color: var(--gris-medio); font-weight: 500; }
+  .alerta-critica-desc   { font-size: 8pt; color: var(--gris-texto); line-height: 1.5; margin-bottom: 7px; }
+  .alerta-critica-accion {
+    font-size: 7.5pt; font-weight: 600; color: var(--rojo-alerta);
+    background: rgba(192,57,43,0.08); border-radius: 4px; padding: 5px 10px;
+  }
+  .lineas-emergencia { display: flex; gap: 8px; margin-top: 6px; }
+  .linea-badge { font-size: 7pt; font-weight: 600; color: var(--blanco); background: var(--rojo-alerta); border-radius: 4px; padding: 3px 8px; }
+  .sin-alerta-card {
+    background: var(--verde-semaforo-palido); border: 1px solid var(--verde-semaforo);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 8pt; color: var(--verde-semaforo); display: flex; align-items: center; gap: 8px;
+  }
 
-  /* ── Espacio de seguimiento ── */
-  .seguimiento-box { background: var(--crema); border: 1px solid var(--gris-linea); border-radius: 8px; padding: 13px 15px; }
-  .form-field { margin-bottom: 10px; }
-  .form-label { font-size: 7pt; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gris-suave); display: block; margin-bottom: 4px; }
-  .form-line { border-bottom: 1.5px solid var(--gris-linea); height: 22px; }
-  .form-lines-area { display: flex; flex-direction: column; gap: 16px; }
-  .form-checkbox-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 4px; }
-  .form-checkbox { display: flex; align-items: center; gap: 6px; font-size: 8pt; color: var(--gris-medio); }
-  .checkbox-box { width: 13px; height: 13px; border: 1.5px solid var(--gris-linea); border-radius: 3px; flex-shrink: 0; }
+  /* ── Checkboxes de acciones ── */
+  .acciones-list { display: flex; flex-direction: column; gap: 5px; }
+  .accion-item { display: flex; align-items: flex-start; gap: 9px; font-size: 8pt; color: var(--gris-texto); line-height: 1.45; }
+  .checkbox { width: 12px; height: 12px; border: 1.5px solid var(--gris-linea); border-radius: 2px; flex-shrink: 0; margin-top: 1px; background: white; }
+
+  /* ── Espacio de seguimiento (página extra) ── */
+  .seguimiento-intro { font-size: 8pt; color: var(--gris-medio); line-height: 1.55; margin-bottom: 11px; }
+  .firma-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .firma-campo { border-top: 1px solid var(--gris-linea); padding-top: 5px; }
+  .firma-label { font-size: 6.5pt; color: var(--gris-suave); letter-spacing: 0.05em; }
+  .linea-escritura {
+    border: none; border-bottom: 0.5px solid var(--gris-linea);
+    display: block; width: 100%; margin: 8px 0 4px; height: 22px;
+  }
+  .campo-texto-largo {
+    border: 0.5px solid var(--gris-linea); border-radius: 5px;
+    width: 100%; height: 55px; margin-top: 5px; background: var(--gris-fondo);
+    display: block;
+  }
 
   /* ── Disclaimer ── */
-  .disclaimer-final { background: #F5F4F1; border-radius: 6px; padding: 10px 13px; font-size: 7pt; color: var(--gris-suave); line-height: 1.6; border: 0.5px solid var(--gris-linea); }
-  .disclaimer-final strong { font-weight: 600; color: var(--gris-medio); }
+  .disclaimer { background: var(--gris-fondo); border-radius: 6px; padding: 9px 12px; font-size: 6.5pt; color: var(--gris-suave); line-height: 1.6; border: 0.5px solid var(--gris-linea); }
+  .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
 
   /* ── Footer ── */
   .page-footer {
     margin-top: auto;
     display: flex; justify-content: space-between; align-items: center;
     border-top: 0.75px solid var(--gris-linea); padding-top: 5px; padding-bottom: 8mm;
-    font-size: 6.5pt; color: var(--gris-suave);
+    font-size: 6pt; color: var(--gris-suave);
   }
-  .footer-brand { font-weight: 600; color: var(--tierra); }
-  .footer-confid { font-style: italic; }
+  .footer-brand { font-weight: 500; color: var(--verde-oscuro); }
+  .footer-conf  { color: var(--rojo-alerta); font-weight: 500; }
 
   @media print { body { background: white; } .page { box-shadow: none; margin: 0; } }
   @page { size: A4; margin: 0; }
@@ -243,448 +324,395 @@
 <body>
 
 {% set nombre_corto = nombre_completo.split()[0] %}
-{% set total_pages = 3 if mostrar_espacio_seguimiento else 2 %}
+{% set total_pages = 4 if mostrar_espacio_seguimiento else 3 %}
 
-<!-- ═══════════════════════ PÁGINA 1 ═══════════════════════ -->
+{# ── Macros de semáforo ── #}
+{% macro semaforo_clase(nivel, tipo) -%}
+  {%- if tipo == 'carga' -%}
+    {%- if nivel == 'alta' %}dot-rojo{% elif nivel == 'media' %}dot-naranja{% else %}dot-verde{% endif -%}
+  {%- elif tipo == 'red' -%}
+    {%- if nivel == 'fuerte' %}dot-verde{% elif nivel == 'moderada' %}dot-naranja{% else %}dot-rojo{% endif -%}
+  {%- elif tipo == 'respaldo' -%}
+    {%- if nivel == 'alto' %}dot-verde{% elif nivel == 'medio' %}dot-naranja{% else %}dot-rojo{% endif -%}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro alerta_emoji(nivel_alerta) -%}
+  {%- if nivel_alerta == 'prioritario' %}🔴{% elif nivel_alerta == 'activo' %}🟡{% else %}🟢{% endif -%}
+{%- endmacro %}
+
+{% macro alerta_titulo(nivel_alerta) -%}
+  {%- if nivel_alerta == 'prioritario' %}Seguimiento Prioritario
+  {%- elif nivel_alerta == 'activo' %}Acompañamiento Activo
+  {%- else %}Seguimiento Regular{% endif -%}
+{%- endmacro %}
+
+{% set cv = contexto_vida %}
+{% set cf = cv.get('carga_familiar',    {}) if cv is mapping else {} %}
+{% set ra = cv.get('red_apoyo',         {}) if cv is mapping else {} %}
+{% set rs = cv.get('respaldo_estudio',  {}) if cv is mapping else {} %}
+
+
+<!-- ═══════════════════ PÁGINA 1 — SEMÁFORO + NEUROCIENCIAS ═══════════════════ -->
 <div class="page">
-  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="watermark">CONFIDENCIAL</div>
   <div class="content">
 
     <div class="page-header">
       <div class="logo-mark">
-        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-r">r</span><span class="logo-ai">AÍ</span><span class="logo-r">z</span>
         <span class="logo-sub">Mentoría de proyecto de vida</span>
       </div>
       <div class="header-meta">
-        <span class="doc-tipo-badge">Ficha de acompañamiento · Uso exclusivo orientador/a</span>
-        <span style="font-size:7pt;color:#9A9A9A;">Ficha de Acompañamiento · Grado 9°</span>
+        <strong>Ficha de Acompañamiento en Orientación</strong><br>
+        Uso exclusivo orientador/a · Grado 9°<br>
+        <span class="confidencial-badge">CONFIDENCIAL</span>
       </div>
     </div>
 
-    <div class="student-banner">
+    <div class="student-header">
       <h1>{{ nombre_completo }}</h1>
       <div class="student-field">Institución: <span>{{ institucion or 'N/D' }}</span></div>
       <div class="student-field">Municipio: <span>{{ municipio or 'N/D' }}</span></div>
-      <div class="student-field">Grado: <span>9°</span></div>
-      <div class="student-field">Docente orientador/a: <span>{{ orientador_nombre or 'N/D' }}</span></div>
-      <div class="student-field">Fecha de generación: <span>{{ fecha }}</span></div>
-      <div class="student-field">Sesiones analizadas: <span>{{ sesiones_analizadas }} conversaciones</span></div>
+      <div class="student-field">Orientador/a: <span>{{ orientador_nombre or 'N/D' }}</span></div>
+      <div class="student-field">Fecha: <span>{{ fecha }}</span></div>
+      <div class="student-field">Sesiones analizadas: <span>{{ sesiones_analizadas }}</span></div>
     </div>
 
-    <!-- ¿QUÉ ES ESTE DOCUMENTO? -->
+    <!-- INTRO -->
     <div class="section">
-      <div class="section-label">¿Qué es este documento?</div>
-      <div class="que-es">
-        Esta ficha resume lo que <strong>{{ nombre_corto }}</strong> compartió en sus {{ sesiones_analizadas }} conversaciones con rAÍz. <strong>No es un diagnóstico</strong> — es un punto de partida para que vos puedas acompañarlo/a mejor. Cada sección explica qué significa la información y qué podés hacer con ella. El criterio profesional del orientador/a siempre prevalece sobre lo que acá se presenta.
-      </div>
-    </div>
-
-    <!-- DESARROLLO CEREBRAL ADOLESCENTE -->
-    <div class="section">
-      <div class="section-label">¿Por qué es difícil pensar en el futuro a los 15 años?</div>
-      <div class="cerebro-box">
-        <div class="cerebro-box-title">🧠 Lo que está pasando en el cerebro de {{ nombre_corto }}</div>
-        <div class="cerebro-box-body">
-          La corteza prefrontal — la región del cerebro responsable de planear, imaginar consecuencias y construir proyectos a largo plazo — sigue en desarrollo activo hasta los 25 años aproximadamente. En la adolescencia, el sistema límbico (emociones, impulsos, recompensa inmediata) domina frente a esa capacidad de planificación aún inmadura. Esto explica por qué preguntas como "¿qué querés ser?" generan ansiedad o respuestas vagas: no es falta de motivación ni de inteligencia — es neurobiología del desarrollo.<br><br>
-          Según la teoría del desarrollo vocacional de Donald Super, los adolescentes de 14 a 18 años se encuentran en la <strong>etapa de exploración</strong>: su tarea central es explorar intereses y fortalezas, no decidir. Eli Ginzberg llama a esto el período <strong>tentativo</strong>, donde los valores, capacidades e intereses se van integrando gradualmente. Presionar a un joven de 9° a elegir una carrera es contraproducente — la evidencia muestra que las intervenciones más efectivas en esta etapa se enfocan en el autoconocimiento, no en la selección temprana de programas.
-        </div>
-        <div class="cerebro-box-fuente">Fuentes de referencia: Super, D. (1990). Career Choice and Development. Jossey-Bass. · Ginzberg, E. et al. (1951). Occupational Choice. Columbia University Press. · Casey, B.J. et al. (2008). The adolescent brain. Developmental Review.</div>
+      <div class="doc-intro">
+        <strong>¿Qué es este documento?</strong> Esta ficha resume lo que {{ nombre_corto }} compartió en
+        sus {{ sesiones_analizadas }} conversaciones con rAÍz. No es un diagnóstico — es un punto de partida
+        para que vos puedas acompañarlo/a mejor. Cada sección explica qué significa la información y qué podés
+        hacer con ella. <strong>El criterio profesional del orientador/a siempre prevalece.</strong>
       </div>
     </div>
 
-    <!-- PERFIL DE INTERESES HOLLAND -->
+    <!-- SEMÁFORO DE ALERTA ESTRUCTURAL -->
     <div class="section">
-      <div class="section-label">Perfil de intereses (Holland / RIASEC adaptado)</div>
-      <div style="font-size:7.5pt;color:var(--gris-suave);margin-bottom:7px;line-height:1.5;">
-        El modelo de Holland organiza los intereses en cuatro grandes cuadrantes: <strong>Personas, Ideas, Datos y Cosas</strong>. No hay perfiles buenos ni malos — cada uno describe tendencias naturales de disfrute y motivación. En grado 9° este perfil es orientativo, no determinante: los intereses continuarán evolucionando en 10° y 11°.
-      </div>
-
-      <!-- Cuadrantes dominantes -->
-      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--verde-oscuro);margin-bottom:4px;">Cuadrantes con mayor presencia</div>
-      <div class="holland-grid">
-        {% for c in cuadrantes_dominantes %}
-        <div class="cuadrante-card-doc dominante">
-          <div class="cuad-badge-circle">{{ c.icono }}</div>
-          <div>
-            <div class="cuad-tag">Dominante</div>
-            <div class="cuad-nombre">{{ c.nombre }}</div>
-            <div class="cuad-desc">{{ c.descripcion_pedagogica }}</div>
+      <div class="section-label">Nivel de alerta estructural</div>
+      <div class="alerta-card {{ nivel_alerta }}">
+        <div class="alerta-emoji">{{ alerta_emoji(nivel_alerta) }}</div>
+        <div style="flex:1;">
+          <div class="alerta-nivel-label">Nivel de seguimiento</div>
+          <div class="alerta-nivel-titulo">{{ alerta_titulo(nivel_alerta) }}</div>
+          <div class="alerta-descripcion">{{ descripcion_nivel_alerta }}</div>
+          {% if factores_alerta %}
+          <div class="alerta-factores">
+            {% for f in factores_alerta %}
+            <div class="alerta-factor">{{ f }}</div>
+            {% endfor %}
           </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- Cuadrantes menos presentes -->
-      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--gris-suave);margin-bottom:4px;margin-top:6px;">Cuadrantes con menor presencia en este momento</div>
-      <div class="holland-grid">
-        {% for c in cuadrantes_debiles %}
-        <div class="cuadrante-card-doc debil">
-          <div class="cuad-badge-circle">{{ c.icono }}</div>
-          <div>
-            <div class="cuad-tag">Menor afinidad actual</div>
-            <div class="cuad-nombre">{{ c.nombre }}</div>
-            <div class="cuad-desc">{{ c.descripcion_donotham }}</div>
+          {% endif %}
+          {% if factores_protectores %}
+          <div class="factores-protectores-list">
+            <div class="fp-label">Factores protectores</div>
+            {% for fp in factores_protectores %}
+            <div class="fp-item">{{ fp }}</div>
+            {% endfor %}
           </div>
+          {% endif %}
         </div>
-        {% endfor %}
       </div>
     </div>
 
-    <!-- FORTALEZAS Y VALORES EN DOS COLUMNAS -->
+    <!-- NEUROCIENCIAS DEL ADOLESCENTE -->
     <div class="section">
-      <div class="section-label">Fortalezas y valores identificados</div>
-      <div class="catalogo-cols">
-        <!-- Fortalezas VIA -->
-        <div class="info-box">
-          <div class="catalogo-col-title">🌟 Fortalezas de carácter (VIA)</div>
-          {% for f in fortalezas %}
-          <div class="catalogo-item">
-            <div class="catalogo-nombre">{{ f.nombre }}</div>
-            <div class="catalogo-desc">{{ f.descripcion_catalogo }}</div>
-            <div class="catalogo-evidencia">{{ f.evidencia }}</div>
-          </div>
-          {% endfor %}
+      <div class="section-label">🧠 ¿Por qué es difícil pensar en el futuro a los 15 años?</div>
+      <div class="neuro-card">
+        <div class="neuro-title">Lo que está pasando en el cerebro de {{ nombre_corto }}</div>
+        <div class="neuro-body">
+          La corteza prefrontal —responsable de planear, imaginar consecuencias y construir proyectos a largo plazo—
+          sigue en desarrollo activo hasta los 25 años aproximadamente. En la adolescencia, el sistema límbico
+          (emociones, impulsos, recompensa inmediata) domina frente a esa capacidad de planificación aún inmadura.
+          Esto explica por qué preguntas como <em>"¿qué querés ser?"</em> generan ansiedad o respuestas vagas:
+          no es falta de motivación ni de inteligencia — es neurobiología del desarrollo.
+          <br><br>
+          Según Donald Super, los adolescentes de 14 a 18 años están en la <strong>etapa de exploración</strong>:
+          su tarea central es explorar intereses y fortalezas, no decidir. Eli Ginzberg denomina esto el
+          <strong>período tentativo</strong>, donde valores, capacidades e intereses se integran gradualmente.
+          Presionar a un joven de 9° a elegir una carrera es contraproducente — la evidencia muestra que
+          las intervenciones más efectivas en esta etapa se enfocan en el autoconocimiento, no en la selección temprana.
         </div>
-        <!-- Valores -->
-        <div class="info-box">
-          <div class="catalogo-col-title">🧭 Valores que lo/a mueven</div>
-          {% for v in valores %}
-          <div class="catalogo-item">
-            <div class="catalogo-nombre">{{ v.nombre }}</div>
-            <div class="catalogo-desc">{{ v.descripcion_catalogo }}</div>
-            <div class="catalogo-evidencia">{{ v.evidencia }}</div>
-          </div>
-          {% endfor %}
+        <div class="neuro-refs">
+          Super, D. (1990). Career Choice and Development. Jossey-Bass. ·
+          Ginzberg, E. et al. (1951). Occupational Choice. Columbia University Press. ·
+          Casey, B.J. et al. (2008). The adolescent brain. Developmental Review.
         </div>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="section">
+      <div class="disclaimer">
+        <div class="disclaimer-title">⚠️ Información confidencial e importante</div>
+        {{ disclaimer | safe }}
       </div>
     </div>
 
   </div>
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
-    <span class="footer-confid">{{ pie }}</span>
+    <span>{{ pie }}</span>
+    <span class="footer-conf">Confidencial · solo orientador/a</span>
     <span>1 / {{ total_pages }}</span>
   </div>
 </div>
 
 
-<!-- ═══════════════════════ PÁGINA 2 ═══════════════════════ -->
+<!-- ═══════════════════ PÁGINA 2 — PREDIGER + CONTEXTO DE VIDA ═══════════════════ -->
 <div class="page">
-  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="watermark">CONFIDENCIAL</div>
   <div class="content">
 
     <div class="page-header">
       <div class="logo-mark">
-        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-r">r</span><span class="logo-ai">AÍ</span><span class="logo-r">z</span>
         <span class="logo-sub">Mentoría de proyecto de vida</span>
       </div>
       <div class="header-meta">
-        <strong>{{ nombre_completo }}</strong> · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
-        <span style="font-size:7pt;">Ficha de Acompañamiento · {{ fecha }}</span>
+        {{ nombre_completo }} · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
+        Ficha de Acompañamiento · {{ fecha }}
       </div>
     </div>
 
-    <!-- CONTEXTO DE VIDA -->
-    {% set cv = contexto_vida %}
-    {% set cf = cv.get('carga_familiar', {}) %}
-    {% set ra = cv.get('red_apoyo', {}) %}
-    {% set rs = cv.get('respaldo_estudio', {}) %}
-
-    {% macro semaforo_clase(nivel, tipo) %}
-      {%- if tipo == 'carga' -%}
-        {%- if nivel == 'alta' %}dot-rojo{% elif nivel == 'media' %}dot-naranja{% else %}dot-verde{% endif -%}
-      {%- elif tipo == 'red' -%}
-        {%- if nivel == 'fuerte' %}dot-verde{% elif nivel == 'moderada' %}dot-naranja{% else %}dot-rojo{% endif -%}
-      {%- elif tipo == 'respaldo' -%}
-        {%- if nivel == 'alto' %}dot-verde{% elif nivel == 'medio' %}dot-naranja{% else %}dot-rojo{% endif -%}
-      {%- endif -%}
-    {% endmacro %}
-
-    {% macro etiqueta_nivel(nivel, tipo) %}
-      {%- if tipo == 'carga' -%}
-        Carga {{ nivel }}
-      {%- elif tipo == 'red' -%}
-        Red {{ nivel }}
-      {%- elif tipo == 'respaldo' -%}
-        Respaldo {{ nivel }}
-      {%- endif -%}
-    {% endmacro %}
-
+    <!-- BLOQUE B: PERFIL DE INTERESES PREDIGER -->
     <div class="section">
-      <div class="section-label">Contexto de vida relevante</div>
-      <div class="info-box" style="padding:10px 13px;">
-        <div style="font-size:7pt;color:var(--gris-suave);margin-bottom:8px;">
-          🔴 Condición que requiere atención &nbsp;|&nbsp; 🟠 Condición mixta &nbsp;|&nbsp; 🟢 Condición favorable
-        </div>
+      <div class="section-label">Bloque B — Perfil de preferencias en tareas (Prediger)</div>
+      <div class="prediger-explainer">
+        Este apartado se basa en el <strong>Modelo de Ejes de Tareas de Dale Prediger</strong>, base estructural del hexágono RIASEC de Holland.
+        Evalúa la inclinación natural hacia cuatro polos: <strong>Personas</strong> (cuidar, enseñar, liderar),
+        <strong>Cosas</strong> (trabajo práctico, objetos, mecanismos), <strong>Datos</strong> (sistematización, orden, administración) e
+        <strong>Ideas</strong> (resolución creativa, investigación, arte). A través de la Ronda Relámpago de Intereses,
+        rAÍz identificó las actividades donde {{ nombre_corto }} experimenta mayor flujo y sentido de competencia.
+        Este perfil es <strong>orientativo y evolutivo</strong> — continuará cambiando en 10° y 11°.
+      </div>
 
-        <div class="semaforo-row">
-          <div class="semaforo-dot {{ semaforo_clase(cf.get('nivel',''), 'carga') }}"></div>
+      <div class="prediger-sublabel-ori dominante" style="margin-bottom:4px;">Polos dominantes — mayor interés</div>
+      <div class="polo-grid-ori">
+        {% for p in polos_dominantes %}
+        <div class="polo-card-ori dominante">
+          <div class="polo-circle-ori">{{ p.icono }}</div>
           <div>
-            <div class="semaforo-label">{{ etiqueta_nivel(cf.get('nivel',''), 'carga') }}</div>
-            <div class="semaforo-body">{{ cf.get('descripcion', '') }}</div>
-            {% if cf.get('evidencia_investigacion') %}
-            <div class="evidencia-invest">{{ cf.get('evidencia_investigacion', '') }}</div>
-            {% endif %}
+            <div class="polo-tag-ori">Polo dominante</div>
+            <div class="polo-nombre-ori">{{ p.nombre }}</div>
+            <div class="polo-desc-ori">{{ p.descripcion_pedagogica }}</div>
           </div>
         </div>
+        {% endfor %}
+      </div>
 
-        <div class="semaforo-row">
-          <div class="semaforo-dot {{ semaforo_clase(ra.get('nivel',''), 'red') }}"></div>
+      <div class="prediger-sublabel-ori debil" style="margin-top:7px; margin-bottom:4px;">Polos de menor interés actual</div>
+      <div class="polo-grid-ori">
+        {% for p in polos_debiles %}
+        <div class="polo-card-ori debil">
+          <div class="polo-circle-ori">{{ p.icono }}</div>
           <div>
-            <div class="semaforo-label">{{ etiqueta_nivel(ra.get('nivel',''), 'red') }}</div>
-            <div class="semaforo-body">{{ ra.get('descripcion', '') }}</div>
-            {% if ra.get('evidencia_investigacion') %}
-            <div class="evidencia-invest">{{ ra.get('evidencia_investigacion', '') }}</div>
-            {% endif %}
+            <div class="polo-tag-ori">Menor afinidad actual</div>
+            <div class="polo-nombre-ori">{{ p.nombre }}</div>
+            <div class="polo-desc-ori">{{ p.descripcion_donotham }}</div>
           </div>
         </div>
-
-        <div class="semaforo-row">
-          <div class="semaforo-dot {{ semaforo_clase(rs.get('nivel',''), 'respaldo') }}"></div>
-          <div>
-            <div class="semaforo-label">{{ etiqueta_nivel(rs.get('nivel',''), 'respaldo') }}</div>
-            <div class="semaforo-body">{{ rs.get('descripcion', '') }}</div>
-            {% if rs.get('evidencia_investigacion') %}
-            <div class="evidencia-invest">{{ rs.get('evidencia_investigacion', '') }}</div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LO QUE IMAGINA PARA SÍ MISMO/A -->
-    <div class="section">
-      <div class="section-label">Lo que {{ nombre_corto }} imagina para sí mismo/a</div>
-      <div class="two-col">
-        <div class="info-box">
-          <div class="info-box-title">Expectativa a corto plazo</div>
-          <div style="font-size:8.5pt;color:var(--gris-medio);font-style:italic;line-height:1.5;">{{ expectativa_corto_plazo }}</div>
-        </div>
-        <div class="info-box">
-          <div class="info-box-title">Barreras que percibe</div>
-          {% for barrera in barreras %}
-          <div style="display:flex;gap:6px;align-items:flex-start;padding:3px 0;border-bottom:0.5px solid var(--gris-linea);font-size:8pt;color:var(--gris-medio);{% if loop.last %}border-bottom:none;{% endif %}">
-            <div class="semaforo-dot dot-naranja" style="margin-top:4px;flex-shrink:0;"></div>
-            <div>{{ barrera }}</div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <!-- DISCLAIMER ANTES DE ALERTAS -->
-    <div class="disclaimer-alertas">
-      <strong>Nota sobre los niveles de seguimiento:</strong> Los indicadores de seguimiento (Regular / Acompañamiento Activo / Prioritario) son señales de atención estructurada construidas a partir de patrones conversacionales — no diagnósticos clínicos. Reflejan condiciones observadas en el contexto del/la estudiante, no características de su personalidad o capacidad. No deben comunicarse al/la estudiante bajo ninguna circunstancia. <strong>El criterio profesional del orientador/a prevalece siempre.</strong>
-    </div>
-
-    <!-- SEÑALES DE ALERTA -->
-    <div class="section">
-      <div class="section-label">Señales de seguimiento detectadas</div>
-
-      {% if nivel_alerta == 'prioritario' %}
-      <div class="alerta-block alerta-roja">
-        <div class="alerta-header">
-          <span class="alerta-icon">🔴</span>
-          <div class="alerta-nivel-label">Nivel: Seguimiento prioritario</div>
-        </div>
-        <div class="alerta-descripcion">{{ descripcion_nivel_alerta }}</div>
-        <div class="alerta-factores-list">
-          {% for f in factores_alerta %}
-          <div class="alerta-factor-item"><span class="alerta-factor-bullet">·</span><span>{{ f }}</span></div>
-          {% endfor %}
-        </div>
-        {% if factores_protectores %}
-        <div class="protectores-list">
-          <div class="protectores-title">Factores protectores identificados</div>
-          {% for fp in factores_protectores %}
-          <div class="protector-item"><span>✓</span><span>{{ fp }}</span></div>
-          {% endfor %}
-        </div>
-        {% endif %}
+        {% endfor %}
       </div>
 
-      {% elif nivel_alerta == 'activo' %}
-      <div class="alerta-block alerta-amarilla">
-        <div class="alerta-header">
-          <span class="alerta-icon">🟡</span>
-          <div class="alerta-nivel-label">Nivel: Acompañamiento activo</div>
-        </div>
-        <div class="alerta-descripcion">{{ descripcion_nivel_alerta }}</div>
-        <div class="alerta-factores-list">
-          {% for f in factores_alerta %}
-          <div class="alerta-factor-item"><span class="alerta-factor-bullet">·</span><span>{{ f }}</span></div>
-          {% endfor %}
-        </div>
-        {% if factores_protectores %}
-        <div class="protectores-list">
-          <div class="protectores-title">Factores protectores identificados</div>
-          {% for fp in factores_protectores %}
-          <div class="protector-item"><span>✓</span><span>{{ fp }}</span></div>
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-
-      {% else %}
-      <div class="alerta-block alerta-verde">
-        <div class="alerta-header" style="margin-bottom:0;">
-          <span class="alerta-icon">🟢</span>
-          <div class="alerta-nivel-label">Nivel: Seguimiento regular</div>
-        </div>
-        <div class="alerta-descripcion" style="margin-top:4px;">
-          {{ descripcion_nivel_alerta or 'El/la estudiante muestra condiciones favorables para la continuidad educativa. Se recomienda acompañamiento de seguimiento regular.' }}
-        </div>
-        {% if factores_protectores %}
-        <div class="protectores-list">
-          <div class="protectores-title">Factores protectores identificados</div>
-          {% for fp in factores_protectores %}
-          <div class="protector-item"><span>✓</span><span>{{ fp }}</span></div>
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
+      {% if prediger_evidencia %}
+      <div class="prediger-evidencia-box">{{ prediger_evidencia }}</div>
       {% endif %}
     </div>
 
-    <!-- ALERTAS CRÍTICAS -->
-    {% if alerta_critica %}
+    <!-- BLOQUE A: CONTEXTO DE VIDA -->
     <div class="section">
-      <div class="section-label">Alerta crítica activa</div>
-      <div class="alerta-block alerta-roja">
-        <div class="alerta-header">
-          <span class="alerta-icon">⚠️</span>
-          <div class="alerta-nivel-label" style="color:var(--rojo-texto);">Alerta crítica — intervención inmediata requerida</div>
-        </div>
-        <div class="alerta-descripcion" style="color:var(--rojo-texto);">
-          <strong>Tipo:</strong> {{ alerta_critica.tipo }}<br>
-          {{ alerta_critica.descripcion }}
-        </div>
-        <div style="margin-top:7px;padding-top:6px;border-top:0.75px solid rgba(220,38,38,0.3);font-size:8pt;color:var(--rojo-texto);">
-          <strong>Acción inmediata:</strong> Activá el protocolo institucional de atención a situaciones de riesgo.
-          <div class="lineas-referencia">
-            <span class="linea-badge">Línea 106 – Salud mental</span>
-            <span class="linea-badge">Línea 141 – ICBF</span>
-          </div>
-        </div>
+      <div class="section-label">Bloque A — Contexto y red de apoyo</div>
+      <div class="semaforo-leyenda" style="margin-bottom:6px;">
+        🔴 Condición que requiere atención &nbsp;|&nbsp; 🟠 Condición mixta &nbsp;|&nbsp; 🟢 Condición favorable
       </div>
-    </div>
-    {% else %}
-    <div class="section">
-      <div class="section-label">Alertas críticas</div>
-      <div class="alerta-block alerta-verde">
-        <div class="alerta-header" style="margin-bottom:0;">
-          <span class="alerta-icon">✅</span>
-          <div class="alerta-nivel-label" style="color:var(--verde-ok-texto);">Sin alertas críticas activas</div>
-        </div>
-        <div class="alerta-descripcion" style="margin-top:4px;">No se detectaron situaciones de riesgo psicológico grave en este proceso.</div>
-      </div>
-    </div>
-    {% endif %}
+      <div class="semaforo-grid">
 
-    <!-- DISCLAIMER FINAL -->
-    <div class="section">
-      <div class="disclaimer-final">{{ disclaimer | safe }}</div>
+        <!-- Carga familiar -->
+        <div class="semaforo-item {{ semaforo_clase(cf.get('nivel',''), 'carga') }}">
+          <span class="semaforo-dot"></span>
+          <div class="semaforo-dim-label">Carga extracurricular</div>
+          <div class="semaforo-nivel">{{ cf.get('nivel', 'N/D') | capitalize }}</div>
+          <div class="semaforo-desc">{{ cf.get('descripcion', '') }}</div>
+          {% if cf.get('evidencia_investigacion') %}
+          <div class="semaforo-evidencia">{{ cf.get('evidencia_investigacion', '') }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Red de apoyo -->
+        <div class="semaforo-item {{ semaforo_clase(ra.get('nivel',''), 'red') }}">
+          <span class="semaforo-dot"></span>
+          <div class="semaforo-dim-label">Red de apoyo</div>
+          <div class="semaforo-nivel">{{ ra.get('nivel', 'N/D') | capitalize }}</div>
+          <div class="semaforo-desc">{{ ra.get('descripcion', '') }}</div>
+          {% if ra.get('evidencia_investigacion') %}
+          <div class="semaforo-evidencia">{{ ra.get('evidencia_investigacion', '') }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Respaldo al estudio -->
+        <div class="semaforo-item {{ semaforo_clase(rs.get('nivel',''), 'respaldo') }}">
+          <span class="semaforo-dot"></span>
+          <div class="semaforo-dim-label">Respaldo al estudio</div>
+          <div class="semaforo-nivel">{{ rs.get('nivel', 'N/D') | capitalize }}</div>
+          <div class="semaforo-desc">{{ rs.get('descripcion', '') }}</div>
+          {% if rs.get('evidencia_investigacion') %}
+          <div class="semaforo-evidencia">{{ rs.get('evidencia_investigacion', '') }}</div>
+          {% endif %}
+        </div>
+
+      </div>
     </div>
 
   </div>
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
-    <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
+    <span>{{ pie }}</span>
+    <span class="footer-conf">Confidencial · solo orientador/a</span>
     <span>2 / {{ total_pages }}</span>
   </div>
 </div>
 
 
-<!-- ═══ PÁGINA 3: ESPACIO DE SEGUIMIENTO (solo si nivel activo o prioritario) ═══ -->
-{% if mostrar_espacio_seguimiento %}
+<!-- ═══════════════════ PÁGINA 3 — SCCT + FORTALEZAS + ENGAGEMENT + ALERTAS ═══════════════════ -->
 <div class="page">
-  <div class="watermark">PILOTO — MAYO 2026</div>
+  <div class="watermark">CONFIDENCIAL</div>
   <div class="content">
 
     <div class="page-header">
       <div class="logo-mark">
-        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-r">r</span><span class="logo-ai">AÍ</span><span class="logo-r">z</span>
         <span class="logo-sub">Mentoría de proyecto de vida</span>
       </div>
       <div class="header-meta">
-        <strong>{{ nombre_completo }}</strong> · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
-        <span style="font-size:7pt;">Ficha de Acompañamiento · {{ fecha }}</span>
+        {{ nombre_completo }} · {{ institucion or '' }}{% if institucion and municipio %} · {% endif %}{{ municipio or '' }}<br>
+        Ficha de Acompañamiento · {{ fecha }}
       </div>
     </div>
 
+    <!-- BLOQUE D: SCCT -->
     <div class="section">
-      <div class="section-label">Espacio de seguimiento</div>
-      <div style="font-size:8pt;color:var(--gris-medio);margin-bottom:10px;">
-        Este espacio aparece porque el/la estudiante muestra condiciones que merecen acompañamiento activo. Usalo para registrar las acciones que acordés con él/ella.
-      </div>
-      <div class="seguimiento-box">
+      <div class="section-label">Bloque D — Variables sociocognitivas (SCCT)</div>
+      <div class="scct-grid">
 
-        <div class="two-col" style="margin-bottom:12px;">
-          <div class="form-field">
-            <label class="form-label">Fecha de reunión</label>
-            <div class="form-line"></div>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Próxima reunión programada</label>
-            <div class="form-line"></div>
+        <!-- Metas proyectadas — ancho completo -->
+        <div class="scct-card metas">
+          <div class="scct-card-label">🎯 Metas e intenciones proyectadas</div>
+          <div class="scct-metas-texto">{{ scct_metas_proyectadas or 'No emergió una proyección clara durante el proceso.' }}</div>
+        </div>
+
+        <!-- Barreras percibidas -->
+        <div class="scct-card barreras">
+          <div class="scct-card-label">⚠️ Expectativas negativas / barreras percibidas</div>
+          <div class="scct-list">
+            {% for b in scct_expectativas_negativas %}
+            <div class="scct-list-item">{{ b }}</div>
+            {% else %}
+            <div class="scct-list-item" style="color:var(--gris-suave);font-style:italic;">No se identificaron barreras explícitas.</div>
+            {% endfor %}
           </div>
         </div>
 
-        <div class="form-field">
-          <label class="form-label">Observaciones del orientador/a</label>
-          <div class="form-lines-area">
-            <div class="form-line"></div>
-            <div class="form-line"></div>
-            <div class="form-line"></div>
-            <div class="form-line"></div>
-          </div>
-        </div>
-
-        <div class="form-field" style="margin-top:13px;">
-          <label class="form-label">Compromisos acordados con el/la estudiante</label>
-          <div class="form-lines-area">
-            <div class="form-line"></div>
-            <div class="form-line"></div>
-            <div class="form-line"></div>
-          </div>
-        </div>
-
-        <div class="form-field" style="margin-top:13px;">
-          <label class="form-label">Próxima acción a seguir</label>
-          <div class="form-checkbox-row">
-            <div class="form-checkbox"><div class="checkbox-box"></div> Nueva reunión individual</div>
-            <div class="form-checkbox"><div class="checkbox-box"></div> Activar protocolo institucional</div>
-            <div class="form-checkbox"><div class="checkbox-box"></div> Informar a acudiente</div>
-            <div class="form-checkbox"><div class="checkbox-box"></div> Remitir a orientación especializada</div>
-            <div class="form-checkbox"><div class="checkbox-box"></div> Gestionar información de becas</div>
-            <div class="form-checkbox"><div class="checkbox-box"></div> Ninguna acción requerida ahora</div>
-          </div>
-        </div>
-
-        <div class="two-col" style="margin-top:12px;">
-          <div class="form-field">
-            <label class="form-label">Firma del docente orientador/a</label>
-            <div style="height:35px;border-bottom:1.5px solid var(--gris-linea);"></div>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Fecha de diligenciamiento</label>
-            <div style="height:35px;border-bottom:1.5px solid var(--gris-linea);display:flex;align-items:flex-end;padding-bottom:3px;">
-              <span style="font-size:8pt;color:var(--gris-suave);">{{ fecha }}</span>
-            </div>
+        <!-- Oportunidades percibidas -->
+        <div class="scct-card oportunidades">
+          <div class="scct-card-label">→ Oportunidades locales percibidas</div>
+          <div class="scct-list">
+            {% for o in scct_oportunidades_percibidas %}
+            <div class="scct-list-item">{{ o }}</div>
+            {% else %}
+            <div class="scct-list-item" style="color:var(--gris-suave);font-style:italic;">No emergieron oportunidades percibidas concretas.</div>
+            {% endfor %}
           </div>
         </div>
 
       </div>
+    </div>
+
+    <!-- BLOQUE C: FORTALEZAS Y VALORES CON EVIDENCIA -->
+    <div class="section">
+      <div class="section-label">Bloque C — Fortalezas de carácter y factores protectores</div>
+      <div class="via-grid">
+
+        <div class="via-col">
+          <div class="via-col-title">🌟 Fortalezas VIA (con evidencia)</div>
+          {% for f in fortalezas %}
+          <div class="via-item">
+            <div class="via-nombre">{{ f.nombre }}</div>
+            <div class="via-desc">{{ f.descripcion_catalogo }}</div>
+            {% if f.evidencia %}
+            <div class="via-evidencia">{{ f.evidencia }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="via-col">
+          <div class="via-col-title">🧭 Valores centrales</div>
+          {% for v in valores %}
+          <div class="via-item">
+            <div class="via-nombre">{{ v.nombre }}</div>
+            <div class="via-desc">{{ v.descripcion_catalogo }}</div>
+            {% if v.evidencia %}
+            <div class="via-evidencia">{{ v.evidencia }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          {% if factores_protectores %}
+          <div style="margin-top:8px; padding-top:7px; border-top:1px solid var(--verde-palido);">
+            <div class="via-col-title">🛡️ Factores protectores</div>
+            {% for fp in factores_protectores %}
+            <div class="fp-item" style="padding-left:14px; font-size:7.5pt; color:var(--gris-medio); line-height:1.5; margin-top:3px;">{{ fp }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCIÓN 5: ESTILO DE INTERACCIÓN -->
+    <div class="section">
+      <div class="section-label">Estilo de interacción y engagement</div>
+      <div class="engagement-card">{{ estilo_interaccion or 'No hay información disponible sobre el engagement conversacional.' }}</div>
+    </div>
+
+    <!-- ALERTA CRÍTICA -->
+    <div class="section">
+      <div class="section-label">Alertas críticas</div>
+      {% if alerta_critica %}
+      <div class="alerta-critica-card">
+        <div class="alerta-critica-header">
+          <span class="alerta-critica-icon">⚠️</span>
+          <div>
+            <div class="alerta-critica-title">Alerta crítica — intervención inmediata requerida</div>
+            <div class="alerta-critica-tipo">Tipo: {{ alerta_critica.tipo if alerta_critica is mapping else alerta_critica.get('tipo','') }}</div>
+          </div>
+        </div>
+        <div class="alerta-critica-desc">{{ alerta_critica.descripcion if alerta_critica is mapping else alerta_critica.get('descripcion','') }}</div>
+        <div class="alerta-critica-accion">Acción inmediata: Activá el protocolo institucional de atención a situaciones de riesgo.</div>
+        <div class="lineas-emergencia">
+          <span class="linea-badge">Línea 106 — Salud mental</span>
+          <span class="linea-badge">Línea 141 — ICBF</span>
+        </div>
+      </div>
+      {% else %}
+      <div class="sin-alerta-card">
+        ✅ &nbsp; No se detectaron situaciones de riesgo psicológico grave en este proceso.
+      </div>
+      {% endif %}
     </div>
 
   </div>
   <div class="page-footer">
     <span class="footer-brand">rAÍz · Ficha de Acompañamiento</span>
-    <span class="footer-confid">Documento confidencial · uso exclusivo del docente orientador · no compartir con terceros</span>
-    <span>3 / {{ total_pages }}</span>
+    <span>{{ pie }}</span>
+    <span class="footer-conf">Confidencial · solo orientador/a</span>
+    <span>3 / 3</span>
   </div>
 </div>
-{% endif %}
 
 </body>
 </html>

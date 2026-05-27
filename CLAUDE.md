@@ -104,18 +104,18 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Alertas pendientes visibles en el dashboard admin con "Marcar como vista"
 
 **Generación de PDFs (`pdf_generator.py`):**
-- Migrado de Playwright a WeasyPrint (compatible con Streamlit Cloud)
-- Fuentes DM Sans y DM Serif Display descargadas localmente en `static/fonts/`
-- `@font-face` local reemplaza `@import` de Google Fonts en ambos templates
-- `packages.txt` creado con dependencias de sistema para WeasyPrint en Debian Trixie
-- Layout de encabezados corregido en ambos templates (CSS grid → flexbox)
-- Footer anclado al fondo en ambos templates (`position:absolute` → flex column)
-- Espacio de escritura manual ampliado en `mapa_estudiante.html` (margin-top 32px)
-- Handler del botón `[FIN_CONSEJERIA]` completado en `app.py`
+- Revertido de WeasyPrint a Playwright (`playwright.sync_api` con Chromium) por dependencias externas complejas (GTK3 en Windows). Playwright maneja sin problemas el layout avanzado.
+- Script de prueba `test_pdf.py` modificado con historial mockeado offline para iteración visual rápida.
+- Diseño visual mejorado en los PDFs:
+  - Ficha Orientador (3 páginas): Disclaimer "CONFIDENCIAL E IMPORTANTE" resaltado en pág 1, eliminación de cuarta página y áreas en blanco ineficientes al final.
+  - Mapa Estudiante (2 páginas): Márgenes ajustados para evitar fuga al footer, talento oculto trasladado a pág 1, disclaimer unificado en pág 2.
+- Logo rAÍz rediseñado para uniformidad y simetría.
+- Fuentes DM Sans y DM Serif Display gestionadas de forma local vía `@font-face`.
+- Layout de encabezados en flexbox.
+- Handler del botón `[FIN_CONSEJERIA]` completado en `app.py`.
 - `generar_pdfs(estudiante, historial, client, model, system_instruction) → (bytes, bytes)`
-- Llama a Gemini para extraer datos estructurados (Holland, fortalezas, nudges, riesgo)
-- PDF estudiante: "Mi Mapa rAÍz" descargable desde la app al completar mentoría
-- PDF orientador: "Ficha de Acompañamiento" enviado automáticamente por email al completar mentoría
+- PDF estudiante: "Mi Mapa rAÍz" descargable desde la app.
+- PDF orientador: "Ficha de Acompañamiento" enviado automáticamente por email.
 
 **Email orientador (`email_service.py`):**
 - SMTP Gmail con contraseña de aplicación

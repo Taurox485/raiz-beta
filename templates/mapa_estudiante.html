@@ -12,26 +12,26 @@
   @font-face { font-family: 'DM Serif Display'; font-style: italic; font-weight: 400; src: url('../static/fonts/dm-serif-display-italic.woff2') format('woff2'); }
 
   :root {
-    --verde-oscuro: #2D5016;
-    --verde-medio: #4A7C2A;
-    --verde-claro: #7AB648;
-    --verde-palido: #D4EDBA;
-    --verde-fondo: #EEF7E4;
-    --tierra: #8B5E3C;
-    --tierra-claro: #C49A6C;
+    --verde-oscuro:  #2D5016;
+    --verde-medio:   #4A7C2A;
+    --verde-claro:   #7AB648;
+    --verde-palido:  #D4EDBA;
+    --verde-fondo:   #EEF7E4;
+    --tierra:        #8B5E3C;
+    --tierra-claro:  #C49A6C;
     --tierra-palido: #F0E4D4;
-    --ocre: #C8892A;
-    --ocre-claro: #F2D589;
-    --ocre-fondo: #FDF6E3;
-    --crema: #FAF7F2;
-    --blanco: #FFFFFF;
-    --gris-texto: #2A2A2A;
-    --gris-medio: #5A5A5A;
-    --gris-suave: #9A9A9A;
-    --gris-linea: #E0DDD8;
-    --font-display: 'DM Serif Display', Georgia, serif;
-    --font-body: 'DM Sans', system-ui, sans-serif;
-    --page-padding: 14mm;
+    --ocre:          #C8892A;
+    --ocre-claro:    #F2D589;
+    --ocre-fondo:    #FDF6E3;
+    --crema:         #FAF7F2;
+    --blanco:        #FFFFFF;
+    --gris-texto:    #2A2A2A;
+    --gris-medio:    #5A5A5A;
+    --gris-suave:    #9A9A9A;
+    --gris-linea:    #E0DDD8;
+    --font-display:  'DM Serif Display', Georgia, serif;
+    --font-body:     'DM Sans', system-ui, sans-serif;
+    --page-padding:  13mm;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,7 +40,7 @@
     font-family: var(--font-body);
     background: #E8E4DC;
     color: var(--gris-texto);
-    font-size: 10pt;
+    font-size: 9.5pt;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
@@ -50,7 +50,7 @@
     min-height: 297mm;
     margin: 8mm auto;
     background: var(--blanco);
-    padding: var(--page-padding);
+    padding: 7mm 9mm 10mm 9mm;
     position: relative;
     overflow: hidden;
     page-break-after: always;
@@ -63,7 +63,7 @@
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%,-50%) rotate(-35deg);
     font-family: var(--font-body); font-size: 36pt; font-weight: 600;
-    color: rgba(180,175,165,0.10); white-space: nowrap; letter-spacing: 0.08em;
+    color: rgba(180,175,165,0.09); white-space: nowrap; letter-spacing: 0.08em;
     pointer-events: none; z-index: 0; user-select: none;
   }
 
@@ -72,86 +72,141 @@
   /* ── Header ── */
   .page-header {
     display: flex; justify-content: space-between; align-items: flex-end;
-    border-bottom: 1.5px solid var(--verde-medio); padding-bottom: 7px; margin-bottom: 12px;
+    border-bottom: 1.5px solid var(--verde-medio); padding-bottom: 7px; margin-bottom: 11px;
   }
   .logo-mark { display: flex; align-items: baseline; }
-  .logo-r { font-family: var(--font-display); font-size: 22pt; color: var(--verde-oscuro); line-height: 1; }
-  .logo-raiz { font-family: var(--font-display); font-size: 15pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
-  .logo-sub { font-size: 7pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 2px; }
+  .logo-r    { font-family: var(--font-display); font-size: 42pt; color: var(--verde-oscuro); line-height: 1; }
+  .logo-ai   { font-family: var(--font-display); font-size: 28pt; color: var(--verde-medio); font-style: italic; line-height: 1; letter-spacing: -0.01em; }
+  .logo-sub  { font-size: 6.5pt; color: var(--gris-suave); margin-left: 8px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; align-self: flex-end; margin-bottom: 8px; }
   .header-meta { text-align: right; font-size: 7.5pt; color: var(--gris-suave); line-height: 1.5; }
   .header-meta strong { color: var(--gris-medio); font-weight: 500; }
 
   /* ── Banner estudiante ── */
   .student-header {
     background: var(--verde-fondo); border-left: 4px solid var(--verde-claro);
-    border-radius: 0 6px 6px 0; padding: 10px 14px; margin-bottom: 14px;
-    display: flex; flex-wrap: wrap; gap: 4px 8px;
+    border-radius: 0 6px 6px 0; padding: 9px 13px; margin-bottom: 12px;
+    display: flex; flex-wrap: wrap; gap: 3px 8px;
   }
-  .student-header h1 { font-family: var(--font-display); font-size: 15pt; color: var(--verde-oscuro); width: 100%; margin-bottom: 4px; line-height: 1.2; }
-  .student-field { font-size: 8pt; color: var(--gris-medio); min-width: 120px; }
+  .student-header h1 { font-family: var(--font-display); font-size: 14pt; color: var(--verde-oscuro); width: 100%; margin-bottom: 3px; line-height: 1.2; }
+  .student-field { font-size: 7.5pt; color: var(--gris-medio); min-width: 120px; }
   .student-field span { font-weight: 500; color: var(--gris-texto); }
 
-  /* ── Secciones ── */
-  .section { margin-bottom: 13px; }
+  /* ── Secciones generales ── */
+  .section { margin-bottom: 12px; }
   .section-label {
-    font-size: 7pt; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
+    font-size: 6.5pt; font-weight: 600; letter-spacing: 0.11em; text-transform: uppercase;
     color: var(--verde-medio); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;
   }
   .section-label::after { content: ''; flex: 1; height: 1px; background: var(--verde-palido); }
 
-  /* ── Holland ── */
-  .holland-intro { font-size: 8.5pt; color: var(--gris-medio); line-height: 1.55; margin-bottom: 8px; }
-  .holland-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
-  .cuad-card {
-    border-radius: 8px; padding: 9px 12px;
-    display: flex; gap: 10px; align-items: flex-start;
+  /* ── Prediger ── */
+  .prediger-intro { font-size: 8pt; color: var(--gris-medio); line-height: 1.5; margin-bottom: 8px; }
+  .prediger-sublabel {
+    font-size: 6.5pt; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    margin-bottom: 4px; margin-top: 5px;
   }
-  .cuad-card.dominante { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
-  .cuad-card.debil { background: var(--crema); border: 1px solid var(--gris-linea); }
-  .cuad-circle {
-    width: 38px; height: 38px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16pt; flex-shrink: 0;
-  }
-  .dominante .cuad-circle { background: var(--verde-medio); }
-  .debil .cuad-circle { background: var(--gris-linea); }
-  .cuad-tag-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
-  .dominante .cuad-tag-label { color: var(--verde-oscuro); }
-  .debil .cuad-tag-label { color: var(--gris-suave); }
-  .cuad-nombre { font-size: 9.5pt; font-weight: 600; margin-bottom: 3px; }
-  .dominante .cuad-nombre { color: var(--verde-oscuro); }
-  .debil .cuad-nombre { color: var(--gris-suave); }
-  .cuad-desc { font-size: 8pt; line-height: 1.45; }
-  .dominante .cuad-desc { color: var(--gris-medio); }
-  .debil .cuad-desc { color: var(--gris-suave); }
+  .prediger-sublabel.dominante { color: var(--verde-oscuro); }
+  .prediger-sublabel.debil     { color: var(--gris-suave); }
 
-  /* ── Catálogo fortalezas y valores en dos columnas ── */
-  .catalogo-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-  .catalogo-col { border: 1px solid var(--gris-linea); border-radius: 8px; padding: 10px 12px; }
-  .catalogo-col-title { font-size: 8pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--verde-palido); }
-  .catalogo-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
-  .catalogo-item:last-child { border-bottom: none; }
-  .catalogo-nombre { font-size: 9pt; font-weight: 600; color: var(--verde-oscuro); }
-  .catalogo-desc { font-size: 8pt; color: var(--gris-suave); line-height: 1.4; margin-top: 1px; }
+  .polo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px; }
+  .polo-card {
+    border-radius: 7px; padding: 8px 10px;
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .polo-card.dominante { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
+  .polo-card.debil     { background: var(--crema);       border: 1px solid var(--gris-linea); }
+  .polo-circle {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15pt; flex-shrink: 0;
+  }
+  .dominante .polo-circle { background: var(--verde-medio); }
+  .debil     .polo-circle { background: var(--gris-linea); }
+  .polo-tag  { font-size: 5.5pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+  .dominante .polo-tag { color: var(--verde-oscuro); }
+  .debil     .polo-tag { color: var(--gris-suave); }
+  .polo-nombre { font-size: 9pt; font-weight: 600; margin-bottom: 2px; }
+  .dominante .polo-nombre { color: var(--verde-oscuro); }
+  .debil     .polo-nombre { color: var(--gris-suave); }
+  .polo-desc { font-size: 7.5pt; line-height: 1.45; }
+  .dominante .polo-desc { color: var(--gris-medio); }
+  .debil     .polo-desc { color: var(--gris-suave); }
+
+  /* ── ADN de carácter: fortalezas con evidencia ── */
+  .adn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .adn-col { border: 1px solid var(--gris-linea); border-radius: 7px; padding: 9px 11px; }
+  .adn-col-title { font-size: 7.5pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--verde-palido); }
+
+  /* Fortaleza con evidencia */
+  .fortaleza-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
+  .fortaleza-item:last-child { border-bottom: none; }
+  .fortaleza-nombre { font-size: 8.5pt; font-weight: 600; color: var(--verde-oscuro); margin-bottom: 1px; }
+  .fortaleza-desc   { font-size: 7pt;  color: var(--gris-suave); line-height: 1.4; margin-bottom: 3px; }
+  .fortaleza-evidencia {
+    font-size: 7pt; color: var(--tierra); line-height: 1.4;
+    background: var(--tierra-palido); border-radius: 4px; padding: 3px 7px;
+    border-left: 2px solid var(--tierra-claro);
+    font-style: italic;
+  }
+
+  /* Valor simple */
+  .valor-item { padding: 5px 0; border-bottom: 0.5px solid var(--gris-linea); }
+  .valor-item:last-child { border-bottom: none; }
+  .valor-nombre { font-size: 8.5pt; font-weight: 600; color: var(--verde-oscuro); }
+  .valor-desc   { font-size: 7pt;  color: var(--gris-suave); line-height: 1.4; }
+
+  /* ── Talento oculto ── */
+  .talento-card {
+    background: var(--ocre-fondo); border-left: 3px solid var(--ocre);
+    border-radius: 0 7px 7px 0; padding: 10px 13px;
+  }
+  .talento-icono  { font-size: 16pt; margin-bottom: 5px; display: block; }
+  .talento-texto  { font-size: 9pt; color: var(--gris-texto); line-height: 1.55; font-style: italic; }
+
+  /* ── Espejo del entorno ── */
+  .espejo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .espejo-card {
+    border-radius: 7px; padding: 9px 11px;
+  }
+  .espejo-card.modelo { background: var(--verde-fondo); border: 1px solid var(--verde-palido); }
+  .espejo-card.ubuntu { background: var(--ocre-fondo);  border: 1px solid var(--ocre-claro); }
+  .espejo-card-label { font-size: 6pt; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 4px; }
+  .modelo .espejo-card-label { color: var(--verde-medio); }
+  .ubuntu .espejo-card-label { color: var(--ocre); }
+  .espejo-card-body { font-size: 8pt; color: var(--gris-texto); line-height: 1.5; }
+  .espejo-card-body strong { font-weight: 600; }
 
   /* ── Sueño principal ── */
   .sueno-card {
     background: var(--ocre-fondo); border-left: 3px solid var(--ocre);
-    border-radius: 0 8px 8px 0; padding: 11px 14px;
+    border-radius: 0 7px 7px 0; padding: 10px 13px;
   }
-  .sueno-quote-mark { font-family: var(--font-display); font-size: 28pt; color: var(--ocre-claro); line-height: 0.6; display: block; margin-bottom: 5px; }
-  .sueno-texto { font-size: 10.5pt; color: var(--gris-texto); line-height: 1.5; font-style: italic; margin-bottom: 8px; }
-  .sueno-nota { font-size: 8pt; color: var(--tierra); background: var(--tierra-palido); border-radius: 5px; padding: 5px 9px; line-height: 1.45; }
+  .sueno-quote-mark { font-family: var(--font-display); font-size: 26pt; color: var(--ocre-claro); line-height: 0.6; display: block; margin-bottom: 5px; }
+  .sueno-texto { font-size: 10pt; color: var(--gris-texto); line-height: 1.5; font-style: italic; margin-bottom: 7px; }
+  .sueno-nota { font-size: 7.5pt; color: var(--tierra); background: var(--tierra-palido); border-radius: 5px; padding: 5px 9px; line-height: 1.45; }
   .sueno-nota::before { content: '💡 '; }
 
   /* ── Tips ── */
-  .tips-strip { background: var(--verde-palido); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; }
-  .tip-item { display: flex; gap: 9px; align-items: flex-start; font-size: 9pt; color: var(--verde-oscuro); line-height: 1.5; }
-  .tip-bullet { width: 20px; height: 20px; border-radius: 50%; background: var(--verde-medio); color: white; font-size: 8pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .tips-strip { background: var(--verde-palido); border-radius: 7px; padding: 9px 13px; display: flex; flex-direction: column; gap: 6px; }
+  .tip-item { display: flex; gap: 8px; align-items: flex-start; font-size: 8.5pt; color: var(--verde-oscuro); line-height: 1.5; }
+  .tip-bullet { width: 19px; height: 19px; border-radius: 50%; background: var(--verde-medio); color: white; font-size: 7.5pt; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Metáfora de cierre ── */
+  .metafora-card {
+    background: var(--verde-oscuro); border-radius: 7px; padding: 9px 14px;
+    text-align: center;
+  }
+  .metafora-texto { font-family: var(--font-display); font-size: 9.5pt; color: var(--verde-palido); font-style: italic; line-height: 1.5; }
 
   /* ── Disclaimer ── */
-  .disclaimer { background: #F5F4F1; border-radius: 6px; padding: 10px 13px; font-size: 7pt; color: var(--gris-suave); line-height: 1.6; border: 0.5px solid var(--gris-linea); }
-  .disclaimer strong { font-weight: 600; color: var(--gris-medio); }
+  .disclaimer {
+    background: var(--rojo-palido); border: 1.5px solid var(--rojo-alerta); border-radius: 6px;
+    padding: 10px 13px; font-size: 8.5pt; color: #1a1a1a; line-height: 1.5;
+  }
+  .disclaimer-title {
+    font-size: 8.5pt; font-weight: 800; color: var(--rojo-alerta); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .disclaimer strong { font-weight: 700; color: #000; }
 
   /* ── Footer ── */
   .page-footer {
@@ -170,14 +225,14 @@
 
 {% set nombre_corto = nombre_completo.split()[0] %}
 
-<!-- ═══════════════════════ PÁGINA 1 ═══════════════════════ -->
+<!-- ═══════════════════════ PÁGINA 1 — INCLINACIONES NATURALES + ADN ═══════════════════════ -->
 <div class="page">
   <div class="watermark">PILOTO — MAYO 2026</div>
   <div class="content">
 
     <div class="page-header">
       <div class="logo-mark">
-        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-r">r</span><span class="logo-ai">AÍ</span><span class="logo-r">z</span>
         <span class="logo-sub">Mentoría de proyecto de vida</span>
       </div>
       <div class="header-meta">
@@ -194,66 +249,78 @@
       <div class="student-field">Fecha: <span>{{ fecha }}</span></div>
     </div>
 
-    <!-- PERFIL DE INTERESES HOLLAND -->
+    <!-- SECCIÓN 1: INCLINACIONES NATURALES (PREDIGER) -->
     <div class="section">
-      <div class="section-label">Tu perfil de intereses</div>
-      <div class="holland-intro">
-        Hay cuatro grandes tipos de actividades que le gustan a la gente: <strong>Personas</strong> (conectar, ayudar, liderar), <strong>Ideas</strong> (crear, inventar, imaginar), <strong>Datos</strong> (organizar, analizar, calcular) y <strong>Cosas</strong> (construir, arreglar, trabajar con las manos). A continuación encontrás cuáles te llamaron más la atención y cuáles menos — y eso ya dice mucho sobre quién sos.
-      </div>
+      <div class="section-label">Tus inclinaciones naturales</div>
 
-      <!-- Dominantes -->
-      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--verde-oscuro);margin-bottom:4px;">Lo que más te llama la atención</div>
-      <div class="holland-grid">
-        {% for c in cuadrantes_dominantes %}
-        <div class="cuad-card dominante">
-          <div class="cuad-circle">{{ c.icono }}</div>
+      <div class="prediger-sublabel dominante">Tu zona de fluidez — lo que más te llama</div>
+      <div class="polo-grid">
+        {% for p in polos_dominantes %}
+        <div class="polo-card dominante">
+          <div class="polo-circle">{{ p.icono }}</div>
           <div>
-            <div class="cuad-tag-label">Área dominante</div>
-            <div class="cuad-nombre">{{ c.nombre }}</div>
-            <div class="cuad-desc">{{ c.descripcion_positiva }}</div>
+            <div class="polo-tag">Área dominante</div>
+            <div class="polo-nombre">{{ p.nombre }}</div>
+            <div class="polo-desc">{{ p.descripcion_positiva }}</div>
           </div>
         </div>
         {% endfor %}
       </div>
 
-      <!-- Débiles -->
-      <div style="font-size:7pt;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--gris-suave);margin-bottom:4px;margin-top:5px;">Lo que hoy no te llama tanto la atención</div>
-      <div class="holland-grid">
-        {% for c in cuadrantes_debiles %}
-        <div class="cuad-card debil">
-          <div class="cuad-circle">{{ c.icono }}</div>
+      <div class="prediger-sublabel debil" style="margin-top:7px;">Para tener en cuenta — lo que hoy no te llama tanto</div>
+      <div class="polo-grid">
+        {% for p in polos_debiles %}
+        <div class="polo-card debil">
+          <div class="polo-circle">{{ p.icono }}</div>
           <div>
-            <div class="cuad-tag-label">Menor preferencia actual</div>
-            <div class="cuad-nombre">{{ c.nombre }}</div>
-            <div class="cuad-desc">{{ c.descripcion_donotham }}</div>
+            <div class="polo-tag">Menor preferencia actual</div>
+            <div class="polo-nombre">{{ p.nombre }}</div>
+            <div class="polo-desc">{{ p.descripcion_donotham }}</div>
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <!-- FORTALEZAS Y VALORES EN DOS COLUMNAS -->
+    <!-- SECCIÓN 2: ADN DE CARÁCTER -->
     <div class="section">
-      <div class="section-label">Tus fortalezas y valores</div>
-      <div class="catalogo-cols">
-        <div class="catalogo-col">
-          <div class="catalogo-col-title">🌟 Tus fortalezas</div>
+      <div class="section-label">Tu ADN de carácter</div>
+      <div class="adn-grid">
+
+        <!-- Fortalezas con evidencia -->
+        <div class="adn-col">
+          <div class="adn-col-title">🌟 Tus fortalezas</div>
           {% for f in fortalezas %}
-          <div class="catalogo-item">
-            <div class="catalogo-nombre">{{ f.nombre }}</div>
-            <div class="catalogo-desc">{{ f.descripcion_catalogo }}</div>
+          <div class="fortaleza-item">
+            <div class="fortaleza-nombre">{{ f.nombre }}</div>
+            <div class="fortaleza-desc">{{ f.descripcion_catalogo }}</div>
+            {% if f.evidencia %}
+            <div class="fortaleza-evidencia">{{ f.evidencia }}</div>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
-        <div class="catalogo-col">
-          <div class="catalogo-col-title">🧭 Lo que te mueve</div>
+
+        <!-- Valores -->
+        <div class="adn-col">
+          <div class="adn-col-title">🧭 Lo que te mueve</div>
           {% for v in valores %}
-          <div class="catalogo-item">
-            <div class="catalogo-nombre">{{ v.nombre }}</div>
-            <div class="catalogo-desc">{{ v.descripcion_catalogo }}</div>
+          <div class="valor-item">
+            <div class="valor-nombre">{{ v.nombre }}</div>
+            <div class="valor-desc">{{ v.descripcion_catalogo }}</div>
           </div>
           {% endfor %}
         </div>
+
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: TALENTO OCULTO EN ACCIÓN -->
+    <div class="section">
+      <div class="section-label">Tu talento oculto en acción</div>
+      <div class="talento-card">
+        <span class="talento-icono">⚡</span>
+        <div class="talento-texto">{{ talento_oculto_narrativa }}</div>
       </div>
     </div>
 
@@ -266,14 +333,14 @@
 </div>
 
 
-<!-- ═══════════════════════ PÁGINA 2 ═══════════════════════ -->
+<!-- ═══════════════════════ PÁGINA 2 — TALENTO OCULTO + ESPEJO DEL ENTORNO ═══════════════════════ -->
 <div class="page">
   <div class="watermark">PILOTO — MAYO 2026</div>
   <div class="content">
 
     <div class="page-header">
       <div class="logo-mark">
-        <span class="logo-r">r</span><span class="logo-raiz">AÍz</span>
+        <span class="logo-r">r</span><span class="logo-ai">AÍ</span><span class="logo-r">z</span>
         <span class="logo-sub">Mentoría de proyecto de vida</span>
       </div>
       <div class="header-meta">
@@ -282,10 +349,38 @@
       </div>
     </div>
 
-    <!-- SUEÑO PRINCIPAL -->
+    <!-- SECCIÓN 4: EL ESPEJO DE TU ENTORNO -->
+    <div class="section">
+      <div class="section-label">El espejo de tu entorno</div>
+      <div class="espejo-grid">
+
+        <!-- Modelo de rol -->
+        <div class="espejo-card modelo">
+          <div class="espejo-card-label">✨ Tu inspiración</div>
+          <div class="espejo-card-body">
+            Admirás a <strong>{{ modelo_rol_nombre }}</strong> por
+            {% if modelo_rol_cualidad %}
+            <strong>{{ modelo_rol_cualidad }}</strong>.
+            {% else %}
+            su ejemplo.
+            {% endif %}
+            Recuerda que lo que logras ver y admirar en otros ya existe dentro de vos.
+          </div>
+        </div>
+
+        <!-- Ancla Ubuntu -->
+        <div class="espejo-card ubuntu">
+          <div class="espejo-card-label">🌱 Tu propósito</div>
+          <div class="espejo-card-body">{{ ancla_ubuntu }}</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCIÓN 5: TU SUEÑO PRINCIPAL -->
     {% if sueno_principal %}
     <div class="section">
-      <div class="section-label">Tu sueño principal</div>
+      <div class="section-label">Tu gran sueño</div>
       <div class="sueno-card">
         <span class="sueno-quote-mark">&ldquo;</span>
         <div class="sueno-texto">{{ sueno_principal }}</div>
@@ -296,12 +391,11 @@
     </div>
     {% endif %}
 
-    <!-- TIPS PERSONALIZADOS -->
+    <!-- SECCIÓN 6: PARA SEGUIR CONSTRUYENDO TU CAMINO (TIPS) -->
     <div class="section">
       <div class="section-label">Para seguir construyendo tu camino</div>
       <div class="tips-strip">
-        {% set tips_list = tips if tips is iterable and tips is not string else [tips] %}
-        {% for tip in tips_list %}
+        {% for tip in tips %}
         {% if tip %}
         <div class="tip-item">
           <div class="tip-bullet">{{ loop.index }}</div>
@@ -312,9 +406,21 @@
       </div>
     </div>
 
-    <!-- DISCLAIMER -->
+    <!-- METÁFORA DE CIERRE -->
+    {% if metafora_cierre %}
     <div class="section">
-      <div class="disclaimer">{{ disclaimer | safe }}</div>
+      <div class="metafora-card">
+        <div class="metafora-texto">🌿 {{ metafora_cierre }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- DISCLAIMER -->
+    <div class="section" style="margin-top: 15px;">
+      <div class="disclaimer">
+        <div class="disclaimer-title">⚠️ Información importante</div>
+        {{ disclaimer | safe }}
+      </div>
     </div>
 
   </div>

@@ -25,9 +25,11 @@ from pathlib import Path
 
 from google.genai import types
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML as WeasyHTML
+from playwright.sync_api import sync_playwright
+import os
 
 import database as db
+from def_esquemas_pdf_gen import EsquemaMapaEstudiante, EsquemaFichaOrientador
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -149,30 +151,35 @@ def _llamar_gemini_json(
     model: str,
     system: str,
     intentos: int = 3,
+    schema=None,
 ) -> dict:
     """
     Llama a Gemini y garantiza retorno JSON válido.
 
-    Fix 1 — JSON nativo: response_mime_type="application/json" obliga al modelo
-    a retornar solo JSON sin texto introductorio ni bloques markdown.
-    Se mantiene el strip de backticks como fallback por si el SDK no lo respeta.
-
-    Fix 2 — Inyección accidental: el historial ya viene envuelto en <conversacion>
-    desde los prompts de extracción, separando datos de instrucciones.
+    - response_mime_type="application/json": obliga al modelo a retornar
+      solo JSON sin texto introductorio ni bloques markdown.
+    - response_schema: cuando se provee, activa Structured Outputs de Gemini,
+      eliminando el riesgo de JSON malformado.
+    - Strip de backticks como fallback por si el SDK no respeta mime_type.
+    - El historial viene envuelto en <conversacion> en los prompts,
+      separando datos de instrucciones (anti-injection).
     """
     for intento in range(intentos):
         try:
+            config_kwargs = dict(
+                system_instruction=system,
+                temperature=0.2,
+                response_mime_type="application/json",
+            )
+            if schema is not None:
+                config_kwargs["response_schema"] = schema
+
             resp = client.models.generate_content(
                 model=model,
-                config=types.GenerateContentConfig(
-                    system_instruction=system,
-                    temperature=0.3,
-                    response_mime_type="application/json",
-                ),
+                config=types.GenerateContentConfig(**config_kwargs),
                 contents=prompt,
             )
             texto = resp.text.strip()
-            # Fallback: limpiar backticks por si el SDK ignora response_mime_type
             texto = re.sub(r"^```json\s*", "", texto)
             texto = re.sub(r"\s*```$", "", texto)
             return json.loads(texto)
@@ -184,9 +191,29 @@ def _llamar_gemini_json(
     return {}
 
 
+_playwright_installed = False
+
 def _html_a_pdf(html_content: str) -> bytes:
-    base_url = str(Path(__file__).parent)
-    return WeasyHTML(string=html_content, base_url=base_url).write_pdf()
+    """
+    Convierte HTML a PDF usando Playwright + Chromium.
+    Reemplaza WeasyPrint que requiere GTK3 (no disponible en Windows sin instalación manual).
+    """
+    global _playwright_installed
+    if not _playwright_installed:
+        # Asegurar que los binarios del navegador estén instalados en entornos Cloud
+        os.system("playwright install chromium")
+        _playwright_installed = True
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.set_content(html_content, wait_until="networkidle")
+        pdf_bytes = page.pdf(
+            format="A4",
+            print_background=True,
+            margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
+        )
+        browser.close()
+    return pdf_bytes
 
 
 def _renderizar_plantilla(nombre_template: str, contexto: dict) -> str:
@@ -215,7 +242,7 @@ def _extraer_datos_estudiante(
         "sin bloques de código markdown, sin explicaciones."
     )
 
-    prompt = f"""Analiza esta conversación de mentoría entre rAÍz (IA) y un estudiante colombiano de grado 9° del Valle del Cauca.
+    prompt = f"""Analiza esta conversación de mentoría entre rAÍz (IA) y un/a estudiante colombiano/a de grado 9° del Valle del Cauca.
 
 <conversacion>
 {historial_texto}
@@ -225,76 +252,54 @@ def _extraer_datos_estudiante(
 
 {CATALOGO_VALORES}
 
-INSTRUCCIONES DE EXTRACCIÓN PARA EL REPORTE DEL ESTUDIANTE:
+INSTRUCCIONES DE EXTRACCIÓN — PDF DEL ESTUDIANTE "Mi Mapa rAÍz":
+Tono general: empoderador, cálido, segunda persona (vos/tú). Como un espejo positivo.
+Nombre del/la estudiante: {nombre}
 
-1. PERFIL DE INTERESES (Holland): Identifica los DOS cuadrantes más presentes (dominantes) y los DOS menos presentes (débiles) en la conversación. Los cuadrantes son exactamente estos cuatro: Personas, Ideas, Datos, Cosas. Si la Ronda Relámpago ocurrió, úsala como fuente primaria; si no, infiere desde la conversación.
+1. POLOS DE PREDIGER (polos_dominantes y polos_debiles):
+   Los cuatro polos son exactamente: Personas, Cosas, Datos, Ideas.
+   Identifica los 2 con mayor presencia (dominantes) y los 2 con menor presencia (débiles).
+   Si la Ronda Relámpago ocurrió en la conversación, úsala como fuente primaria.
+   — Para dominantes: incluir descripcion_positiva (cálida, en vos/tú, sin jerga técnica).
+   — Para débiles: incluir descripcion_donotham (neutra, NUNCA "débil", "malo", "no sirve para").
 
-2. FORTALEZAS: Identifica exactamente 3 fortalezas usando SOLO los nombres del Catálogo Cerrado VIA. Basa cada una en evidencia concreta de la conversación.
+2. FORTALEZAS (exactamente 3):
+   SOLO nombres del Catálogo VIA cerrado. No inventar, no usar sinónimos.
+   Incluir evidencia en segunda persona empoderaora:
+   Ej: "Porque nos contaste cómo resolviste [situación concreta de la conversación]..."
 
-3. VALORES: Identifica exactamente 3 valores usando SOLO los nombres del Catálogo Cerrado de Valores. Basa cada uno en evidencia concreta.
+3. VALORES (exactamente 3):
+   SOLO nombres del Catálogo de Valores cerrado. No inventar, no usar sinónimos.
 
-4. SUEÑO PRINCIPAL: Extrae el sueño o deseo principal del estudiante en sus propias palabras o parafraseando muy de cerca lo que dijo. Si no emergió un sueño claro, devuelve null.
+4. TALENTO OCULTO EN ACCIÓN (talento_oculto_narrativa):
+   Párrafo de 3-4 oraciones en segunda persona sobre un problema concreto que
+   el/la estudiante resolvió y el talento que demostró ahí.
+   Anclado en algo que dijo en la conversación.
+   Si no hay episodio concreto, construir desde sus fortalezas más evidentes.
 
-5. TIPS: Genera 5 recomendaciones de vida personalizadas según los cuadrantes dominantes. Deben ser accionables, positivas, basadas en los marcos teóricos (VIA, SCCT, Covey, Ubuntu) y relevantes para un adolescente de 14-16 años del Valle del Cauca.
+5. ESPEJO DEL ENTORNO:
+   — modelo_rol_nombre: nombre o parentesco de quien admira (ej: "tu tío Carlos").
+     Si no emergió, usar "alguien de tu entorno".
+   — modelo_rol_cualidad: la cualidad específica que admira.
+   — ancla_ubuntu: su propósito de retorno familiar/comunitario, redactado con calidez.
 
-Devuelve SOLO este JSON:
+6. SUEÑO PRINCIPAL (sueno_principal): en sus palabras o muy cerca. Null si no emergió.
 
-{{
-  "cuadrantes_dominantes": [
-    {{
-      "nombre": "Nombre exacto del cuadrante (Personas | Ideas | Datos | Cosas)",
-      "icono": "Emoji representativo",
-      "descripcion_positiva": "2-3 oraciones en tono cálido describiendo qué le gusta y en qué tiende a ser bueno alguien con este perfil. En español colombiano, usando 'vos' o 'tú'. Sin jerga técnica."
-    }},
-    {{
-      "nombre": "Segundo cuadrante dominante",
-      "icono": "Emoji",
-      "descripcion_positiva": "Descripción"
-    }}
-  ],
-  "cuadrantes_debiles": [
-    {{
-      "nombre": "Nombre exacto del cuadrante menos presente",
-      "icono": "Emoji",
-      "descripcion_donotharm": "1-2 oraciones usando lenguaje do-no-harm: 'tiende a preferir otras actividades', 'no es lo que más le llama la atención por ahora'. NUNCA usar 'débil', 'malo', 'no sirve para'. Tono neutro y respetuoso."
-    }},
-    {{
-      "nombre": "Cuarto cuadrante",
-      "icono": "Emoji",
-      "descripcion_donotham": "Descripción"
-    }}
-  ],
-  "fortalezas": [
-    {{
-      "nombre": "Nombre EXACTO del catálogo VIA",
-      "descripcion_catalogo": "Descripción corta del catálogo para este nombre (copiada textualmente del catálogo)"
-    }},
-    {{"nombre": "Fortaleza 2 del catálogo", "descripcion_catalogo": "Descripción del catálogo"}},
-    {{"nombre": "Fortaleza 3 del catálogo", "descripcion_catalogo": "Descripción del catálogo"}}
-  ],
-  "valores": [
-    {{
-      "nombre": "Nombre EXACTO del catálogo de Valores",
-      "descripcion_catalogo": "Descripción corta del catálogo para este nombre (copiada textualmente del catálogo)"
-    }},
-    {{"nombre": "Valor 2 del catálogo", "descripcion_catalogo": "Descripción del catálogo"}},
-    {{"nombre": "Valor 3 del catálogo", "descripcion_catalogo": "Descripción del catálogo"}}
-  ],
-  "sueno_principal": "El sueño o deseo principal del estudiante en sus propias palabras o muy cercano a ellas. Null si no emergió.",
-  "nota_sueno": "Una frase corta y cálida que acompañe el sueño: 'Recuerda que los sueños pueden cambiar — lo importante es que hoy ya sabés en qué dirección mirás.'",
-  "tips": [
-    "Tip 1: consejo de vida accionable y positivo personalizado para este perfil Holland dominante",
-    "Tip 2",
-    "Tip 3",
-    "Tip 4",
-    "Tip 5"
-  ]
-}}
+7. NOTA_SUEÑO: frase corta y cálida que acompañe el sueño.
 
-Nombre del estudiante: {nombre}
-IMPORTANTE: Solo JSON, nada más."""
+8. TIPS (exactamente 5): recomendaciones accionables, positivas, personalizadas según
+   sus polos dominantes y fortalezas. Para adolescente de 14-16 años del Valle del Cauca.
+   Basadas en VIA, SCCT, Covey adaptado y Ubuntu.
+   REGLA ESTRICTA: NO mencionar ni recomendar cursos, estudios técnicos (SENA), universitarios ni ninguna educación formal fuera de la escuela. Enfocarse únicamente en actitudes, exploración personal de intereses diarios y conversaciones con su entorno.
 
-    return _llamar_gemini_json(prompt, client, model, system)
+9. METÁFORA DE CIERRE (metafora_cierre): una sola oración con metáfora territorial
+   (caña, café, río, ladera, semilla, cosecha, raíz). Cálida y memorable.
+
+IMPORTANTE: Solo JSON válido, nada más."""
+
+    return _llamar_gemini_json(
+        prompt, client, model, system, schema=EsquemaMapaEstudiante
+    )
 
 
 def _extraer_datos_orientador(
@@ -313,7 +318,16 @@ def _extraer_datos_orientador(
 
     nivel_riesgo_db = estudiante.get("perfil_riesgo", "sin_evaluar")
 
-    prompt = f"""Analiza esta conversación de mentoría entre rAÍz (IA) y un estudiante de grado 9° en el Valle del Cauca, Colombia.
+    # Mapeo explícito para evitar ambigüedad al modelo
+    mapeo_alerta = {
+        "bajo": "regular",
+        "medio": "activo",
+        "alto": "prioritario",
+        "sin_evaluar": "regular",
+    }
+    nivel_alerta_mapeado = mapeo_alerta.get(nivel_riesgo_db, "regular")
+
+    prompt = f"""Analiza esta conversación de mentoría entre rAÍz (IA) y un/a estudiante de grado 9° en el Valle del Cauca, Colombia.
 
 <conversacion>
 {historial_texto}
@@ -321,120 +335,65 @@ def _extraer_datos_orientador(
 
 DATOS DEL SISTEMA:
 - Nivel de seguimiento detectado por el motor de inferencia: {nivel_riesgo_db}
+- Nivel de alerta para el reporte (ya mapeado): {nivel_alerta_mapeado}
 - Grado: {estudiante.get('grado', 9)}
 
 {CATALOGO_FORTALEZAS}
 
 {CATALOGO_VALORES}
 
-INSTRUCCIONES DE EXTRACCIÓN PARA LA FICHA DEL ORIENTADOR:
+INSTRUCCIONES DE EXTRACCIÓN — FICHA DEL ORIENTADOR:
+Tono general: profesional, técnico, empático. Lenguaje de condiciones estructurales.
+PROHIBIDO adjetivar al estudiante. PROHIBIDO: "caso difícil", "estudiante en riesgo",
+"perfil problemático". CORRECTO: "el/la estudiante enfrenta condiciones estructurales que...".
 
-LENGUAJE OBLIGATORIO — RIESGO ALTO:
-Cuando el nivel sea "alto" o "prioritario", describe SIEMPRE las condiciones estructurales observadas, nunca características de la persona. 
-CORRECTO: "El/la estudiante enfrenta una carga laboral que compite con el estudio y una red de apoyo adulto limitada."
-INCORRECTO: "Estudiante en riesgo", "caso difícil", "perfil problemático".
+1. POLOS DE PREDIGER (polos_dominantes y polos_debiles):
+   Los cuatro polos son: Personas, Cosas, Datos, Ideas.
+   — Para dominantes: incluir descripcion_pedagogica (técnica, para el docente).
+   — Para débiles: incluir descripcion_donotham (neutro).
+   — prediger_evidencia: actividad específica mencionada que justifica los dominantes.
+   Si la Ronda Relámpago ocurrió, usarla como fuente primaria.
 
-PERFIL HOLLAND:
-Los cuadrantes son exactamente: Personas, Ideas, Datos, Cosas.
-Si la Ronda Relámpago ocurrió en la conversación, úsala como fuente primaria para identificar dominantes y débiles.
+2. FORTALEZAS (exactamente 3):
+   SOLO nombres del Catálogo VIA cerrado.
+   Evidencia en tercera persona técnica: "Demostró [fortaleza] cuando describió [situación]."
 
-Devuelve SOLO este JSON:
+3. VALORES (exactamente 3):
+   SOLO nombres del Catálogo de Valores cerrado.
+   Evidencia en tercera persona técnica.
 
-{{
-  "cuadrantes_dominantes": [
-    {{
-      "nombre": "Nombre exacto (Personas | Ideas | Datos | Cosas)",
-      "icono": "Emoji",
-      "descripcion_pedagogica": "2-3 oraciones técnicas para el docente describiendo qué implica este perfil en términos de aprendizaje y motivación escolar."
-    }},
-    {{
-      "nombre": "Segundo cuadrante dominante",
-      "icono": "Emoji",
-      "descripcion_pedagogica": "Descripción técnica"
-    }}
-  ],
-  "cuadrantes_debiles": [
-    {{
-      "nombre": "Cuadrante menos presente",
-      "icono": "Emoji",
-      "descripcion_donotham": "1 oración neutra: 'Muestra menor afinidad hacia actividades de tipo [X] en el momento actual.'"
-    }},
-    {{
-      "nombre": "Cuarto cuadrante",
-      "icono": "Emoji",
-      "descripcion_donotham": "Descripción neutra"
-    }}
-  ],
-  "fortalezas": [
-    {{
-      "nombre": "Nombre EXACTO del catálogo VIA",
-      "descripcion_catalogo": "Descripción del catálogo (copiada textualmente)",
-      "evidencia": "Una oración de evidencia concreta observada en la conversación."
-    }},
-    {{"nombre": "Fortaleza 2", "descripcion_catalogo": "Descripción", "evidencia": "Evidencia"}},
-    {{"nombre": "Fortaleza 3", "descripcion_catalogo": "Descripción", "evidencia": "Evidencia"}}
-  ],
-  "valores": [
-    {{
-      "nombre": "Nombre EXACTO del catálogo de Valores",
-      "descripcion_catalogo": "Descripción del catálogo (copiada textualmente)",
-      "evidencia": "Evidencia concreta de cómo apareció este valor en la conversación."
-    }},
-    {{"nombre": "Valor 2", "descripcion_catalogo": "Descripción", "evidencia": "Evidencia"}},
-    {{"nombre": "Valor 3", "descripcion_catalogo": "Descripción", "evidencia": "Evidencia"}}
-  ],
-  "contexto_vida": {{
-    "carga_familiar": {{
-      "nivel": "alta | media | baja",
-      "descripcion": "Descripción concreta de lo observado en la conversación (sin datos sensibles identificables).",
-      "evidencia_investigacion": "Una frase que explique qué dice la evidencia sobre el impacto de este nivel de carga en la continuidad educativa. Ej: 'La investigación muestra que cargas laborales superiores a 4 horas diarias en días escolares están asociadas con mayor riesgo de deserción (DANE, 2023).'"
-    }},
-    "red_apoyo": {{
-      "nivel": "fuerte | moderada | débil",
-      "descripcion": "Descripción de la red de apoyo observada.",
-      "evidencia_investigacion": "Frase con respaldo en evidencia sobre el rol de la red de apoyo en la continuidad escolar."
-    }},
-    "respaldo_estudio": {{
-      "nivel": "alto | medio | bajo",
-      "descripcion": "Nivel de respaldo del entorno para continuar estudiando.",
-      "evidencia_investigacion": "Frase con respaldo en evidencia sobre el impacto del respaldo familiar en las trayectorias educativas."
-    }}
-  }},
-  "expectativa_corto_plazo": "Lo que el/la estudiante imagina para sí mismo/a al terminar el colegio, en sus propias palabras o muy cerca de ellas.",
-  "barreras": [
-    "Barrera estructural 1 (sin datos sensibles identificables)",
-    "Barrera 2",
-    "Barrera 3"
-  ],
-  "nivel_alerta": "regular | activo | prioritario",
-  "descripcion_nivel_alerta": "Una oración que describa las condiciones estructurales que fundamentan este nivel, usando lenguaje de condiciones observadas, no de etiquetas sobre la persona.",
-  "factores_alerta": [
-    "Condición estructural observada 1",
-    "Condición estructural observada 2"
-  ],
-  "factores_protectores": [
-    "Factor protector identificado 1",
-    "Factor protector identificado 2"
-  ],
-  "mostrar_espacio_seguimiento": true,
-  "alerta_critica": null
-}}
+4. FACTORES PROTECTORES (factores_protectores):
+   2-4 factores que funcionan como anclas positivas.
+   Lenguaje estructural: "Cuenta con figura adulta de apoyo activa (tío)" no "tiene suerte".
 
-Mapeado obligatorio de nivel_riesgo_db a nivel_alerta:
-  bajo → regular
-  medio → activo
-  alto → prioritario
-  sin_evaluar → regular
+5. CONTEXTO DE VIDA (contexto_vida) — semáforo de tres dimensiones:
+   — carga_familiar: nivel alta/media/baja + descripción + evidencia investigación
+   — red_apoyo: nivel fuerte/moderada/débil + descripción + evidencia investigación
+   — respaldo_estudio: nivel alto/medio/bajo + descripción + evidencia investigación
 
-mostrar_espacio_seguimiento: true solo cuando nivel_alerta es "activo" o "prioritario". False cuando es "regular".
+6. VARIABLES SCCT (Bloque D):
+   — scct_metas_proyectadas: qué visualiza para sí mismo/a post-colegio.
+   — scct_expectativas_negativas: 2-4 barreras/creencias limitantes expresadas.
+   — scct_oportunidades_percibidas: 1-3 opciones que el/la estudiante reconoce en su territorio.
 
-alerta_critica: Si hay indicios de riesgo psicológico grave (ideación suicida, maltrato, abuso, abandono), devolver:
-  {{"tipo": "psicológica_crítica | situación_familiar_grave | otro", "descripcion": "Descripción concreta del riesgo observado, sin información que identifique negativamente al estudiante."}}
-De lo contrario, null.
+7. ESTILO DE INTERACCIÓN (estilo_interaccion):
+   Evaluación del engagement conversacional a lo largo de las sesiones.
 
-IMPORTANTE: No incluir datos familiares sensibles ni información que pueda estigmatizar al estudiante. Solo JSON, nada más."""
+8. SEMÁFORO DE SEGUIMIENTO:
+   — nivel_alerta: usar EXACTAMENTE "{nivel_alerta_mapeado}" (ya determinado por el motor).
+   — descripcion_nivel_alerta: justificación con condiciones estructurales observadas.
+   — factores_alerta: condiciones que fundamentan el nivel (vacío [] si es "regular").
+   — mostrar_espacio_seguimiento: true si nivel es "activo" o "prioritario", false si "regular".
 
-    return _llamar_gemini_json(prompt, client, model, system)
+9. ALERTA CRÍTICA (alerta_critica):
+   Solo si hay indicios de riesgo psicológico grave (ideación suicida, maltrato, abuso,
+   abandono grave). Null en todos los demás casos.
+
+IMPORTANTE: Solo JSON válido, nada más."""
+
+    return _llamar_gemini_json(
+        prompt, client, model, system, schema=EsquemaFichaOrientador
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -471,31 +430,38 @@ def generar_pdfs(
     datos_est = _extraer_datos_estudiante(historial_texto, nombre_completo, client, model)
     datos_ori = _extraer_datos_orientador(historial_texto, estudiante, sede_info, client, model)
 
-    # Garantizar que tips siempre sea lista — si el modelo devuelve un string
-    # (alucinación), Jinja iteraría sobre cada letra y rompería el diseño.
-    tips_raw = datos_est.get("tips", [])
-    tips_safe = tips_raw if isinstance(tips_raw, list) else [tips_raw] if tips_raw else []
+    # Type-safety: garantizar que listas críticas sean listas
+    def safe_list(val):
+        if isinstance(val, list):
+            return val
+        return [val] if val else []
 
     # ── Contexto para el PDF del estudiante ───────────────────────────────────
     ctx_est = {
-        "nombre_completo":        nombre_completo,
-        "institucion":            sede_info.get("institucion", ""),
-        "municipio":              sede_info.get("municipio", ""),
-        "fecha":                  fecha,
-        # Perfil Holland
-        "cuadrantes_dominantes":  datos_est.get("cuadrantes_dominantes", []),
-        "cuadrantes_debiles":     datos_est.get("cuadrantes_debiles", []),
-        # Fortalezas y valores (catálogo cerrado)
-        "fortalezas":             datos_est.get("fortalezas", []),
-        "valores":                datos_est.get("valores", []),
-        # Sueño principal
-        "sueno_principal":        datos_est.get("sueno_principal"),
-        "nota_sueno":             datos_est.get("nota_sueno", ""),
-        # Tips personalizados (type-safe)
-        "tips":                   tips_safe,
+        "nombre_completo":          nombre_completo,
+        "institucion":              sede_info.get("institucion", ""),
+        "municipio":                sede_info.get("municipio", ""),
+        "fecha":                    fecha,
+        # Prediger
+        "polos_dominantes":         safe_list(datos_est.get("polos_dominantes", [])),
+        "polos_debiles":            safe_list(datos_est.get("polos_debiles", [])),
+        # ADN de carácter
+        "fortalezas":               safe_list(datos_est.get("fortalezas", [])),
+        "valores":                  safe_list(datos_est.get("valores", [])),
+        # Talento oculto
+        "talento_oculto_narrativa": datos_est.get("talento_oculto_narrativa", ""),
+        # Espejo del entorno
+        "modelo_rol_nombre":        datos_est.get("modelo_rol_nombre", "alguien de tu entorno"),
+        "modelo_rol_cualidad":      datos_est.get("modelo_rol_cualidad", ""),
+        "ancla_ubuntu":             datos_est.get("ancla_ubuntu", ""),
+        # Sueño y camino
+        "sueno_principal":          datos_est.get("sueno_principal"),
+        "nota_sueno":               datos_est.get("nota_sueno", ""),
+        "tips":                     safe_list(datos_est.get("tips", [])),
+        "metafora_cierre":          datos_est.get("metafora_cierre", ""),
         # Pie y disclaimer
-        "disclaimer":             DISCLAIMER_ESTUDIANTE,
-        "pie":                    PIE,
+        "disclaimer":               DISCLAIMER_ESTUDIANTE,
+        "pie":                      PIE,
     }
 
     # ── Contexto para la ficha del orientador ─────────────────────────────────
@@ -506,22 +472,27 @@ def generar_pdfs(
         "fecha":                       fecha,
         "orientador_nombre":           sede_info.get("orientador_nombre", "N/D"),
         "sesiones_analizadas":         sesiones_count,
-        # Perfil Holland
-        "cuadrantes_dominantes":       datos_ori.get("cuadrantes_dominantes", []),
-        "cuadrantes_debiles":          datos_ori.get("cuadrantes_debiles", []),
-        # Fortalezas y valores (catálogo cerrado con evidencia)
-        "fortalezas":                  datos_ori.get("fortalezas", []),
-        "valores":                     datos_ori.get("valores", []),
-        # Contexto de vida con semáforo y evidencia
+        # Prediger
+        "polos_dominantes":            safe_list(datos_ori.get("polos_dominantes", [])),
+        "polos_debiles":               safe_list(datos_ori.get("polos_debiles", [])),
+        "prediger_evidencia":          datos_ori.get("prediger_evidencia", ""),
+        # Fortalezas, valores y factores protectores
+        "fortalezas":                  safe_list(datos_ori.get("fortalezas", [])),
+        "valores":                     safe_list(datos_ori.get("valores", [])),
+        "factores_protectores":        safe_list(datos_ori.get("factores_protectores", [])),
+        # Contexto de vida (semáforo)
         "contexto_vida":               datos_ori.get("contexto_vida", {}),
-        # Expectativa e imagen de futuro
-        "expectativa_corto_plazo":     datos_ori.get("expectativa_corto_plazo", ""),
-        "barreras":                    datos_ori.get("barreras", []),
-        # Alertas
+        # SCCT
+        "scct_metas_proyectadas":      datos_ori.get("scct_metas_proyectadas", ""),
+        "scct_expectativas_negativas": safe_list(datos_ori.get("scct_expectativas_negativas", [])),
+        "scct_oportunidades_percibidas": safe_list(datos_ori.get("scct_oportunidades_percibidas", [])),
+        # Engagement
+        "estilo_interaccion":          datos_ori.get("estilo_interaccion", ""),
+        # Semáforo de seguimiento
         "nivel_alerta":                datos_ori.get("nivel_alerta", "regular"),
         "descripcion_nivel_alerta":    datos_ori.get("descripcion_nivel_alerta", ""),
-        "factores_alerta":             datos_ori.get("factores_alerta", []),
-        "factores_protectores":        datos_ori.get("factores_protectores", []),
+        "factores_alerta":             safe_list(datos_ori.get("factores_alerta", [])),
+        "factores_protectores_ori":    safe_list(datos_ori.get("factores_protectores", [])),
         "mostrar_espacio_seguimiento": datos_ori.get("mostrar_espacio_seguimiento", False),
         "alerta_critica":              datos_ori.get("alerta_critica"),
         # Pie y disclaimer

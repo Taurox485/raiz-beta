@@ -171,6 +171,21 @@ RLS está actualmente desactivado. En producción, los datos sensibles (perfil_r
 
 ---
 
+### ~~PENDIENTE 14~~ — ✅ COMPLETADO — Refactorización motor PDF y optimización visual
+
+**Completado:** Mayo 2026
+
+**Implementado:**
+- Sustitución de `WeasyPrint` por `Playwright` para la generación de PDFs debido a conflictos graves con dependencias GTK3 en Windows y otros entornos.
+- Optimización de layout de PDFs generados:
+  - Ficha Orientador condensada a 3 páginas exactas.
+  - Mapa Estudiante condensado a 2 páginas exactas (sin desbordamiento al footer).
+  - Unificación simétrica del logotipo rAÍz mediante flexbox.
+  - Rediseño e incorporación frontal de disclaimers de confidencialidad con fondo semántico y alta visibilidad.
+- Script de testing offline (`test_pdf.py`) reescrito con un mock realista del historial de BD para aislar iteraciones visuales y desarrollo de PDFs de la aplicación principal.
+
+---
+
 ## PRIORIDAD MEDIA — Mejoras para el piloto
 
 ### PENDIENTE 6 — Vista de administrador (dashboard básico)
