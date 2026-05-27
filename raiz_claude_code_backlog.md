@@ -232,13 +232,13 @@ El asentimiento informado del estudiante en el primer login debe incluir consent
 
 ## PENDIENTES DE DEFINICIÓN — Requieren decisión antes de implementar
 
-### DECISIÓN 1 — Canal de entrega del PDF al estudiante
+### ~~DECISIÓN 1 — Canal de entrega del PDF al estudiante~~ ✅ RESUELTA
 El estudiante no tiene email verificado y la penetración de email en la población objetivo es baja. Opciones:
 - A) Descarga directa desde la app al finalizar la mentoría (ya implementado el botón)
 - B) Envío por WhatsApp (requiere integración con WhatsApp Business API — complejidad alta)
 - C) El orientador imprime y entrega el PDF al estudiante en la reunión presencial
 
-**Recomendación:** Opción C para el piloto, A como respaldo digital. B para versión futura.
+**Resolución (Mayo 2026):** Se implementó una solución híbrida (opciones A y B) y se añadió envío por correo como prioridad. Si el estudiante tiene correo, se envía por email para ahorrar costos de API. Si no tiene correo pero tiene celular, se sube un PDF temporal ofuscado a Supabase y se envía por Twilio WhatsApp. La opción de descarga directa en pantalla siempre se mantiene.
 
 ### DECISIÓN 2 — ¿Quién crea los registros de administradores?
 ¿FCC crea las cuentas de orientadores manualmente, o hay un flujo de auto-registro de orientadores con validación por FCC? Para el piloto: FCC crea manualmente. Para escala: flujo de invitación por email.

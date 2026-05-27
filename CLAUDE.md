@@ -116,13 +116,15 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Layout de encabezados en flexbox.
 - Handler del botón `[FIN_CONSEJERIA]` completado en `app.py`.
 - `generar_pdfs(estudiante, historial, client, model, system_instruction) → (bytes, bytes)`
-- PDF estudiante: "Mi Mapa rAÍz" descargable desde la app.
+- PDF estudiante: "Mi Mapa rAÍz" descargable desde la app. También enviado automáticamente por Email o WhatsApp (Twilio) al terminar el proceso.
 - PDF orientador: "Ficha de Acompañamiento" enviado automáticamente por email.
+- Dependencias OS (Debian) manejadas con `packages.txt` (`chromium`) para evitar conflictos t64 en Streamlit Cloud.
 
 **Email orientador (`email_service.py`):**
 - SMTP Gmail con contraseña de aplicación
 - `enviar_id_registro()`, `enviar_id_recuperacion()`, `enviar_alerta_critica()`
 - `enviar_ficha_orientador()` implementada — adjunta PDF orientador como attachment
+- `enviar_mapa_estudiante()` implementada — adjunta PDF estudiante
 - `get_sede_info()` corregida para incluir `orientador_email`, `orientador_telefono`, `rector_email`
 - Tabla `envios_ficha` registra cada intento de envío (exitoso o fallido) por estudiante
 - Migración 006 aplicada en Supabase
