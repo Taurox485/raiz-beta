@@ -278,21 +278,19 @@ def renderizar_ronda_relampago() -> str | None:
 # en la misma instancia Streamlit.
 CHAT_KEY = f"chat_{estudiante['id']}"
 
-SALUDO_INICIAL = (
-    "¡Hola! Soy rAÍz, tu mentor de proyecto de vida 🌱 "
-    "Soy una inteligencia artificial — un programa diseñado para acompañarte — "
-    "pero estoy aquí para escucharte de verdad. "
-    "Vamos a tener 4 conversaciones — cortitas, sin afán — "
-    "donde vamos a ir descubriendo juntos quién sos: "
-    "qué te gusta, qué se te da bien, cómo es tu mundo. "
-    "No hay respuestas buenas ni malas. "
-    "Lo que hablemos queda guardado de forma segura. "
-    "Tu profe orientador/a va a recibir un resumen de tus fortalezas e intereses — "
-    "no una copia de toda la conversación. "
-    "Lo que sea muy personal queda entre nosotros. "
-    "Y si algún día querés que borremos todo, podés pedírselo a tu orientador/a. "
-    "¿Listo/a para arrancar?"
-)
+SALUDO_INICIAL = """¡Hola! Soy rAÍz, tu mentor de proyecto de vida 🌱
+
+Soy una inteligencia artificial — un programa diseñado para acompañarte — pero estoy aquí para escucharte de verdad. Quiero que te sientas seguro/a hablando conmigo.
+
+Nuestra charla va a estar dividida en 4 grandes bloques donde vamos a hablar de ti: de lo que te gusta, lo que se te da bien, lo que sueñas, y cómo es tu día a día. No tienes que hacerlos todos de una vez, puedes avanzar a tu propio ritmo y pausar cuando lo necesites. Pero eso sí, es muy importante que lleguemos hasta el final; si no terminas el proceso, no tendré la información completa para poder ayudarte de verdad.
+
+No hay respuestas buenas ni malas, y tampoco hay ningún afán. Solo te pido que vengas con la mente abierta y ganas de hablar de ti. Con eso es suficiente.
+
+Lo importante es empezar a reflexionar juntos desde ahora. Vas a ver que de acá van a salir cosas clave que te van a servir muchísimo en 10° y 11°, y para todo lo que viene después del colegio.
+
+Al final, lo que descubramos le va a llegar a tu profe orientador/a para que te pueda acompañar mejor — pero lo más personal se queda entre nosotros. Todo queda guardado de forma segura, y si algún día querés que borremos algo, podés pedírselo a tu orientador/a.
+
+¿Listo/a para arrancar?"""
 
 if CHAT_KEY not in st.session_state:
     historial_db = db.get_historial(estudiante["id"])
