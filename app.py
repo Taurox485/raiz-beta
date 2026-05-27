@@ -542,14 +542,17 @@ if st.session_state.fin_consejeria:
                     est_celular = st.session_state.estudiante.get("celular")
                     nombre_est_completo = f"{st.session_state.estudiante.get('nombre', '')} {st.session_state.estudiante.get('apellido', '')}".strip()
 
+                    enviado_por_correo = False
                     if est_email:
                         try:
                             from email_service import enviar_mapa_estudiante
-                            enviar_mapa_estudiante(est_email, nombre_est_completo, pdf_est)
+                            enviado_por_correo = enviar_mapa_estudiante(est_email, nombre_est_completo, pdf_est)
                         except Exception:
                             pass
                     
-                    if est_celular:
+                    # Priorizar correo: evitar costos de Meta/Twilio si ya se envió el PDF.
+                    # Fallback a WhatsApp solo si no tiene correo o si el envío por correo falló.
+                    if est_celular and not enviado_por_correo:
                         try:
                             from whatsapp_service import enviar_mapa_estudiante as enviar_mapa_wa
                             url_pdf = db.subir_pdf_temporal_whatsapp(pdf_est)
