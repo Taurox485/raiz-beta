@@ -1010,6 +1010,60 @@ def get_administrador_por_email(email: str) -> Optional[dict]:
         return dict(row) if row else None
 
 
+def get_todos_administradores() -> list[dict]:
+    """Retorna todos los administradores registrados para la gestión del FCC"""
+    if _use_supabase():
+        r = (
+            _get_supabase().table("administradores")
+            .select("id, nombre, email, rol, activo, instituciones(nombre), municipios(nombre)")
+            .order("nombre")
+            .execute()
+        )
+        result = []
+        for row in r.data:
+            inst = row.get("instituciones") or {}
+            mun = row.get("municipios") or {}
+            result.append({
+                "id": row["id"],
+                "nombre": row["nombre"],
+                "email": row["email"],
+                "rol": row["rol"],
+                "activo": bool(row["activo"]),
+                "institucion": inst.get("nombre", ""),
+                "municipio": mun.get("nombre", "")
+            })
+        return result
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT a.id, a.nombre, a.email, a.rol, a.activo,
+                   i.nombre AS institucion, m.nombre AS municipio
+            FROM administradores a
+            LEFT JOIN instituciones i ON a.institucion_id = i.id
+            LEFT JOIN municipios m ON a.municipio_id = m.id
+            ORDER BY a.nombre
+            """
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+def toggle_estado_administrador(admin_id: str, activo: bool) -> bool:
+    """Activa o desactiva (borrado lógico) a un administrador"""
+    if _use_supabase():
+        client = _get_supabase()
+        try:
+            client.table("administradores").update({"activo": activo}).eq("id", admin_id).execute()
+            return True
+        except Exception:
+            return False
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute("UPDATE administradores SET activo = ? WHERE id = ?", (int(activo), admin_id))
+        return True
+
+
 # ── API pública: registro por administrador ───────────────────────────────────
 
 def crear_estudiante_admin(

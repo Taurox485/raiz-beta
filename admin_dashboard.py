@@ -668,8 +668,42 @@ def _tab_gestion_admins(admin: dict):
                 password=password.strip()
             )
             st.success(f"Administrador **{nombre}** creado exitosamente.")
+            st.rerun()
         except Exception as e:
             st.error(f"Error al crear: {e}")
+
+    st.divider()
+    st.markdown("**Administradores Actuales**")
+    
+    admins_actuales = db.get_todos_administradores()
+    
+    if not admins_actuales:
+        st.info("No hay administradores registrados.")
+    else:
+        for a in admins_actuales:
+            col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
+            with col1:
+                st.write(f"**{a['nombre']}** ({a['email']})")
+                estado = "🟢 Activo" if a['activo'] else "🔴 Inactivo"
+                st.caption(f"{estado} - {a['rol'].upper()}")
+            with col2:
+                st.write(a['institucion'] if a['institucion'] else "-")
+            with col3:
+                st.write(a['municipio'] if a['municipio'] else "-")
+            with col4:
+                # Evitar que se desactive a sí mismo por error
+                if a['id'] == admin['id']:
+                    st.caption("(Tu cuenta)")
+                else:
+                    btn_text = "Desactivar" if a['activo'] else "Activar"
+                    if st.button(btn_text, key=f"toggle_{a['id']}_{a['activo']}"):
+                        nuevo_estado = not a['activo']
+                        if db.toggle_estado_administrador(a['id'], nuevo_estado):
+                            st.success(f"Estado de {a['nombre']} actualizado.")
+                            st.rerun()
+                        else:
+                            st.error("Error al actualizar el estado.")
+                            
 # ── API pública ────────────────────────────────────────────────────────────────
 
 def mostrar_dashboard_admin():
