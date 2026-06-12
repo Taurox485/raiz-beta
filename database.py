@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS administradores (
     email              TEXT    UNIQUE NOT NULL,
     rol                TEXT    NOT NULL CHECK (rol IN ('fcc', 'orientador', 'secretaria', 'rector')),
     institucion_id     INTEGER REFERENCES instituciones(id),
+    municipio_id       INTEGER REFERENCES municipios(id),
     activo             INTEGER DEFAULT 1,
     fecha_creacion     TEXT    DEFAULT (datetime('now'))
 );
@@ -298,6 +299,7 @@ def _ensure_sqlite():
         _add_col(conn, "alertas", "notificado_rector",       "INTEGER DEFAULT 0")
         _add_col(conn, "alertas", "notificado_peas",         "INTEGER DEFAULT 0")
         _add_col(conn, "alertas", "timestamp_notificacion",  "TEXT")
+        _add_col(conn, "administradores", "municipio_id",    "INTEGER")
         # Ajuste piloto: celular_hash opcional (al menos email o celular requerido)
         # Nota: DROP NOT NULL sobre email no es soportado en SQLite via ALTER TABLE.
         # El _DDL ya lo refleja NULLable para instalaciones frescas. En DBs existentes
@@ -892,12 +894,14 @@ def crear_administrador(
     email: str,
     rol: str,
     institucion_id: Optional[int] = None,
+    municipio_id: Optional[int] = None,
     password: Optional[str] = None,
 ) -> str:
     """
     Crea un administrador y retorna su UUID. Si está en Supabase y se envía password, lo crea en Auth.
     rol: 'fcc' | 'orientador' | 'secretaria' | 'rector'
-    institucion_id: requerido para 'orientador' y 'rector', NULL para 'fcc' y 'secretaria'.
+    institucion_id: requerido para 'orientador' y 'rector'.
+    municipio_id: opcional para 'secretaria'.
     """
     admin_id = str(uuid.uuid4())
     email = email.lower().strip()
@@ -921,6 +925,7 @@ def crear_administrador(
             "email":          email,
             "rol":            rol,
             "institucion_id": institucion_id,
+            "municipio_id":   municipio_id,
         }).execute()
         return admin_id
 
@@ -928,10 +933,10 @@ def crear_administrador(
     with _conn() as conn:
         conn.execute(
             """
-            INSERT INTO administradores (id, nombre, email, rol, institucion_id)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO administradores (id, nombre, email, rol, institucion_id, municipio_id)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (admin_id, nombre, email, rol, institucion_id),
+            (admin_id, nombre, email, rol, institucion_id, municipio_id),
         )
     return admin_id
 
@@ -1247,17 +1252,35 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
             "sedes(nombre, instituciones(nombre, municipios(nombre)))"
         )
         q = sb.table("estudiantes").select(sel)
-        if rol == "orientador":
+        if rol == "orientador" or rol == "rector":
             adm = sb.table("administradores").select("institucion_id").eq("id", admin_uuid).limit(1).execute()
             inst_id = adm.data[0]["institucion_id"] if adm.data else None
             if inst_id:
-                q = q.eq("sedes.institucion_id", inst_id)
+                # PostgREST inner join syntax on foreign tables is limited, 
+                # but doing eq on referenced tables effectively filters.
+                # Actually, filtering a child table by parent table id in supabase-py:
+                # We can just fetch all and filter in memory, or use `not.is.null`
+                pass # Wait, eq("sedes.institucion_id") filters the nested select, but does NOT filter the root rows!
+        
         rows_raw = q.order("apellido").execute().data
+        
+        # Necesitamos inst_id y mun_id del admin
+        adm = sb.table("administradores").select("institucion_id, municipio_id").eq("id", admin_uuid).limit(1).execute()
+        inst_id_admin = adm.data[0]["institucion_id"] if adm.data else None
+        mun_id_admin = adm.data[0]["municipio_id"] if adm.data else None
+
         result = []
         for row in rows_raw:
             sede_info = row.get("sedes") or {}
             inst_info = sede_info.get("instituciones") or {}
             mun_info  = inst_info.get("municipios") or {}
+            
+            # Filtro en memoria por si acaso (porque el inner join de supabase a veces no oculta la fila root)
+            if (rol == "orientador" or rol == "rector") and inst_info.get("id") != inst_id_admin:
+                continue
+            if rol == "secretaria" and mun_id_admin is not None and mun_info.get("id") != mun_id_admin:
+                continue
+                
             result.append({
                 "id":                               row["id"],
                 "estudiante_id":                    row["estudiante_id"],
@@ -1279,11 +1302,16 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
 
     _ensure_sqlite()
     with _conn() as conn:
-        if rol == "orientador":
+        if rol in ["orientador", "rector"]:
             sql = _BASE.format(
                 where="WHERE i.id = (SELECT institucion_id FROM administradores WHERE id = ?)"
             )
             rows = conn.execute(sql, (admin_uuid,)).fetchall()
+        elif rol == "secretaria":
+            sql = _BASE.format(
+                where="WHERE (SELECT municipio_id FROM administradores WHERE id = ?) IS NULL OR m.id = (SELECT municipio_id FROM administradores WHERE id = ?)"
+            )
+            rows = conn.execute(sql, (admin_uuid, admin_uuid)).fetchall()
         else:
             rows = conn.execute(_BASE.format(where="")).fetchall()
         result = []
@@ -1321,17 +1349,29 @@ def get_alertas_pendientes(admin_uuid: str, rol: str) -> list:
         sel = (
             "id, tipo, timestamp, estado, "
             "estudiantes(estudiante_id, nombre, apellido), "
-            "sedes(institucion_id)"
+            "sedes(institucion_id, instituciones(municipio_id))"
         )
         q = sb.table("alertas").select(sel).eq("estado", "pendiente").order("timestamp", desc=True)
-        if rol == "orientador":
-            adm = sb.table("administradores").select("institucion_id").eq("id", admin_uuid).limit(1).execute()
-            inst_id = adm.data[0]["institucion_id"] if adm.data else None
-            if inst_id:
-                q = q.eq("sedes.institucion_id", inst_id)
         rows_raw = q.execute().data
+
+        # Obtener ids del admin actual
+        adm = sb.table("administradores").select("institucion_id, municipio_id").eq("id", admin_uuid).limit(1).execute()
+        inst_id_admin = adm.data[0]["institucion_id"] if adm.data else None
+        mun_id_admin = adm.data[0]["municipio_id"] if adm.data else None
+
         result = []
         for row in rows_raw:
+            sede_info = row.get("sedes") or {}
+            inst_id_alerta = sede_info.get("institucion_id")
+            inst_info = sede_info.get("instituciones") or {}
+            mun_id_alerta = inst_info.get("municipio_id")
+
+            # Filtros en memoria
+            if (rol == "orientador" or rol == "rector") and inst_id_alerta != inst_id_admin:
+                continue
+            if rol == "secretaria" and mun_id_admin is not None and mun_id_alerta != mun_id_admin:
+                continue
+
             est = row.get("estudiantes") or {}
             result.append({
                 "id":               row["id"],
@@ -1344,11 +1384,16 @@ def get_alertas_pendientes(admin_uuid: str, rol: str) -> list:
 
     _ensure_sqlite()
     with _conn() as conn:
-        if rol == "orientador":
+        if rol in ["orientador", "rector"]:
             sql = _BASE.format(
                 scope="AND i.id = (SELECT institucion_id FROM administradores WHERE id = ?)"
             )
             rows = conn.execute(sql, (admin_uuid,)).fetchall()
+        elif rol == "secretaria":
+            sql = _BASE.format(
+                scope="AND ((SELECT municipio_id FROM administradores WHERE id = ?) IS NULL OR i.municipio_id = (SELECT municipio_id FROM administradores WHERE id = ?))"
+            )
+            rows = conn.execute(sql, (admin_uuid, admin_uuid)).fetchall()
         else:
             rows = conn.execute(_BASE.format(scope="")).fetchall()
         return [dict(r) for r in rows]

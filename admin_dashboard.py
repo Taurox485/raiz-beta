@@ -621,6 +621,8 @@ def _tab_gestion_admins(admin: dict):
     
     instituciones = db.get_todas_instituciones()
     inst_nombres = {i["nombre"]: i["id"] for i in instituciones}
+    municipios = db.get_municipios()
+    mun_nombres = {m["nombre"]: m["id"] for m in municipios}
     
     with st.form("form_crear_admin", clear_on_submit=True):
         st.markdown("**Nuevo Administrador**")
@@ -632,7 +634,11 @@ def _tab_gestion_admins(admin: dict):
             rol = st.selectbox("Rol *", ["orientador", "rector", "secretaria", "fcc"])
             password = st.text_input("Contraseña temporal *", type="password")
             
-        inst_sel = st.selectbox("Institución (requerido para orientador/rector)", ["-- Ninguna --"] + list(inst_nombres.keys()))
+        c3, c4 = st.columns(2)
+        with c3:
+            inst_sel = st.selectbox("Institución (para orientador/rector)", ["-- Ninguna --"] + list(inst_nombres.keys()))
+        with c4:
+            mun_sel = st.selectbox("Jurisdicción (para secretaria)", ["-- Todas (Departamental) --"] + list(mun_nombres.keys()))
         
         submit = st.form_submit_button("Crear administrador", type="primary")
         
@@ -645,12 +651,20 @@ def _tab_gestion_admins(admin: dict):
             return
             
         inst_id = inst_nombres.get(inst_sel) if inst_sel != "-- Ninguna --" else None
+        mun_id = mun_nombres.get(mun_sel) if mun_sel != "-- Todas (Departamental) --" else None
+        
+        if rol != "secretaria":
+            mun_id = None
+        if rol not in ["orientador", "rector"]:
+            inst_id = None
+
         try:
             db.crear_administrador(
                 nombre=nombre.strip(),
                 email=email.strip(),
                 rol=rol,
                 institucion_id=inst_id,
+                municipio_id=mun_id,
                 password=password.strip()
             )
             st.success(f"Administrador **{nombre}** creado exitosamente.")
