@@ -938,9 +938,13 @@ def crear_administrador(
 def login_admin_supabase(email: str, password: str) -> Optional[dict]:
     email = email.lower().strip()
     if _use_supabase():
-        client = _get_supabase()
+        from supabase import create_client
+        login_client = create_client(
+            st.secrets["SUPABASE_URL"],
+            st.secrets["SUPABASE_SERVICE_KEY"],
+        )
         try:
-            res = client.auth.sign_in_with_password({"email": email, "password": password})
+            res = login_client.auth.sign_in_with_password({"email": email, "password": password})
             return get_administrador_por_id(res.user.id)
         except Exception:
             return None
