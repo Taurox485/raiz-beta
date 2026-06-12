@@ -1063,6 +1063,23 @@ def toggle_estado_administrador(admin_id: str, activo: bool) -> bool:
         conn.execute("UPDATE administradores SET activo = ? WHERE id = ?", (int(activo), admin_id))
         return True
 
+def eliminar_administrador_permanente(admin_id: str) -> bool:
+    """Borra físicamente a un administrador de la base de datos y de Supabase Auth."""
+    if _use_supabase():
+        client = _get_supabase()
+        try:
+            # Primero borrar el registro público
+            client.table("administradores").delete().eq("id", admin_id).execute()
+            # Luego borrar de Supabase Auth usando la llave maestra de admin
+            client.auth.admin.delete_user(admin_id)
+            return True
+        except Exception as e:
+            raise ValueError(f"Error borrando administrador: {e}")
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        conn.execute("DELETE FROM administradores WHERE id = ?", (admin_id,))
+        return True
 
 # ── API pública: registro por administrador ───────────────────────────────────
 

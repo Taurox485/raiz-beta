@@ -690,7 +690,7 @@ def _tab_gestion_admins(admin: dict):
         st.info("No hay administradores registrados.")
     else:
         for a in admins_actuales:
-            col1, col2, col3, col4 = st.columns([2, 1, 2, 1])
+            col1, col2, col3, col4 = st.columns([2.5, 1.5, 1.5, 2])
             with col1:
                 st.write(f"**{a['nombre']}** ({a['email']})")
                 estado = "🟢 Activo" if a['activo'] else "🔴 Inactivo"
@@ -700,18 +700,22 @@ def _tab_gestion_admins(admin: dict):
             with col3:
                 st.write(a['municipio'] if a['municipio'] else "-")
             with col4:
-                # Evitar que se desactive a sí mismo por error
                 if a['id'] == admin['id']:
                     st.caption("(Tu cuenta)")
                 else:
-                    btn_text = "Desactivar" if a['activo'] else "Activar"
-                    if st.button(btn_text, key=f"toggle_{a['id']}_{a['activo']}"):
-                        nuevo_estado = not a['activo']
-                        if db.toggle_estado_administrador(a['id'], nuevo_estado):
-                            st.success(f"Estado de {a['nombre']} actualizado.")
+                    c_btn1, c_btn2 = st.columns(2)
+                    with c_btn1:
+                        btn_text = "Desactivar" if a['activo'] else "Activar"
+                        if st.button(btn_text, key=f"tgl_{a['id']}"):
+                            db.toggle_estado_administrador(a['id'], not a['activo'])
                             st.rerun()
-                        else:
-                            st.error("Error al actualizar el estado.")
+                    with c_btn2:
+                        if st.button("🗑️", key=f"del_{a['id']}", help="Borrar permanentemente"):
+                            try:
+                                db.eliminar_administrador_permanente(a['id'])
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error: {e}")
                             
 # ── API pública ────────────────────────────────────────────────────────────────
 
