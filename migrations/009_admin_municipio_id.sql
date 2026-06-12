@@ -1,5 +1,5 @@
 -- Agregar campo municipio_id a administradores para limitar jurisdicción de la Secretaría
-ALTER TABLE administradores ADD COLUMN municipio_id BIGINT REFERENCES municipios(id);
+ALTER TABLE administradores ADD COLUMN municipio_id INTEGER REFERENCES municipios(id);
 
 -- Actualizar política de administradores para que la Secretaría solo pueda ver administradores de su jurisdicción?
 -- No, la secretaría solo lee estudiantes y alertas. Vamos a ajustar las vistas/políticas si existen.
