@@ -108,9 +108,9 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 **Generación de PDFs (`pdf_generator.py`):**
 - Revertido de WeasyPrint a Playwright (`playwright.sync_api` con Chromium) por dependencias externas complejas (GTK3 en Windows). Playwright maneja sin problemas el layout avanzado.
 - Script de prueba `test_pdf.py` modificado con historial mockeado offline para iteración visual rápida.
-- Diseño visual mejorado en los PDFs:
-  - Ficha Orientador (3 páginas): Disclaimer "CONFIDENCIAL E IMPORTANTE" resaltado en pág 1, eliminación de cuarta página y áreas en blanco ineficientes al final.
-  - Mapa Estudiante (2 páginas): Márgenes ajustados para evitar fuga al footer, talento oculto trasladado a pág 1, disclaimer unificado en pág 2.
+- Diseño visual mejorado en los PDFs (Actualizado Junio 2026):
+  - Ficha Orientador (3 páginas): Disclaimer "CONFIDENCIAL E IMPORTANTE" resaltado en pág 1, eliminación de cuarta página, eliminación de polos de menor interés y diseño compactado.
+  - Mapa Estudiante (2 páginas): Márgenes ajustados, "Espejo de tu entorno" trasladado a pág 1, ajustes de texto para feedback.
 - Logo rAÍz rediseñado para uniformidad y simetría.
 - Fuentes DM Sans y DM Serif Display gestionadas de forma local vía `@font-face`.
 - Layout de encabezados en flexbox.
@@ -146,7 +146,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Twilio WhatsApp: módulo implementado pero envío real no verificado en producción. Hacer prueba manual desde tab "📱 WhatsApp" en dashboard y confirmar recepción.
 
 **Limpieza de código (antes del piloto):**
-- Eliminar `st.info`/`st.warning` de DEBUG del email en `app.py` (commits `temp: *`)
+- ~~Eliminar `st.info`/`st.warning` de DEBUG del email en `app.py` (commits `temp: *`)~~ (Completado)
 
 **Para después del piloto:**
 - **PENDIENTE 10** — Migrar auth admin a Supabase Auth por usuario
@@ -154,7 +154,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - **PENDIENTE 13** — Signed URLs para archivos de consentimiento (hoy: bucket público)
 
 **Deuda técnica registrada (backlog — sección DEUDAS TÉCNICAS PARA ESCALADA):**
-- **DEUDA TÉCNICA 1** — Migrar columna `celular` (texto plano, Opción B piloto) a AES antes de escalar a producción masiva
+- ~~**DEUDA TÉCNICA 1**~~ — ✅ Migrar columna `celular` a AES-128 (Completado)
 
 ---
 
@@ -249,7 +249,7 @@ Reglas invariables: máximo 1 mensaje por tipo por estudiante · nunca si `mento
 1. **Auth sin email:** Los estudiantes no usan Supabase Auth. Login = `SELECT * FROM estudiantes WHERE estudiante_id = ?`. Backend usa `service_role_key`. RLS desactivado en esta fase (PENDIENTE 5).
 2. **Generación del ID:** `MUNICIPIO-GRADO-AÑO-XXXX`, correlativo por `(municipio_id, grado, año)`.
 3. **Fallback SQLite:** `database.py` detecta si `SUPABASE_URL` está configurado. Si no, usa SQLite. Mismo API, distinto backend.
-4. **Celular dual:** `celular_hash` (SHA-256, deduplicación) + `celular` (texto plano, necesario para Twilio). Ambos se limpian en supresión. `celular` será migrado a AES antes de escalar (DEUDA TÉCNICA 1).
+4. **Celular dual:** `celular_hash` (SHA-256) + `celular` encriptado (AES-128 en BD, manejado en backend para Twilio).
 5. **Contacto flexible:** Al menos uno de email o celular_hash es obligatorio (CHECK constraint).
 6. **Cascading selectors:** Los selectboxes Municipio→Institución→Sede van **fuera** del `st.form` en Streamlit para actualización dinámica sin submit.
 

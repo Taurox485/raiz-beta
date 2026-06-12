@@ -448,6 +448,17 @@ pip install twilio
 
 ---
 
+### ~~MEJORAS JUNIO 2026~~ — ✅ COMPLETADO — Tareas Previas al Piloto
+
+**Completado:** Junio 2026
+**Implementado:**
+- **Scripts base de datos:** Creación de script `hard_reset_inicio_piloto.sql` para borrar la base de datos de manera segura antes del piloto.
+- **Gestión Admin:** Se modificó la pestaña de administradores para que los rectores y orientadores se asocien a una institución educativa mediante un menú desplegable, si son funcionarios del municipio.
+- **Instrucciones:** Actualización a `instrucciones.txt` para mejorar la interacción del sistema.
+- **Limpieza y Bugs:** Limpieza de algunos bugs menores detectados.
+
+---
+
 ## BACKLOG DE MEJORAS
 
 - Validar el impacto pedagógico de la nueva jerarquización en los primeros 10 estudiantes.
@@ -476,22 +487,17 @@ pip install twilio
 - Eliminado constraint en Supabase: `ALTER TABLE estudiantes DROP CONSTRAINT check_contacto_requerido;`
 **Estado:** Verificado funcionando en producción con ALC-9-2026-0004
 
+### ✅ RESUELTO — Limpieza de código DEBUG
+**Fecha:** Junio 2026
+**Estado:** Eliminados mensajes de DEBUG en UI y limpieza de bugs menores.
+
 ---
 
 ## DEUDAS TÉCNICAS PARA ESCALADA
 
-### DEUDA TÉCNICA 1 — Encriptación de celulares (antes de escalar a producción masiva)
+### ~~DEUDA TÉCNICA 1~~ — ✅ COMPLETADO — Encriptación de celulares
 
 **Estado actual (piloto):**
-- `celular_hash` — SHA-256 del número, no reversible. Sirve para deduplicación pero no para enviar mensajes.
-- `celular` — texto plano agregado para el piloto (Opción B aprobada, mayo 2026). Necesario para que el módulo WhatsApp (P14) pueda enviar mensajes reales vía Twilio.
-
-**Riesgo:** Datos de menores de edad (número de teléfono) en texto plano en Supabase. Si hay una brecha, la SIC puede sancionar por negligencia en la protección de datos sensibles.
-
-**Solución requerida antes de escalar:**
-- Migrar la columna `celular` de texto plano a encriptación AES simétrica con llave secreta
-- La llave nunca toca la DB — solo vive en `secrets.toml` y Streamlit Cloud Secrets
-- `database.py` encripta al escribir y desencripta al leer — transparente para el resto de la app
-- Requiere script de migración para re-encriptar los registros existentes del piloto
-
-**Mitigación actual:** RLS en Supabase (P5) limita el acceso directo a la tabla.
+- Migración completada exitosamente a AES-128 para la columna `celular`.
+- `database.py` gestiona la encriptación y desencriptación de forma transparente, mientras que la base de datos almacena únicamente el hash SHA-256 (`celular_hash`) para deduplicación y el texto cifrado para Twilio.
+- Llave secreta en `secrets.toml`.
