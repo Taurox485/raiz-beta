@@ -694,6 +694,10 @@ def mostrar_dashboard_admin():
     # ── Contenido ─────────────────────────────────────────────────────────────
     st.title("🌱 rAÍz — Administración")
 
+    if not st.session_state.get("toast_pwd_shown", False):
+        st.toast("Recuerda que puedes cambiar tu contraseña temporal desde el menú lateral izquierdo.", icon="🔐")
+        st.session_state["toast_pwd_shown"] = True
+
     tab_labels = [
         "➕ Registrar estudiante",
         "👥 Estudiantes registrados",
