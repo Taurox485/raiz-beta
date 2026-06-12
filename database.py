@@ -1197,13 +1197,38 @@ def guardar_archivo_consentimiento(
             file_bytes,
             {"content-type": f"image/{extension}" if extension != "pdf" else "application/pdf"},
         )
-        return _get_supabase().storage.from_("consentimientos").get_public_url(ruta)
+        return ruta
 
     os.makedirs("consentimientos", exist_ok=True)
     local_path = f"consentimientos/{estudiante_id}.{extension}"
     with open(local_path, "wb") as fh:
         fh.write(file_bytes)
     return local_path
+
+def get_consentimiento_signed_url(ruta_o_url: str) -> str:
+    """
+    Retorna una URL firmada (válida por 60s) para ver el PDF/imagen de forma segura.
+    Si recibe una URL pública vieja, intenta extraer la ruta.
+    Si es un entorno local, retorna la ruta local tal cual.
+    """
+    if not ruta_o_url:
+        return ""
+    if not _use_supabase():
+        return ruta_o_url
+        
+    ruta = ruta_o_url
+    if ruta.startswith("http"):
+        if "/storage/v1/object/public/consentimientos/" in ruta:
+            ruta = ruta.split("/storage/v1/object/public/consentimientos/")[-1]
+        else:
+            return ruta_o_url # URL de otro origen desconocido
+            
+    try:
+        # Generar signed url por 60 segundos
+        res = _get_supabase().storage.from_("consentimientos").create_signed_url(ruta, 60)
+        return res["signedURL"]
+    except Exception:
+        return ruta_o_url
 
 
 def get_sedes_disponibles(admin_uuid: str, rol: str) -> list:
@@ -1351,23 +1376,28 @@ def get_estudiantes_por_admin(admin_uuid: str, rol: str) -> list:
                 "perfil_riesgo":                    row["perfil_riesgo"],
                 "consentimiento_acudiente_verificado": row["consentimiento_acudiente_verificado"],
                 "tiene_archivo_consentimiento":     bool(row.get("consentimiento_archivo_url")),
+                "consentimiento_archivo_url":       row.get("consentimiento_archivo_url"),
             })
         return result
 
     _ensure_sqlite()
     with _conn() as conn:
+        _BASE_SQLITE = _BASE.replace(
+            "CASE WHEN e.consentimiento_archivo_url IS NOT NULL THEN 1 ELSE 0 END",
+            "e.consentimiento_archivo_url, CASE WHEN e.consentimiento_archivo_url IS NOT NULL THEN 1 ELSE 0 END"
+        )
         if rol in ["orientador", "rector"]:
-            sql = _BASE.format(
+            sql = _BASE_SQLITE.format(
                 where="WHERE i.id = (SELECT institucion_id FROM administradores WHERE id = ?)"
             )
             rows = conn.execute(sql, (admin_uuid,)).fetchall()
         elif rol == "secretaria":
-            sql = _BASE.format(
+            sql = _BASE_SQLITE.format(
                 where="WHERE (SELECT municipio_id FROM administradores WHERE id = ?) IS NULL OR m.id = (SELECT municipio_id FROM administradores WHERE id = ?)"
             )
             rows = conn.execute(sql, (admin_uuid, admin_uuid)).fetchall()
         else:
-            rows = conn.execute(_BASE.format(where="")).fetchall()
+            rows = conn.execute(_BASE_SQLITE.format(where="")).fetchall()
         result = []
         for r in rows:
             d = dict(r)

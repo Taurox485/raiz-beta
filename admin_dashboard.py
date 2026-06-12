@@ -257,7 +257,16 @@ def _tab_lista_estudiantes(admin: dict):
             cols[4].write(f"S{e['sesion_actual']} M{e['momento_actual']}")
 
         cols[5].write(e["perfil_riesgo"])
-        cols[6].write("✅" if e["consentimiento_acudiente_verificado"] else "⏳")
+        with cols[6]:
+            st.write("✅" if e["consentimiento_acudiente_verificado"] else "⏳")
+            if e.get("tiene_archivo_consentimiento") and e.get("consentimiento_archivo_url"):
+                if st.button("📄 Ver Doc", key=f"btn_cons_{e['id']}", help="Ver documento de consentimiento"):
+                    with st.spinner("Generando enlace seguro..."):
+                        url = db.get_consentimiento_signed_url(e["consentimiento_archivo_url"])
+                        if url:
+                            st.markdown(f"[Abrir Documento]({url})")
+                        else:
+                            st.error("Error al generar URL")
 
         with cols[7]:
             if not e.get("mentoria_completada"):
