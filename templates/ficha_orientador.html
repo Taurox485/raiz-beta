@@ -503,19 +503,7 @@
         {% endfor %}
       </div>
 
-      <div class="prediger-sublabel-ori debil" style="margin-top:7px; margin-bottom:4px;">Polos de menor interés actual</div>
-      <div class="polo-grid-ori">
-        {% for p in polos_debiles %}
-        <div class="polo-card-ori debil">
-          <div class="polo-circle-ori">{{ p.icono }}</div>
-          <div>
-            <div class="polo-tag-ori">Menor afinidad actual</div>
-            <div class="polo-nombre-ori">{{ p.nombre }}</div>
-            <div class="polo-desc-ori">{{ p.descripcion_donotham }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
+
 
       {% if prediger_evidencia %}
       <div class="prediger-evidencia-box">{{ prediger_evidencia }}</div>
