@@ -21,13 +21,13 @@ ALTER TABLE sedes ENABLE ROW LEVEL SECURITY;
 -- Función auxiliar para obtener el rol del usuario autenticado (desde la tabla administradores)
 CREATE OR REPLACE FUNCTION get_user_rol()
 RETURNS TEXT AS $$
-  SELECT rol FROM administradores WHERE id = auth.uid()::text AND activo = TRUE;
+  SELECT rol FROM administradores WHERE id = auth.uid() AND activo = TRUE;
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- Función auxiliar para obtener la institución del usuario autenticado
 CREATE OR REPLACE FUNCTION get_user_institucion()
 RETURNS INTEGER AS $$
-  SELECT institucion_id FROM administradores WHERE id = auth.uid()::text AND activo = TRUE;
+  SELECT institucion_id FROM administradores WHERE id = auth.uid() AND activo = TRUE;
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- -----------------------------------------------------------------------------

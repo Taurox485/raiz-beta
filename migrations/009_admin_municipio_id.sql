@@ -18,7 +18,7 @@ ON estudiantes FOR SELECT
 USING (
     EXISTS (
         SELECT 1 FROM administradores a
-        WHERE a.id = auth.uid()::text
+        WHERE a.id = auth.uid()
           AND (
               a.rol = 'fcc' 
               OR (
@@ -43,7 +43,7 @@ ON alertas FOR SELECT
 USING (
     EXISTS (
         SELECT 1 FROM administradores a
-        WHERE a.id = auth.uid()::text
+        WHERE a.id = auth.uid()
           AND (
               a.rol = 'fcc' 
               OR (
@@ -54,7 +54,7 @@ USING (
                           SELECT i.municipio_id FROM instituciones i 
                           JOIN sedes s ON s.institucion_id = i.id 
                           JOIN estudiantes e ON e.sede_id = s.id 
-                          WHERE e.estudiante_id = alertas.estudiante_id
+                          WHERE e.id = alertas.estudiante_id
                       )
                   )
               )
@@ -63,7 +63,7 @@ USING (
                   AND a.institucion_id = (
                       SELECT s.institucion_id FROM sedes s 
                       JOIN estudiantes e ON e.sede_id = s.id 
-                      WHERE e.estudiante_id = alertas.estudiante_id
+                      WHERE e.id = alertas.estudiante_id
                   )
               )
           )
