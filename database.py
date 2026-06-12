@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS administradores (
     id                 TEXT    PRIMARY KEY,
     nombre             TEXT    NOT NULL,
     email              TEXT    UNIQUE NOT NULL,
-    rol                TEXT    NOT NULL CHECK (rol IN ('fcc', 'orientador', 'secretaria')),
+    rol                TEXT    NOT NULL CHECK (rol IN ('fcc', 'orientador', 'secretaria', 'rector')),
     institucion_id     INTEGER REFERENCES instituciones(id),
     activo             INTEGER DEFAULT 1,
     fecha_creacion     TEXT    DEFAULT (datetime('now'))
@@ -892,17 +892,30 @@ def crear_administrador(
     email: str,
     rol: str,
     institucion_id: Optional[int] = None,
+    password: Optional[str] = None,
 ) -> str:
     """
-    Crea un administrador y retorna su UUID.
-    rol: 'fcc' | 'orientador' | 'secretaria'
-    institucion_id: requerido para 'orientador', NULL para 'fcc' y 'secretaria'.
+    Crea un administrador y retorna su UUID. Si está en Supabase y se envía password, lo crea en Auth.
+    rol: 'fcc' | 'orientador' | 'secretaria' | 'rector'
+    institucion_id: requerido para 'orientador' y 'rector', NULL para 'fcc' y 'secretaria'.
     """
     admin_id = str(uuid.uuid4())
     email = email.lower().strip()
 
     if _use_supabase():
-        _get_supabase().table("administradores").insert({
+        client = _get_supabase()
+        if password:
+            try:
+                res = client.auth.admin.create_user({
+                    "email": email,
+                    "password": password,
+                    "email_confirm": True
+                })
+                admin_id = res.user.id
+            except Exception as e:
+                raise ValueError(f"Error creando usuario en Supabase Auth: {str(e)}")
+
+        client.table("administradores").insert({
             "id":             admin_id,
             "nombre":         nombre,
             "email":          email,
@@ -921,6 +934,37 @@ def crear_administrador(
             (admin_id, nombre, email, rol, institucion_id),
         )
     return admin_id
+
+def login_admin_supabase(email: str, password: str) -> Optional[dict]:
+    email = email.lower().strip()
+    if _use_supabase():
+        client = _get_supabase()
+        try:
+            res = client.auth.sign_in_with_password({"email": email, "password": password})
+            return get_administrador_por_id(res.user.id)
+        except Exception:
+            return None
+    return None
+
+def get_administrador_por_id(admin_id: str) -> Optional[dict]:
+    if _use_supabase():
+        r = (
+            _get_supabase().table("administradores")
+            .select("*")
+            .eq("id", admin_id)
+            .eq("activo", True)
+            .limit(1)
+            .execute()
+        )
+        return r.data[0] if r.data else None
+
+    _ensure_sqlite()
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM administradores WHERE id = ? AND activo = 1",
+            (admin_id,),
+        ).fetchone()
+        return dict(row) if row else None
 
 
 def get_administrador_por_email(email: str) -> Optional[dict]:

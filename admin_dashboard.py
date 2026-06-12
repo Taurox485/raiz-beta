@@ -51,15 +51,21 @@ def _mostrar_login():
         st.error("Ingresá tu email.")
         return
 
-    admin_pw = st.secrets.get("ADMIN_PASSWORD", "")
-    if not admin_pw or password != admin_pw:
-        st.error("Contraseña incorrecta.")
-        return
+    if db._use_supabase():
+        admin = db.login_admin_supabase(email.strip(), password)
+        if admin is None:
+            st.error("Email o contraseña incorrecta, o tu cuenta aún no está activa.")
+            return
+    else:
+        admin_pw = st.secrets.get("ADMIN_PASSWORD", "")
+        if not admin_pw or password != admin_pw:
+            st.error("Contraseña incorrecta.")
+            return
 
-    admin = db.get_administrador_por_email(email.strip())
-    if admin is None:
-        st.error("Email no autorizado. Contactá al equipo rAÍz para que creen tu acceso.")
-        return
+        admin = db.get_administrador_por_email(email.strip())
+        if admin is None:
+            st.error("Email no autorizado. Contactá al equipo rAÍz para que creen tu acceso.")
+            return
 
     st.session_state["admin"] = admin
     st.rerun()
@@ -605,8 +611,51 @@ def _tab_whatsapp(admin: dict):
                         f"MSG{item['mensaje_numero']} — `{item['celular']}`"
                     )
                     st.caption(item["texto"])
+                    st.caption(item["texto"])
 
+# ── Tab 6: Gestión de Administradores (solo fcc) ──────────────────────────────
 
+def _tab_gestion_admins(admin: dict):
+    st.markdown("### Gestión de Administradores")
+    st.caption("Crea accesos para rectores, orientadores y secretaría.")
+    
+    instituciones = db.get_todas_instituciones()
+    inst_nombres = {i["nombre"]: i["id"] for i in instituciones}
+    
+    with st.form("form_crear_admin", clear_on_submit=True):
+        st.markdown("**Nuevo Administrador**")
+        c1, c2 = st.columns(2)
+        with c1:
+            nombre = st.text_input("Nombre completo *")
+            email = st.text_input("Email *")
+        with c2:
+            rol = st.selectbox("Rol *", ["orientador", "rector", "secretaria", "fcc"])
+            password = st.text_input("Contraseña temporal *", type="password")
+            
+        inst_sel = st.selectbox("Institución (requerido para orientador/rector)", ["-- Ninguna --"] + list(inst_nombres.keys()))
+        
+        submit = st.form_submit_button("Crear administrador", type="primary")
+        
+    if submit:
+        if not nombre.strip() or not email.strip() or not password.strip():
+            st.error("Nombre, email y contraseña son obligatorios.")
+            return
+        if rol in ["orientador", "rector"] and inst_sel == "-- Ninguna --":
+            st.error(f"Debes seleccionar una institución para el rol {rol}.")
+            return
+            
+        inst_id = inst_nombres.get(inst_sel) if inst_sel != "-- Ninguna --" else None
+        try:
+            db.crear_administrador(
+                nombre=nombre.strip(),
+                email=email.strip(),
+                rol=rol,
+                institucion_id=inst_id,
+                password=password.strip()
+            )
+            st.success(f"Administrador **{nombre}** creado exitosamente.")
+        except Exception as e:
+            st.error(f"Error al crear: {e}")
 # ── API pública ────────────────────────────────────────────────────────────────
 
 def mostrar_dashboard_admin():
@@ -635,7 +684,7 @@ def mostrar_dashboard_admin():
         "🔔 Alertas pendientes",
     ]
     if admin["rol"] == "fcc":
-        tab_labels += ["⚙️ Instituciones", "📱 WhatsApp"]
+        tab_labels += ["⚙️ Instituciones", "📱 WhatsApp", "🔐 Gestión Admins"]
 
     tabs = st.tabs(tab_labels)
 
@@ -650,3 +699,5 @@ def mostrar_dashboard_admin():
             _tab_instituciones(admin)
         with tabs[4]:
             _tab_whatsapp(admin)
+        with tabs[5]:
+            _tab_gestion_admins(admin)

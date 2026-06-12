@@ -172,64 +172,64 @@ SITUACIONES_RONDA = [
     {
         "titulo": "En el estudio",
         "opciones": [
-            "Explicar tarea a compañero (Personas)",
-            "Proponer forma distinta de hacer proyecto (Ideas)",
-            "Organizar apuntes en calendario (Datos)",
-            "Construir maqueta o experimento manual (Cosas)"
+            "Explicar tarea a compañero",
+            "Proponer forma distinta de hacer proyecto",
+            "Organizar apuntes en calendario",
+            "Construir maqueta o experimento manual"
         ]
     },
     {
         "titulo": "En el trabajo",
         "opciones": [
-            "Coordinar al equipo (Personas)",
-            "Inventar mejor método de trabajo (Ideas)",
-            "Llevar cuentas exactas de gastos (Datos)",
-            "Reparar herramientas de trabajo (Cosas)"
+            "Coordinar al equipo",
+            "Inventar mejor método de trabajo",
+            "Llevar cuentas exactas de gastos",
+            "Reparar herramientas de trabajo"
         ]
     },
     {
         "titulo": "En el tiempo libre",
         "opciones": [
-            "Organizar salida con amigos o barrio (Personas)",
-            "Imaginar historias o nuevos juegos (Ideas)",
-            "Comparar estadísticas de equipos (Datos)",
-            "Arreglar o desarmar aparatos viejos (Cosas)"
+            "Organizar salida con amigos o barrio",
+            "Imaginar historias o nuevos juegos",
+            "Comparar estadísticas de equipos",
+            "Arreglar o desarmar aparatos viejos"
         ]
     },
     {
         "titulo": "Resolviendo problemas",
         "opciones": [
-            "Escuchar para aconsejar (Personas)",
-            "Pensar en solución ingeniosa (Ideas)",
-            "Analizar hechos fríos y datos (Datos)",
-            "Arreglar falla técnica con herramientas (Cosas)"
+            "Escuchar para aconsejar",
+            "Pensar en solución ingeniosa",
+            "Analizar hechos fríos y datos",
+            "Arreglar falla técnica con herramientas"
         ]
     },
     {
         "titulo": "En un proyecto grupal",
         "opciones": [
-            "Motivar al grupo para que nadie se quede atrás (Personas)",
-            "Diseñar concepto creativo visual (Ideas)",
-            "Escribir informe y organizar datos (Datos)",
-            "Encargarse de la parte mecánica o física (Cosas)"
+            "Motivar al grupo para que nadie se quede atrás",
+            "Diseñar concepto creativo visual",
+            "Escribir informe y organizar datos",
+            "Encargarse de la parte mecánica o física"
         ]
     },
     {
         "titulo": "Aprendiendo algo nuevo",
         "opciones": [
-            "Aprender a mediar conflictos (Personas)",
-            "Aprender el 'porqué' profundo de las cosas (Ideas)",
-            "Aprender a leer gráficos y tablas (Datos)",
-            "Aprender a usar una máquina o herramienta nueva (Cosas)"
+            "Aprender a mediar conflictos",
+            "Aprender el 'porqué' profundo de las cosas",
+            "Aprender a leer gráficos y tablas",
+            "Aprender a usar una máquina o herramienta nueva"
         ]
     },
     {
         "titulo": "Tu futuro",
         "opciones": [
-            "Ser alguien que guía y apoya a su comunidad (Personas)",
-            "Ser alguien que crea cosas nuevas (Ideas)",
-            "Ser alguien que planea y analiza para tener éxito (Datos)",
-            "Ser experto en un oficio o trabajo técnico (Cosas)"
+            "Ser alguien que guía y apoya a su comunidad",
+            "Ser alguien que crea cosas nuevas",
+            "Ser alguien que planea y analiza para tener éxito",
+            "Ser experto en un oficio o trabajo técnico"
         ]
     }
 ]
@@ -264,17 +264,18 @@ def renderizar_ronda_relampago() -> str | None:
         # Cálculo de puntos: 1ro=4pts, 2do=3pts, 3ro=2pts, 4to=1pt
         puntos = {"Personas": 0, "Ideas": 0, "Datos": 0, "Cosas": 0}
         
-        for respuestas in st.session_state.ronda_respuestas:
+        for i, respuestas in enumerate(st.session_state.ronda_respuestas):
+            # Obtener las opciones originales para esta situación para saber su categoría
+            opciones_originales = SITUACIONES_RONDA[i]["opciones"]
+            categorias = ["Personas", "Ideas", "Datos", "Cosas"]
+            
             for idx, opc in enumerate(respuestas):
                 puntaje = 4 - idx
-                if "(Personas)" in opc:
-                    puntos["Personas"] += puntaje
-                elif "(Ideas)" in opc:
-                    puntos["Ideas"] += puntaje
-                elif "(Datos)" in opc:
-                    puntos["Datos"] += puntaje
-                elif "(Cosas)" in opc:
-                    puntos["Cosas"] += puntaje
+                # Encontrar el índice original de la opción para saber su categoría
+                if opc in opciones_originales:
+                    cat_idx = opciones_originales.index(opc)
+                    categoria = categorias[cat_idx]
+                    puntos[categoria] += puntaje
 
         # Limpiar el session_state para la próxima iteración si se vuelve a llamar
         del st.session_state["ronda_respuestas"]
