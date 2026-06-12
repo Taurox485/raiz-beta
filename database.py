@@ -13,9 +13,35 @@ import sqlite3
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Optional
-
+from typing import Optional, Tuple
+import hashlib
+import base64
+from cryptography.fernet import Fernet
 import streamlit as st
+
+def _get_fernet() -> Fernet:
+    """Retorna la instancia de Fernet usando la clave simétrica de los secretos."""
+    try:
+        # Intentar obtener la clave de secrets.toml
+        key = st.secrets["CELULAR_ENCRYPTION_KEY"]
+    except (FileNotFoundError, KeyError):
+        # Fallback de desarrollo temporal (IMPORTANTE: configurar en prod)
+        key = base64.urlsafe_b64encode(b"01234567890123456789012345678901").decode()
+    return Fernet(key)
+
+def encriptar_celular(celular: Optional[str]) -> Optional[str]:
+    """Encripta el número de celular usando AES-128."""
+    if not celular: return None
+    return _get_fernet().encrypt(celular.encode("utf-8")).decode("utf-8")
+
+def desencriptar_celular(celular_enc: Optional[str]) -> Optional[str]:
+    """Desencripta el número de celular."""
+    if not celular_enc: return None
+    try:
+        return _get_fernet().decrypt(celular_enc.encode("utf-8")).decode("utf-8")
+    except Exception:
+        # Fallback si el celular está en texto plano en la DB (ej. previo a la migración)
+        return celular_enc
 
 
 # ── Detección de backend ───────────────────────────────────────────────────────
@@ -494,14 +520,22 @@ def login_estudiante(estudiante_id: str) -> Optional[dict]:
             .limit(1)
             .execute()
         )
-        return r.data[0] if r.data else None
+        if not r.data:
+            return None
+        est = r.data[0]
+        est["celular"] = desencriptar_celular(est.get("celular"))
+        return est
 
     _ensure_sqlite()
     with _conn() as conn:
         row = conn.execute(
             "SELECT * FROM estudiantes WHERE estudiante_id = ?", (eid,)
         ).fetchone()
-        return dict(row) if row else None
+        if not row:
+            return None
+        est = dict(row)
+        est["celular"] = desencriptar_celular(est.get("celular"))
+        return est
 
 
 def get_estudiante_por_email(email: str) -> Optional[dict]:
@@ -1107,6 +1141,7 @@ def crear_estudiante_admin(
         )
 
     email_norm = email.lower().strip() if email else None
+    celular_encriptado = encriptar_celular(celular) if celular else None
     new_uuid = str(uuid.uuid4())
     from datetime import date as _date
     retencion = _date(datetime.now().year + 1, 12, 31).isoformat()
@@ -1854,7 +1889,12 @@ def get_estudiantes_para_reengagement() -> list[dict]:
         )
         if not r_est.data:
             return []
-        ids = [e["id"] for e in r_est.data]
+            
+        est_data = r_est.data
+        for e in est_data:
+            e["celular"] = desencriptar_celular(e["celular"])
+            
+        ids = [e["id"] for e in est_data]
 
         r_wa = sb.table("whatsapp_mensajes").select("estudiante_id, mensaje_numero").in_("estudiante_id", ids).execute()
         wa_enviados: dict = {}
@@ -1869,11 +1909,11 @@ def get_estudiantes_para_reengagement() -> list[dict]:
             if uid not in ultimo_chat or ts > ultimo_chat[uid]:
                 ultimo_chat[uid] = ts
 
-        return _aplicar_reglas_reengagement(r_est.data, wa_enviados, ultimo_chat, umbral_1d, umbral_2d, umbral_5d)
+        return _aplicar_reglas_reengagement(est_data, wa_enviados, ultimo_chat, umbral_1d, umbral_2d, umbral_5d)
 
     _ensure_sqlite()
     with _conn() as conn:
-        rows_est = conn.execute(
+        rows_est_raw = conn.execute(
             """
             SELECT id, nombre, estudiante_id, celular, sesion_actual, momento_actual, fecha_registro
             FROM   estudiantes
@@ -1882,8 +1922,14 @@ def get_estudiantes_para_reengagement() -> list[dict]:
               AND  celular IS NOT NULL
             """
         ).fetchall()
-        if not rows_est:
+        if not rows_est_raw:
             return []
+
+        rows_est = []
+        for r in rows_est_raw:
+            d = dict(r)
+            d["celular"] = desencriptar_celular(d["celular"])
+            rows_est.append(d)
 
         ids = [r["id"] for r in rows_est]
         placeholders = ",".join("?" * len(ids))

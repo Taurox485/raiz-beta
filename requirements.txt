@@ -24,3 +24,6 @@ twilio>=9.0.0
 
 # UI: Arrastrar y soltar para la Ronda Relámpago
 streamlit-sortables>=0.3.0
+
+# Encriptación de datos sensibles (celular)
+cryptography>=41.0.0
