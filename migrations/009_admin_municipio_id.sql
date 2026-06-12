@@ -18,7 +18,7 @@ ON estudiantes FOR SELECT
 USING (
     EXISTS (
         SELECT 1 FROM administradores a
-        WHERE a.id = auth.uid()
+        WHERE a.id = auth.uid()::text
           AND (
               a.rol = 'fcc' 
               OR (
@@ -43,7 +43,7 @@ ON alertas FOR SELECT
 USING (
     EXISTS (
         SELECT 1 FROM administradores a
-        WHERE a.id = auth.uid()
+        WHERE a.id = auth.uid()::text
           AND (
               a.rol = 'fcc' 
               OR (
