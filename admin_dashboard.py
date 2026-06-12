@@ -670,6 +670,22 @@ def mostrar_dashboard_admin():
     with st.sidebar:
         st.markdown(f"**{admin['nombre']}**")
         st.caption(roles.get(admin["rol"], admin["rol"]))
+        with st.expander("🔐 Cambiar mi contraseña"):
+            with st.form("form_cambiar_password"):
+                new_pw = st.text_input("Nueva contraseña", type="password")
+                new_pw_conf = st.text_input("Confirmar contraseña", type="password")
+                if st.form_submit_button("Actualizar", use_container_width=True):
+                    if len(new_pw) < 6:
+                        st.error("La contraseña debe tener al menos 6 caracteres.")
+                    elif new_pw != new_pw_conf:
+                        st.error("Las contraseñas no coinciden.")
+                    else:
+                        try:
+                            db.update_admin_password(admin["id"], new_pw)
+                            st.success("Contraseña actualizada exitosamente.")
+                        except Exception as e:
+                            st.error(f"Hubo un error: {e}")
+                            
         st.markdown("---")
         if st.button("Cerrar sesión", use_container_width=True):
             del st.session_state["admin"]

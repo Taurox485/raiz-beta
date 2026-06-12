@@ -950,6 +950,17 @@ def login_admin_supabase(email: str, password: str) -> Optional[dict]:
             return None
     return None
 
+def update_admin_password(admin_id: str, new_password: str) -> bool:
+    """Actualiza la contraseña de un administrador en Supabase Auth usando la llave de servicio"""
+    if _use_supabase():
+        client = _get_supabase()
+        try:
+            client.auth.admin.update_user_by_id(admin_id, {"password": new_password})
+            return True
+        except Exception as e:
+            raise ValueError(f"Error actualizando contraseña: {str(e)}")
+    return False
+
 def get_administrador_por_id(admin_id: str) -> Optional[dict]:
     if _use_supabase():
         r = (
