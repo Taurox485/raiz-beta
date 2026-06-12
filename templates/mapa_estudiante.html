@@ -266,20 +266,6 @@
         </div>
         {% endfor %}
       </div>
-
-      <div class="prediger-sublabel debil" style="margin-top:7px;">Para tener en cuenta — lo que hoy no te llama tanto</div>
-      <div class="polo-grid">
-        {% for p in polos_debiles %}
-        <div class="polo-card debil">
-          <div class="polo-circle">{{ p.icono }}</div>
-          <div>
-            <div class="polo-tag">Menor preferencia actual</div>
-            <div class="polo-nombre">{{ p.nombre }}</div>
-            <div class="polo-desc">{{ p.descripcion_donotham }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
     </div>
 
     <!-- SECCIÓN 2: ADN DE CARÁCTER -->
@@ -370,7 +356,7 @@
 
         <!-- Ancla Ubuntu -->
         <div class="espejo-card ubuntu">
-          <div class="espejo-card-label">🌱 Tu propósito</div>
+          <div class="espejo-card-label">🌱 Idea para contribuir</div>
           <div class="espejo-card-body">{{ ancla_ubuntu }}</div>
         </div>
 
@@ -380,7 +366,7 @@
     <!-- SECCIÓN 5: TU SUEÑO PRINCIPAL -->
     {% if sueno_principal %}
     <div class="section">
-      <div class="section-label">Tu gran sueño</div>
+      <div class="section-label">Tu sueño hoy</div>
       <div class="sueno-card">
         <span class="sueno-quote-mark">&ldquo;</span>
         <div class="sueno-texto">{{ sueno_principal }}</div>
