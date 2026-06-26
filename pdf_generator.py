@@ -27,6 +27,7 @@ from google.genai import types
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
 import os
+import threading
 
 import database as db
 from def_esquemas_pdf_gen import EsquemaMapaEstudiante, EsquemaFichaOrientador
@@ -192,19 +193,35 @@ def _llamar_gemini_json(
 
 
 _playwright_installed = False
+_usando_chromium_sistema = True  # Intentar usar el binario de apt primero
+_playwright_lock = threading.Lock()
 
 def _html_a_pdf(html_content: str) -> bytes:
     """
     Convierte HTML a PDF usando Playwright + Chromium.
-    Reemplaza WeasyPrint que requiere GTK3 (no disponible en Windows sin instalación manual).
+    Intenta usar el binario provisto por packages.txt con fallback seguro a instalación local.
     """
-    global _playwright_installed
-    if not _playwright_installed:
-        # Asegurar que los binarios del navegador estén instalados en entornos Cloud
-        os.system("playwright install chromium")
-        _playwright_installed = True
+    global _playwright_installed, _usando_chromium_sistema
+    
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = None
+        
+        # Intento 1: Binario de sistema (evita os.system y previene colapsos por concurrencia)
+        if _usando_chromium_sistema:
+            try:
+                browser = p.chromium.launch(executable_path="/usr/bin/chromium")
+            except Exception as e:
+                print(f"[WARN] No se pudo lanzar Chromium del sistema. Activando fallback. Error: {e}")
+                _usando_chromium_sistema = False
+                
+        # Intento 2: Fallback (El comportamiento original)
+        if not _usando_chromium_sistema:
+            with _playwright_lock:
+                if not _playwright_installed:
+                    # Asegurar que los binarios del navegador estén instalados en entornos Cloud
+                    os.system("playwright install chromium")
+                    _playwright_installed = True
+                browser = p.chromium.launch()
         page = browser.new_page()
         page.set_content(html_content, wait_until="networkidle")
         pdf_bytes = page.pdf(
