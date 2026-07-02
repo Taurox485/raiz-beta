@@ -494,3 +494,7 @@ pip install twilio
 - Migración completada exitosamente a AES-128 para la columna `celular`.
 - `database.py` gestiona la encriptación y desencriptación de forma transparente, mientras que la base de datos almacena únicamente el hash SHA-256 (`celular_hash`) para deduplicación y el texto cifrado para Twilio.
 - Llave secreta en `secrets.toml`.
+
+### DEUDA TÉCNICA 2 — Limpieza de archivos temporales y .gitignore
+**Contexto:** El repo local acumula archivos de trabajo temporal (`app_backup_reconstruccion.py`, `instrucciones_v3_backup.txt`, `mod.py`, `scratch/`) que nunca fueron commiteados pero aparecen en `git status` generando ruido. No tienen impacto en producción pero deben limpiarse y agregarse al `.gitignore`.
+**Para después del piloto:** Eliminar esos archivos del disco local y agregar sus patrones al `.gitignore`.

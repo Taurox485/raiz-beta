@@ -147,6 +147,7 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 
 **Deuda técnica registrada (backlog — sección DEUDAS TÉCNICAS PARA ESCALADA):**
 - ~~**DEUDA TÉCNICA 1**~~ — ✅ Migrar columna `celular` a AES-128 (Completado)
+- **LIMPIEZA POST-PILOTO** — Eliminar archivos temporales acumulados en el repo local que no deben commitearse: `app_backup_reconstruccion.py`, `instrucciones_v3_backup.txt`, `mod.py`, `scratch/`. Agregar estos patrones al `.gitignore` para evitar que reaparezcan en futuros `git status`.
 
 ---
 
