@@ -51,13 +51,14 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 - Admin certifica que el acudiente firmó la autorización física (`consentimiento_acudiente_verificado`)
 - Estudiante inicia sesión con su ID → ve asentimiento informado (2 checkboxes: general + datos sensibles) → accede al chat
 - Recuperación de ID por email (`auth.py`)
+- Autenticación de administradores migrada a Supabase Auth por usuario (email + contraseña individual, PENDIENTE 10) con pestaña de gestión de accesos (Tab 6, fcc)
 
 **Dashboard administrador (`admin_dashboard.py`):**
-- Acceso vía `/?admin=1`, protegido con email + `ADMIN_PASSWORD` en secrets
-- Tres roles: `fcc` (todas las instituciones), `orientador` (su institución), `secretaria` (todas — lectura)
-- Tabs (rol fcc): Registrar estudiante · Estudiantes registrados · Alertas pendientes · Instituciones · WhatsApp
-- Tabs (orientador/secretaria): Registrar estudiante · Estudiantes registrados · Alertas pendientes
-- Admin de prueba en Supabase: `admin@fcc.edu.co` / contraseña en `ADMIN_PASSWORD`
+- Acceso vía `/?admin=1`, protegido con login de usuario Supabase Auth (desarrollo local mantiene fallback con ADMIN_PASSWORD)
+- Tres roles: `fcc` (todas las instituciones), `orientador`/`rector` (su institución), `secretaria` (jurisdicción regional, PENDIENTE 11)
+- Tabs (rol fcc): Registrar estudiante · Estudiantes registrados · Alertas pendientes · Instituciones · WhatsApp · Gestión Admins
+- Tabs (orientador/rector/secretaria): Registrar estudiante · Estudiantes registrados · Alertas pendientes
+- Admin de prueba en Supabase: `admin@fcc.edu.co`
 - Tabla de estudiantes rediseñada con `st.columns` (reemplaza `st.dataframe`)
 - Columna "Progreso": `S1 M3` / `✅ Completada` (reemplaza columna "Sesión")
 - Columna "Ficha orientador": botón Descargar + estado email (✅ fecha / ⚠️ Error / 📧 Pendiente)
@@ -67,9 +68,11 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 **Base de datos (`database.py`):**
 - Adapter dual: Supabase (prod) / SQLite (dev offline, `raiz_local.db`)
 - Detección automática por `SUPABASE_URL` en secrets
-- Schema en `schema.sql` + migraciones 002–005 (ver sección de migraciones)
+- Schema en `schema.sql` + todas las 9 SQL migrations aplicadas en Supabase
 - Tablas: `municipios`, `instituciones`, `sedes`, `estudiantes`, `mensajes`, `alertas`, `administradores`, `whatsapp_mensajes`
 - Seed data: 11 municipios y ~25 instituciones reales del Valle del Cauca
+- Row Level Security (RLS) habilitado y políticas de acceso configuradas en Supabase (estudiantes, mensajes, alertas, sedes, instituciones - PENDIENTE 5)
+- Firmas digitales temporales (Signed URLs) para la descarga segura de archivos de consentimiento (PENDIENTE 13)
 
 **Selector en cascada (registro de estudiantes):**
 - Selectboxes Municipio → Institución → Sede fuera del form en `_tab_registrar_estudiante()`
@@ -135,23 +138,12 @@ El ecosistema económico gira en torno a la caña de azúcar y la agricultura. M
 
 ### Pendiente (ver `raiz_claude_code_backlog.md` para detalle)
 
-**Crítico para el piloto:**
-- **PENDIENTE 5** — Row Level Security (RLS) en Supabase
+**Verificación pendiente:**
+- Twilio WhatsApp: módulo de re-engagement implementado pero envío real no verificado en producción con número Twilio final. Hacer prueba manual desde tab "📱 WhatsApp" en dashboard y confirmar recepción cuando la cuenta de Twilio esté vinculada a Facebook Business.
 
 **Supresión de datos (Ley 1581/2012):**
 - El check constraint `check_contacto_requerido` en la tabla `estudiantes` fue eliminado de Supabase (bloqueaba la anonimización al poner celular/email en NULL). Ejecutado: `ALTER TABLE estudiantes DROP CONSTRAINT check_contacto_requerido;`
 - `suprimir_estudiante()` en `database.py` ya incluye DELETE de `envios_ficha` y `whatsapp_mensajes` antes de `mensajes` y `alertas` (orden correcto para FKs)
-
-**Verificación pendiente:**
-- Twilio WhatsApp: módulo implementado pero envío real no verificado en producción. Hacer prueba manual desde tab "📱 WhatsApp" en dashboard y confirmar recepción.
-
-**Limpieza de código (antes del piloto):**
-- ~~Eliminar `st.info`/`st.warning` de DEBUG del email en `app.py` (commits `temp: *`)~~ (Completado)
-
-**Para después del piloto:**
-- **PENDIENTE 10** — Migrar auth admin a Supabase Auth por usuario
-- **PENDIENTE 11** — Campo `jurisdiccion` para scope regional de rol `secretaria`
-- **PENDIENTE 13** — Signed URLs para archivos de consentimiento (hoy: bucket público)
 
 **Deuda técnica registrada (backlog — sección DEUDAS TÉCNICAS PARA ESCALADA):**
 - ~~**DEUDA TÉCNICA 1**~~ — ✅ Migrar columna `celular` a AES-128 (Completado)
@@ -231,7 +223,11 @@ migrations/
 ├── 003_rector_instituciones.sql     ← aplicado en Supabase
 ├── 004_supresion_retencion.sql      ← aplicado en Supabase
 ├── 005_whatsapp.sql                 ← aplicado en Supabase
-└── 006_envios_ficha.sql             ← aplicado en Supabase
+├── 006_envios_ficha.sql             ← aplicado en Supabase
+├── 007_mensaje_cero.sql             ← aplicado en Supabase
+├── 008_admin_auth_y_rls.sql         ← aplicado en Supabase
+├── 009_admin_municipio_id.sql       ← aplicado en Supabase
+└── 010_rls_sedes_instituciones.sql  ← aplicado en Supabase
 ```
 
 ### Reglas de activación WhatsApp (5 mensajes)

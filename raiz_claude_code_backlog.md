@@ -30,7 +30,7 @@ Streamlit Cloud detecta el push a `main` y redespliega automáticamente en 2-3 m
 
 ## PRIORIDAD CRÍTICA — Cambios que bloquean el piloto
 
-### PENDIENTE 1 — Rediseño completo del flujo de registro
+### ~~PENDIENTE 1~~ — ✅ COMPLETADO — Rediseño completo del flujo de registro
 
 **Contexto legal:**
 La Ley 1581 de 2012 establece que los menores de edad no pueden otorgar consentimiento autónomo para el tratamiento de sus datos personales. El flujo actual (el estudiante se registra solo y acepta el habeas data) es legalmente inválido. El registro debe ser gestionado por un administrador autorizado que certifique que el acudiente firmó la autorización previa.
@@ -92,7 +92,7 @@ ALTER TABLE estudiantes
 
 ---
 
-### PENDIENTE 2 — Tres niveles de notificación en alertas críticas
+### ~~PENDIENTE 2~~ — ✅ COMPLETADO — Tres niveles de notificación en alertas críticas
 
 **Contexto:**
 La Política PEAS de Corpoeducación establece que ante cualquier sospecha de abuso o violencia, la notificación no debe limitarse a una sola persona — el presunto agresor podría ser alguien del entorno escolar inmediato, incluyendo el orientador. La arquitectura actual solo notifica al orientador.
@@ -157,7 +157,7 @@ ALTER TABLE alertas
 - Banner rojo en dashboard (solo `fcc`) cuando hay estudiantes con retención vencida
 - No usa pg_cron — chequeo al cargar el dashboard admin
 
-### PENDIENTE 5 — Row Level Security (RLS) en Supabase para datos sensibles
+### ~~PENDIENTE 5~~ — ✅ COMPLETADO — Row Level Security (RLS) en Supabase para datos sensibles
 
 **Contexto:**
 RLS está actualmente desactivado. En producción, los datos sensibles (perfil_riesgo, contenido de mensajes con alertas) deben tener acceso restringido por rol.
@@ -188,7 +188,7 @@ RLS está actualmente desactivado. En producción, los datos sensibles (perfil_r
 
 ## PRIORIDAD MEDIA — Mejoras para el piloto
 
-### PENDIENTE 6 — Vista de administrador (dashboard básico)
+### ~~PENDIENTE 6~~ — ✅ COMPLETADO — Vista de administrador (dashboard básico)
 
 **Funcionalidades mínimas requeridas:**
 - Login de administrador (Supabase Auth, separado del flujo de estudiante)
@@ -200,7 +200,7 @@ RLS está actualmente desactivado. En producción, los datos sensibles (perfil_r
 **Nota de diseño:**
 El dashboard del orientador era la Fase 2 definida en CLAUDE.md. Este pendiente lo adelanta parcialmente porque el flujo de registro lo hace necesario antes del piloto.
 
-### PENDIENTE 7 — Consentimiento diferenciado para datos sensibles
+### ~~PENDIENTE 7~~ — ✅ COMPLETADO — Consentimiento diferenciado para datos sensibles
 
 **Contexto:**
 El asentimiento informado del estudiante en el primer login debe incluir consentimiento explícito diferenciado para datos sensibles (Ley 1581, Art. 6), separado del consentimiento general.
@@ -366,26 +366,19 @@ pip install twilio
 
 ## PENDIENTES DE PRODUCCIÓN — Surgidos del dashboard admin
 
-### PENDIENTE 10 — Migrar auth de admin a Supabase Auth por usuario
-**Contexto:** Para el piloto se usa una contraseña compartida (`ADMIN_PASSWORD` en secrets.toml) para todos los administradores. Esto es aceptable para 300 estudiantes en un piloto controlado, pero no escala.
-**Para producción:** Cada administrador debe tener su propia cuenta en Supabase Auth con email + contraseña individual. El login de admin_dashboard.py debe autenticar contra Supabase Auth en lugar de la contraseña hardcodeada.
-**Archivos a modificar:** `admin_dashboard.py`, `secrets.toml`
+### ~~PENDIENTE 10~~ — ✅ COMPLETADO — Migrar auth de admin a Supabase Auth por usuario
+**Completado:** Junio 2026 — commit `e4d6acc` y correcciones posteriores (`a9f6549`).
 
-### PENDIENTE 11 — Campo jurisdiccion para scope regional de Secretaría
-**Contexto:** El rol `secretaria` actualmente ve todas las instituciones igual que `fcc`. El campo `jurisdiccion` no existe en el schema.
-**Para producción:** Agregar campo `jurisdiccion` a la tabla `administradores` para limitar el scope de la Secretaría de Educación del Valle a sus instituciones y municipios específicos.
-**Archivos a modificar:** `schema.sql`, `migrations/003_...sql`, `database.py`
+### ~~PENDIENTE 11~~ — ✅ COMPLETADO — Campo jurisdiccion para scope regional de Secretaría
+**Completado:** Junio 2026 — commit `f0f9a52` y correcciones (`66d6f7b`, `6808b1e`).
 
 ### PENDIENTE 12 — Crear bucket 'consentimientos' en Supabase antes del deploy
 **Contexto:** El dashboard admin sube archivos de consentimiento al bucket `consentimientos` en Supabase Storage. Este bucket debe crearse manualmente antes del primer deploy a Streamlit Cloud.
 **Acción manual requerida:** En el dashboard de Supabase → Storage → New bucket → nombre: `consentimientos` → público (por ahora).
 **Bloqueante para:** Subida de archivos de consentimiento en producción. No bloqueante para desarrollo local (guarda en carpeta `consentimientos/`).
 
-### PENDIENTE 13 — Migrar URLs de consentimiento a signed URLs
-**Contexto:** Los archivos de consentimiento de menores de edad se guardan en un bucket público de Supabase Storage. Las URLs son accesibles por cualquiera que tenga el link.
-**Para producción:** Cambiar el bucket a privado y usar signed URLs con expiración para acceder a los archivos. Esto protege datos de menores conforme a la Ley 1581/2012.
-**Archivos a modificar:** `admin_dashboard.py`, `database.py`
-**Impacto:** Las URLs guardadas en `consentimiento_archivo_url` deberán generarse dinámicamente en lugar de almacenarse estáticas.
+### ~~PENDIENTE 13~~ — ✅ COMPLETADO — Migrar URLs de consentimiento a signed URLs
+**Completado:** Junio 2026 — commit `1d9bbdc`.
 
 ---
 
