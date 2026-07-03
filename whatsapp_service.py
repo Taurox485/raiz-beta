@@ -2,13 +2,13 @@
 whatsapp_service.py — Módulo de re-engagement por WhatsApp (P14)
 
 Envía mensajes automáticos a estudiantes que abandonaron su proceso de
-orientación vocacional, usando Twilio WhatsApp API.
+orientación vocacional, usando Twilio WhatsApp API con plantillas aprobadas por Meta.
 
 Requiere en secrets.toml:
-    TWILIO_ACCOUNT_SID     = "..."
-    TWILIO_AUTH_TOKEN      = "..."
-    TWILIO_WHATSAPP_NUMBER = "whatsapp:+57XXXXXXXXXX"
-    APP_URL                = "https://raiz-piloto.streamlit.app"
+    TWILIO_ACCOUNT_SID      = "..."
+    TWILIO_AUTH_TOKEN       = "..."
+    TWILIO_WHATSAPP_NUMBER  = "whatsapp:+57XXXXXXXXXX"
+    APP_URL                 = "https://raiz-piloto.streamlit.app"
 
 Reglas de activación (backlog PENDIENTE 14):
   MSG0 — Mensaje de bienvenida inmediata al registro
@@ -19,18 +19,24 @@ Reglas de activación (backlog PENDIENTE 14):
   MSG5 — 5 días sin actividad en cualquier punto, último intento
 """
 
+import json
 import logging
 import re
 
 import streamlit as st
 
-MENSAJES = {
-    0: "¡Hola, {nombre}! Soy rAÍz, tu mentor de proyecto de vida. Ya dejamos tu cuenta lista para que empecemos este viaje. Vamos a tener 4 charlas para descubrir qué te mueve, en qué sos bueno/a y qué imaginás para tu futuro. Tu código de acceso único es: {codigo} ¿Listo/a para arrancar? Entrá acá: {link}",
-    1: "Hola {nombre} Ya tienes tu cuenta en rAÍz lista. Ingresa con tu código {codigo} en {link} y empieza a explorar tu proyecto de vida. ¡Te esperamos!",
-    2: "¡Hola, {nombre}! La última vez hablamos de tu día a día y de las cosas que te mueven. Me quedé con ganas de seguir conociéndote En la próxima charla vamos a seguir conversando sobre ti. ¡Quiero saber más de ti! Tu código: {codigo} ¿Seguimos? Entrá acá: {link}",
-    3: "¡Hola, {nombre}! Ya descubriste cosas importantes sobre vos. Ahora sigue otra parte muy interesante: hablar de lo que imaginás para tu futuro Tu código: {codigo} ¿Le damos? Entrá acá: {link}",
-    4: "Hola {nombre}, ¡ya casi terminás! Solo falta una sesión en rAÍz. Entrá con {codigo} en {link} y obtén tu Mapa rAÍz personalizado.",
-    5: "Hola {nombre}, tu recorrido en rAÍz te espera Ingresá cuando puedas con tu código {codigo} en {link}. Tu orientador/a también está pendiente de ti.",
+# ── Content SIDs de plantillas aprobadas por Meta vía Twilio ─────────────────
+# Variables: {{1}} = nombre, {{2}} = código de acceso, {{3}} = link
+# raiz_cierre_mapa solo usa {{1}} = nombre (PDF va como media_url)
+
+TEMPLATE_SIDS = {
+    0: "HXf5921f1897d41091afa4bd56b4b13a9e",  # raiz_bienvenida
+    1: "HXeef0228726a06013218e54b82f1e2f52",  # raiz_reengagement_1
+    2: "HX54610034a30b26b0cd6945aff4f36f75",  # raiz_reengagement_2
+    3: "HXaefd218a9d891ac92478f5b886af7f9c",  # raiz_reengagement_3
+    4: "HX5e411595d949aa60525ed3a7180a1076",  # raiz_reengagement_4
+    5: "HX3294acccd38d0b383b17b900769cb225",  # raiz_reengagement_5
+    6: "HXcc6b4a10f5547921324aabde2079249a",  # raiz_cierre_mapa
 }
 
 
@@ -44,8 +50,25 @@ def _normalizar_celular(celular: str) -> str:
     return celular
 
 
-def _enviar_mensaje(celular: str, texto: str, media_url: str = None) -> bool:
-    """Envía un mensaje WhatsApp vía Twilio. Retorna True si fue exitoso."""
+def _get_link() -> str:
+    """Retorna el link de la plataforma desde secrets o el default."""
+    try:
+        return st.secrets.get("APP_URL", "https://raiz-piloto.streamlit.app")
+    except Exception:
+        return "https://raiz-piloto.streamlit.app"
+
+
+def _enviar_plantilla(
+    celular: str,
+    content_sid: str,
+    variables: dict,
+    media_url: str = None,
+) -> bool:
+    """
+    Envía un mensaje WhatsApp vía Twilio usando una plantilla aprobada por Meta.
+    variables: dict con keys "1", "2", "3" según las variables de la plantilla.
+    Retorna True si fue exitoso.
+    """
     try:
         account_sid   = st.secrets["TWILIO_ACCOUNT_SID"]
         auth_token    = st.secrets["TWILIO_AUTH_TOKEN"]
@@ -58,14 +81,16 @@ def _enviar_mensaje(celular: str, texto: str, media_url: str = None) -> bool:
         from twilio.rest import Client
         celular_norm = _normalizar_celular(celular)
         client = Client(account_sid, auth_token)
+
         kwargs = {
-            "from_": from_whatsapp,
-            "to": f"whatsapp:{celular_norm}",
-            "body": texto,
+            "from_":             from_whatsapp,
+            "to":                f"whatsapp:{celular_norm}",
+            "content_sid":       content_sid,
+            "content_variables": json.dumps(variables),
         }
         if media_url:
             kwargs["media_url"] = [media_url]
-            
+
         client.messages.create(**kwargs)
         return True
     except Exception as e:
@@ -73,18 +98,13 @@ def _enviar_mensaje(celular: str, texto: str, media_url: str = None) -> bool:
         return False
 
 
-def _formatear(template: str, nombre: str, codigo: str) -> str:
-    try:
-        link = st.secrets.get("APP_URL", "https://raiz-piloto.streamlit.app")
-    except Exception:
-        link = "https://raiz-piloto.streamlit.app"
-    return template.format(nombre=nombre.split()[0], codigo=codigo, link=link)
-
-
 def enviar_bienvenida(celular: str, nombre: str, codigo: str) -> bool:
     """Envía el Mensaje Cero (Bienvenida Inmediata) tras el registro."""
-    texto = _formatear(MENSAJES[0], nombre, codigo)
-    return _enviar_mensaje(celular, texto)
+    return _enviar_plantilla(
+        celular=celular,
+        content_sid=TEMPLATE_SIDS[0],
+        variables={"1": nombre.split()[0], "2": codigo, "3": _get_link()},
+    )
 
 
 def preview_reengagement(database) -> list[dict]:
@@ -95,14 +115,14 @@ def preview_reengagement(database) -> list[dict]:
     candidatos = database.get_estudiantes_para_reengagement()
     result = []
     for c in candidatos:
-        texto = _formatear(MENSAJES[c["mensaje_numero"]], c["nombre"], c["estudiante_id"])
+        msg_num = c["mensaje_numero"]
         cel = c["celular"]
         result.append({
             "nombre":         c["nombre"],
             "estudiante_id":  c["estudiante_id"],
             "celular":        cel[:4] + "***" + cel[-2:] if len(cel) >= 6 else "***",
-            "mensaje_numero": c["mensaje_numero"],
-            "texto":          texto,
+            "mensaje_numero": msg_num,
+            "texto":          f"[Plantilla {msg_num}] → nombre={c['nombre'].split()[0]}, codigo={c['estudiante_id']}, link={_get_link()}",
         })
     return result
 
@@ -118,10 +138,14 @@ def procesar_reengagement(database) -> dict:
     fallidos = 0
 
     for c in candidatos:
-        texto = _formatear(MENSAJES[c["mensaje_numero"]], c["nombre"], c["estudiante_id"])
-        ok = _enviar_mensaje(c["celular"], texto)
+        msg_num = c["mensaje_numero"]
+        ok = _enviar_plantilla(
+            celular=c["celular"],
+            content_sid=TEMPLATE_SIDS[msg_num],
+            variables={"1": c["nombre"].split()[0], "2": c["estudiante_id"], "3": _get_link()},
+        )
         estado = "enviado" if ok else "fallido"
-        database.registrar_whatsapp_mensaje(c["id"], c["mensaje_numero"], estado)
+        database.registrar_whatsapp_mensaje(c["id"], msg_num, estado)
         if ok:
             enviados += 1
         else:
@@ -132,5 +156,9 @@ def procesar_reengagement(database) -> dict:
 
 def enviar_mapa_estudiante(celular: str, nombre_estudiante: str, url_pdf: str) -> bool:
     """Envía el Mapa rAÍz (URL del PDF temporal) al estudiante vía WhatsApp."""
-    texto = f"¡Felicitaciones, {nombre_estudiante.split()[0]}! \n\nHas completado tu proceso de mentoría con rAÍz Aquí te compartimos tu Mapa rAÍz con el resumen de todo lo que descubrimos juntos.\n\n¡Mucho éxito en tu camino!"
-    return _enviar_mensaje(celular, texto, media_url=url_pdf)
+    return _enviar_plantilla(
+        celular=celular,
+        content_sid=TEMPLATE_SIDS[6],
+        variables={"1": nombre_estudiante.split()[0]},
+        media_url=url_pdf,
+    )
