@@ -30,12 +30,12 @@ import streamlit as st
 # raiz_cierre_mapa solo usa {{1}} = nombre (PDF va como media_url)
 
 TEMPLATE_SIDS = {
-    0: "HXf5921f1897d41091afa4bd56b4b13a9e",  # raiz_bienvenida
-    1: "HXeef0228726a06013218e54b82f1e2f52",  # raiz_reengagement_1
-    2: "HX54610034a30b26b0cd6945aff4f36f75",  # raiz_reengagement_2
-    3: "HXaefd218a9d891ac92478f5b886af7f9c",  # raiz_reengagement_3
+    0: "HXfd8f3cc55fe8834b80ddfe699901c16c",  # raiz_bienvenida
+    1: "HX06e47ebc12f16aebd9075073be6f8214",  # raiz_reengagement_1
+    2: "HXb18a11ae30e2776d6fbcc5d911c7ff3f",  # raiz_reengagement_2
+    3: "HX799197f010caeb98b29b589a85de764d",  # raiz_reengagement_3
     4: "HX5e411595d949aa60525ed3a7180a1076",  # raiz_reengagement_4
-    5: "HX3294acccd38d0b383b17b900769cb225",  # raiz_reengagement_5
+    5: "HXfcdd567bd79b8c3af58af397d1a3ab53",  # raiz_reengagement_5
     6: "HXcc6b4a10f5547921324aabde2079249a",  # raiz_cierre_mapa
 }
 
