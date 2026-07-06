@@ -161,15 +161,35 @@ No responda a este correo.
         except Exception:
             pass  # resultados[clave] permanece False
 
+    # Parsear peas_email: puede ser un string único o múltiples emails separados por coma
+    peas_emails_lista = []
+    if peas_email and str(peas_email).strip():
+        peas_emails_lista = [e.strip() for e in str(peas_email).split(",") if e.strip()]
+
+    # Resultado PEAS: True si AL MENOS UNO de los emails llegó exitosamente
+    resultados_peas_individuales = []
+
+    def _intentar_peas(email: str) -> None:
+        try:
+            _enviar(email, asunto, cuerpo)
+            resultados_peas_individuales.append(True)
+        except Exception:
+            resultados_peas_individuales.append(False)
+
     hilos = [
         threading.Thread(target=_intentar, args=("orientador", orientador_email), daemon=True),
         threading.Thread(target=_intentar, args=("rector",     rector_email),     daemon=True),
-        threading.Thread(target=_intentar, args=("peas",       peas_email),       daemon=True),
     ]
+    for email_peas in peas_emails_lista:
+        hilos.append(threading.Thread(target=_intentar_peas, args=(email_peas,), daemon=True))
+
     for h in hilos:
         h.start()
     for h in hilos:
         h.join(timeout=15)
+
+    # PEAS se marca True si al menos un email de la lista llegó
+    resultados["peas"] = any(resultados_peas_individuales) if resultados_peas_individuales else False
 
     return resultados
 
