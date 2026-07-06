@@ -55,17 +55,20 @@
   }
 
   .page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 8mm auto;
+    width: 216mm;
+    min-height: 279mm;
     background: var(--blanco);
     padding: var(--page-padding);
     position: relative;
     overflow: hidden;
-    page-break-after: always;
     box-shadow: 0 4px 24px rgba(0,0,0,0.12);
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  @media screen {
+    .page { margin: 8mm auto; }
   }
 
   .watermark {
@@ -317,8 +320,12 @@
   .footer-brand { font-weight: 500; color: var(--verde-oscuro); }
   .footer-conf  { color: var(--rojo-alerta); font-weight: 500; }
 
-  @media print { body { background: white; } .page { box-shadow: none; margin: 0; } }
-  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+  }
+  @page { size: Letter; margin: 0; }
 </style>
 </head>
 <body>
